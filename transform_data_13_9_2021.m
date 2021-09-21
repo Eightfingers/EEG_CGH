@@ -1,11 +1,11 @@
 addpath('helperfuncs');
 addpath('myfuncs');
-addpath('13_9_2021');
+addpath('17_9_2021');
 
-data = readmatrix('circum2_shake_005.csv');
-specs = data(:,3:8); 
+data = readmatrix('Specs_ear2earshake_17_9_2026.csv');
+specs = data(:,34:39); 
 specs = rmmissing(specs);
-wand= data(:,38:43); 
+wand= data(:,3:8); 
 wand = rmmissing(wand);
 
 %% Remove some rows and trimming

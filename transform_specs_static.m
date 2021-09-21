@@ -12,6 +12,7 @@ first_row_markers = markers(8,:);
 
 first_row_rot = specs(8,1:3);
 first_row_displacement = specs(8,4:6);
+first_row_displacement = [first_row_displacement(:,1), first_row_displacement(:,3), first_row_displacement(:,2)];
 specs = rmmissing(specs);
 
 static_markers = [];

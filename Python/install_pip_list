@@ -1,1 +1,2 @@
-numpy, PyQt5, pyside6, PyOpenGl, moderngl
+numpy, pyside6, PyOpenGl, moderngl
+pip install pyside6 numpy
