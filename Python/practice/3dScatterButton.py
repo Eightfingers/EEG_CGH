@@ -21,7 +21,7 @@ class UpdateDataThread(QThread):
         self.signals.signal_np.connect(parent.update_and_add_scatter)
         print("Update data worker called")
 
-    # This stun function is not called
+    # This stop function is not used in this example
     def stop(self):
         print("Stopped called")
 
@@ -34,16 +34,13 @@ class UpdateDataThread(QThread):
 class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
-        super(MainWindow,self).__init__(parent)
+        QMainWindow.__init__(self, parent)
 
         self.setWindowTitle('Qt DataVisualization 3D random scatter')
-        
+
+        # Main central widget
         self.scatter = Q3DScatter()
         self.scatter_series = QScatter3DSeries()
-        
-        self.button = QPushButton("Randomized the graph!")
-        self.button.clicked.connect(self.start_thread) # start a thread when the button is clicked
-
         self.container = QWidget.createWindowContainer(self.scatter)
         geometry = QGuiApplication.primaryScreen().geometry()
         size = geometry.height() * 3 / 4
@@ -52,9 +49,27 @@ class MainWindow(QMainWindow):
         self.container.setFocusPolicy(Qt.StrongFocus)
         self.setCentralWidget(self.container)
 
-        # self.dock = QDockWidget(self.container)
-        # self.dockWidgetArea = 10
-        # self.dock.setWidget(self.button)
+        # Create left dockable window widget
+        self.docked = QDockWidget("Menu", self)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.docked)
+
+        # Create a a parent widget to handle button widgets??
+        self.docked_parent_widget = QWidget(self)
+        self.docked.setWidget(self.docked_parent_widget)
+        self.docked_parent_widget.setLayout(QVBoxLayout()) # set the layout of parent widget
+
+        # Create Button widget
+        self.button = QPushButton("Randomize the graph!")
+        self.button.clicked.connect(self.start_thread) # start a thread when the button is clicked
+
+        # Create a placeholder button to show QVBoxLayout
+        self.button2 = QPushButton("Button 2")
+        self.button3 = QPushButton("Button 3")
+
+        # Add the button widget to the docked window
+        self.docked_parent_widget.layout().addWidget(self.button)
+        self.docked_parent_widget.layout().addWidget(self.button2)
+        self.docked_parent_widget.layout().addWidget(self.button3)
 
     def start_thread(self):
         instanced_thread = UpdateDataThread(self)

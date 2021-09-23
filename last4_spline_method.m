@@ -122,7 +122,7 @@ y_spline = spline_pts3(:,2);
 z_spline = spline_pts3(:,3);
 [yy_fit3, zz_fit3] = splineplot(y_spline, z_spline);
 
-[P4_YZ,~,~] = interparc(0.25, yy_fit3, zz_fit3,'spline');
+[P4_YZ,~,~] = interparc(0.75, yy_fit3, zz_fit3,'spline');
 P4 = [P4_XZ(1) , P4_YZ(1), P4_YZ(2)];
 
 % Visual YZ spline plot
@@ -139,11 +139,11 @@ spline_pts4 = [F7; Fz; F8];
 x_spline = spline_pts4(:,1);
 z_spline = spline_pts4(:,3);
 [xxdata4, zzdata4] = splineplot(x_spline, z_spline);
-[F4_XZ,~,~] = interparc(0.25, xxdata4,zzdata4,'spline'); % F3 is located from the right 
+[F3_XZ,~,~] = interparc(0.25, xxdata4,zzdata4,'spline'); % F3 is located from the right 
 
 % Visual XZ spline plot
 figure;
-plot(F4_XZ(1), F4_XZ(2) ,'d'); % the predicted points
+plot(F3_XZ(1), F3_XZ(2) ,'d'); % the predicted points
 hold on;
 plot(x_spline, z_spline, 'o'); % the points
 plot(xxdata4, zzdata4); % spline
