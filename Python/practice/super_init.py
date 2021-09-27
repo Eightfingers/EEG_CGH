@@ -4,7 +4,7 @@ class Vehicle():
 		self.battery = battery
 
 	def battery_life(self):
-		print("It has "+ str(self.battery) + " horsepower")
+		print("It has "+ str(self.battery) + " horsepower") # 70
 		
 	def name_1(self):
 		print(self.name + " is my favourite car")

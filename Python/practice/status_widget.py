@@ -9,8 +9,6 @@ from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBar
 
 import numpy as np
 import random
-import matlab.engine
-from matlab_thread import MatlabMainThread
 
 class StatusWidget(QWidget):
 
@@ -34,29 +32,10 @@ class StatusWidget(QWidget):
         self._layout.addWidget(self.optitrack_qlabel)
         self._layout.addWidget(self.wand_qlabel)
         self._layout.addWidget(self.specs_qlabel)
-        self._layout.addStretch()   
+        self._layout.addStretch()
 
-        # Start the Matlab Thread
-        self.start_matlab_thread()
-
-    def start_matlab_thread(self):
-        self.matlab_main_thread = MatlabMainThread(self)
-        self.matlab_main_thread.start()
 
     @Slot()
     def change_label(self,message):
-        self.label = message[0]
-        self.status = message[1]
-
-        print(message)
-        print(self.label)
-        
-        if self.label == "Matlab":
-            self.matlab_qlabel.setText(self.matlab_label + self.status)
-        elif self.label == "Optitrack" :
-            self.optitrack_qlabel.setText(self.optitrack_label + self.status) 
-        elif self.label == "Stylus" :
-            self.wand_qlabel.setText(self.wand_label + self.status) 
-        elif self.label == "Specs" :
-            self.specs_qlabel.setText(self.specs_label + self.status) 
-
+        self.hello = ["Hallo Welt", "Hei maailma", "Hola Mundo", "Привет мир"]
+        self.matlab_qlabel.setText(random.choice(self.hello))

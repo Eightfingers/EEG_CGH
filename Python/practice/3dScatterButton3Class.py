@@ -9,6 +9,7 @@ from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBar
 import numpy as np
 import random
 from menu_widget import MenuWidget
+from status_widget import StatusWidget
 
 class MainWindow(QMainWindow):
 
@@ -35,8 +36,16 @@ class MainWindow(QMainWindow):
 
         # layout of the left dockable widget
         self.left_dock_layout = QVBoxLayout()
-        self.left_dock_widget = MenuWidget(self.left_dock_layout, self.scatter, self.scatter_series) # create the widget with the given layout
-        self.left_dock.setWidget(self.left_dock_widget) # now add the widget into the dock
+
+        ## LOOK INTO THIS 
+        # There is something logically weird here.
+        # Instead of creating an "Actual MenuWidget Object" I am just passing the QVBoxLayout() and adding widgets into
+        # it this layout value. This same goees to the StatusWidget where the QVBoxLayout() value is passed to it too. (not pass by reference??) 
+        self.left_dock_menu_widget = MenuWidget(self.left_dock_layout, self.scatter, self.scatter_series) 
+        self.left_dock_status_widget = StatusWidget(self.left_dock_layout)
+
+        # Anyways when you instead of passing left_dock_menu_widget into self.left_dock.setWidget() and pass left_dock_status_widget, it will show up an empty dock
+        self.left_dock.setWidget(self.left_dock_menu_widget) 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

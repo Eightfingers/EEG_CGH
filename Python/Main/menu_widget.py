@@ -9,6 +9,7 @@ from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBar
 
 import numpy as np
 import random
+from matlab_thread import MatlabMainThread
 
 # Signals must inherit QObject
 class ScatterSignal(QObject):
@@ -18,26 +19,22 @@ class ScatterSignal(QObject):
 class UpdateDataThread(QThread):
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
-
         self.signals = ScatterSignal()
         self.signals.signal_np.connect(parent.update_and_add_scatter)
-        print("Update data worker called")
-
-    # This stop function is not used in this example
-    def stop(self):
-        print("Stopped called")
+        # print("Update data worker called")
 
     def run(self):
         random_coordinates = np.random.randint(0, 100, size=(10, 3)) 
         # Emit signals whenever you want (print to command line)
         self.signals.signal_np.emit(random_coordinates) 
-        print("signalemited")
+        # print("signalemited")
 
 class MenuWidget(QWidget):
 
-    def __init__(self, layout, scatter, scatter_series):
-        # super(MenuWidget, self).__init__()
+    def __init__(self, layout,scatter, scatter_series, parent=None):
+        QWidget.__init__(self, parent)
 
+        # store the format of the layout
         self._layout = layout
         self._scatter = scatter
         self._scatter_series = scatter_series
@@ -50,16 +47,16 @@ class MenuWidget(QWidget):
         self.button2 = QPushButton("Button 2")
         self.button2.clicked.connect(self.change_label) # start a thread when the button is clicked
         self.button3 = QPushButton("Button 3")
-        # Create placeholder labels
-        self.label = QLabel("Lol")
-        self.label2 = QLabel("Lulz")
 
-        self._layout.addStretch()
+        # Create placeholder labels
+        self.matlab_label = QLabel("Matlab status:")
+        self.optitrack_label = QLabel("Optitrack: ")
+        self.wand_label = QLabel("Wand: ")
+        self.specs_label = QLabel("Specs: ")
+
         self._layout.addWidget(self.button)
         self._layout.addWidget(self.button2)
         self._layout.addWidget(self.button3)
-        self._layout.addWidget(self.label)
-        self._layout.addWidget(self.label2)
         self._layout.addStretch()
 
         # set the layout of the menu
@@ -80,7 +77,7 @@ class MenuWidget(QWidget):
     @Slot()
     def change_label(self,message):
         self.hello = ["Hallo Welt", "Hei maailma", "Hola Mundo", "Привет мир"]
-        self.label.setText(random.choice(self.hello))
+        self.matlab_label.setText(random.choice(self.hello))
 
     def add_list_to_scatterdata(self, scatter_series, data):
         for d in data:

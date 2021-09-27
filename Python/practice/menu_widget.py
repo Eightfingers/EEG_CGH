@@ -35,11 +35,13 @@ class UpdateDataThread(QThread):
 
 class MenuWidget(QWidget):
 
-    def __init__(self, layout, parent=None):
-        super(MenuWidget, self).__init__()
+    def __init__(self, layout,scatter, scatter_series, parent=None):
+        QWidget.__init__(self, parent)
 
         # store the format of the layout
         self._layout = layout
+        self._scatter = scatter
+        self._scatter_series = scatter_series
 
         # Create Button widget
         self.button = QPushButton("Randomize the graph!")
@@ -49,16 +51,16 @@ class MenuWidget(QWidget):
         self.button2 = QPushButton("Button 2")
         self.button2.clicked.connect(self.change_label) # start a thread when the button is clicked
         self.button3 = QPushButton("Button 3")
-        # Create placeholder labels
-        self.label = QLabel("Lol")
-        self.label2 = QLabel("Lulz")
 
-        self._layout.addStretch()
+        # Create placeholder labels
+        self.matlab_label = QLabel("Matlab status:")
+        self.optitrack_label = QLabel("Optitrack: ")
+        self.wand_label = QLabel("Wand: ")
+        self.specs_label = QLabel("Specs: ")
+
         self._layout.addWidget(self.button)
         self._layout.addWidget(self.button2)
         self._layout.addWidget(self.button3)
-        self._layout.addWidget(self.label)
-        self._layout.addWidget(self.label2)
         self._layout.addStretch()
 
         # set the layout of the menu
@@ -72,14 +74,14 @@ class MenuWidget(QWidget):
     @Slot(np.ndarray)
     def update_and_add_scatter(self, message):
         print("signal recieved")
-        self.add_list_to_scatterdata(self.scatter_series, message)
-        self.scatter.addSeries(self.scatter_series)
-        self.scatter.show()
+        self.add_list_to_scatterdata(self._scatter_series, message)
+        self._scatter.addSeries(self._scatter_series)
+        self._scatter.show()
     
     @Slot()
     def change_label(self,message):
         self.hello = ["Hallo Welt", "Hei maailma", "Hola Mundo", "Привет мир"]
-        self.label.setText(random.choice(self.hello))
+        self.matlab_label.setText(random.choice(self.hello))
 
     def add_list_to_scatterdata(self, scatter_series, data):
         for d in data:
