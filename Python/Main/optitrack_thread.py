@@ -14,6 +14,20 @@ class OptitrackMainThread(QThread):
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
         self.signals = MatlabSignals()
 
+        # This will create a new NatNet client
+        self.streamingClient = NatNetClient()
+
+    def run(self):
+        try:
+            # Configure the streaming client to call our rigid body handler on the emulator to send data out.
+            self.streamingClient.newFrameListener = self.receiveNewFrame
+            self.streamingClient.rigidBodyListener = self.receiveRigidBodyFrame
+            # Start up the streaming client now that the callbacks are set up.
+            # This will run perpetually, and operate on a separate thread.
+            self.streamingClient.run() 
+        except:
+            print("ERROR ON THE OPTITRACKMAIN THREAD")
+
     # This is a callback function that gets connected to the NatNet client and called once per mocap frame.
     def receiveNewFrame( frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
                         labeledMarkerCount, timecode, timecodeSub, timestamp, isRecording, trackedModelsChanged ):
@@ -23,37 +37,7 @@ class OptitrackMainThread(QThread):
     def receiveRigidBodyFrame( id, position, rotation ):
         print( "Received frame for rigid body", id )
 
-    # This will create a new NatNet client
-    streamingClient = NatNetClient()
-
-    # Configure the streaming client to call our rigid body handler on the emulator to send data out.
-    streamingClient.newFrameListener = receiveNewFrame
-    streamingClient.rigidBodyListener = receiveRigidBodyFrame
-
-    # Start up the streaming client now that the callbacks are set up.
-    # This will run perpetually, and operate on a separate thread.
-    streamingClient.run() 
-
-    def run(self):
-        try:
-            pass
-        except:
-            pass
-
     @Slot()
     def spawn_thread(self, message):
         print("Spawn matlab thread called!!!")
         print(message)
-        
-# Create a worker thread that is responsible for executing of scripts inside the matlab engine
-class MatlabWorkerThread(QThread):
-    def __init__(self,matlab_engine, parent=None):
-        QThread.__init__(self, parent)
-        self._matlab_engine = matlab_engine
-
-    def run(self):
-        # Start the Matlab Engine
-        try:
-            print("I am spawned!@")
-        except:
-            print("wtf")

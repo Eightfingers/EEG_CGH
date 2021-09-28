@@ -65,8 +65,6 @@ class MainWindow(QMainWindow):
         # Now connect the Signals in the MenuWidget to the matlab_thread main
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
 
-        # Start the Optitrack Thread
-
     # Create the Slots that will receive signals from the worker Thread
     @Slot(np.ndarray)
     def update_and_add_scatter(self, message):
