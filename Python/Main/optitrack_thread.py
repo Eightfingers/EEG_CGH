@@ -8,7 +8,7 @@ from PythonClient.NatNetClient import NatNetClient
 
 # Create the main Thread
 class OptitrackMainThread(QThread):
-    def __init__(self,status_widget, menu_widget, parent=None):
+    def __init__(self, parent=None):
         QThread.__init__(self, parent)
 
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
