@@ -27,13 +27,13 @@ def receiveNewFrame( frameNumber, markerSetCount, unlabeledMarkersCount, rigidBo
 
 # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
 def receiveRigidBodyFrame( id, position, rotation ):
-    print( "Received frame for rigid body", id )
+    print( "Received frame for rigid body", id, position, rotation )
 
 # This will create a new NatNet client
 streamingClient = NatNetClient()
 
 # Configure the streaming client to call our rigid body handler on the emulator to send data out.
-streamingClient.newFrameListener = receiveNewFrame
+streamingClient.newFrameListener = None
 streamingClient.rigidBodyListener = receiveRigidBodyFrame
 
 # Start up the streaming client now that the callbacks are set up.
