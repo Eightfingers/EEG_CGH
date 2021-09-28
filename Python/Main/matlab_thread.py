@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
-from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QMessageBox
 import matlab.engine
 from matlab_signal import MatlabSignals
 
@@ -16,26 +16,27 @@ class MatlabMainThread(QThread):
         self._menu_widget = menu_widget
 
         self.signals.signal_list.connect(self._status_widget.change_label) # change label function is found in status_widget.py
- 
+
     def run(self):
         # Start the Matlab Engine
         try:
             # I know this can be a tuple/dictionary but this is the first thing that came to my mind
             self.signals.signal_list.emit(["Matlab","Testing"]) # emit a list signal
-            print("Starting Matlab engine!")
+            # print("Starting Matlab engine!")
             self.eng = matlab.engine.start_matlab()
-            print("Matlab engine running!")
-            print("Is 37 a prime?")
+            # print("Matlab engine running!")
+            # print("Is 37 a prime?")
             tf = self.eng.isprime(37)
-            print("Matlab says its ...")
-            print(tf)
-            print("Trying to call matlab script")
+            # print("Matlab says its ...")
+            # print(tf)
+            # print("Trying to call matlab script")
             triangle_size = self.eng.test(1,2)
-            print(triangle_size)
-            print("Success")
+            # print(triangle_size)
+            # print("Success")
             self.signals.signal_list.emit(["Matlab","Okay"]) # emit a list signal
-        except:
-            print("Error in starting or calling matlab engine")
+        except Exception as e:
+            self.signals.signal_list.emit(["Matlab","Error"]) # emit a list signal
+            print(e)
 
     @Slot()
     def spawn_thread(self, message):

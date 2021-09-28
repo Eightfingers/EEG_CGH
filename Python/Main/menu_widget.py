@@ -3,7 +3,7 @@ from PySide6.QtCore import (Signal, QMutex, QElapsedTimer, QMutexLocker,
                             QPoint, QPointF, QSize, Qt, QThread, QObject, 
                             QWaitCondition, Slot, QSize)
 from PySide6.QtGui import QGuiApplication, QVector3D
-from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget, QLabel, QBoxLayout 
+from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget, QLabel, QBoxLayout, QMessageBox
 from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBarDataItem,
                                          QCategory3DAxis, QScatter3DSeries, QValue3DAxis, QScatterDataItem)
 
@@ -57,44 +57,41 @@ class MenuWidget(QWidget):
     def connect_matlab_signals(self, matlab_thread):
         self._matlab_thread = matlab_thread
         self.matlab_signal.signal_int.connect(self._matlab_thread.spawn_thread)
-        print("kek")
 
     @Slot()
     def do_nziz(self):
         print("NZIZ started")
-        self.change_button_state(self.NZIZbutton, self.NZIZbutton_state)
+        self.change_button_state(self.NZIZbutton, self.NZIZbutton_text)
         self.matlab_signal.signal_int.emit(1)
         print("Spawn thread succesful")
 
     @Slot()
     def do_circum(self):
-        self.change_button_state(self.Circumbutton, self.NZIZbutton_state)
+        self.change_button_state(self.Circumbutton, self.Circumbutton_text)
         print("Circum started")
 
     @Slot()
     def do_ear_to_ear(self):
-        self.change_button_state(self.EartoearButton, self.EartoEarutton_state)
+        self.change_button_state(self.EartoearButton, self.EartoEarbutton_text)
         print("Ear 2 Ear started")
     
     @Slot()
     def predict_eeg_positions(self):
         print("Tryna predict eeg positions")
 
-    def change_button_state(self, button, button_state):
-        button_state = not button_state # this is somehow legal?
-        print(self.NZIZbutton_state)
-        print(self.Circumbutton_state)
-        print(self.EartoEarutton_state)
-        if (self.NZIZbutton_state or self.Circumbutton_state or self.EartoEarutton_state):
-            self.is_recording_flag = True # If any of the state is True that means its recording
-        else:
-            self.is_recording_flag = False # else its not
-        
-        print("The recording state is ..", self.is_recording_flag)
-        if (self.is_recording_flag is False):
-            print("Button state going to change!")
+    def change_button_state(self, button, button_label):
+        if(button.isFlat()): 
+            button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
+            button.setText(button_label)
+            button.setFlat(False)
+            
+        elif (not self.NZIZbutton.isFlat() and not self.Circumbutton.isFlat() and not self.EartoearButton.isFlat()): # only press the button when it is the only button not flat?
+            # Not setting border width here causes a bug where the background colour isnt changed at all ?
+            # I can't seem to replicate this on an standalone code that only has a button widget (without the rest of the dock and stuff)
+            ### Anyway there is probably a better way to set this stylesheet but this should do also the button size CHANGES when its this set to flat 
+            button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
             button.setText('Stop!')
-            button.setStyleSheet('QPushButton {background-color: light gray; color: red;}')
-        else:
-            print("You cant do any recording till you stop the current recording!")
+            button.setFlat(True)
 
+        else:
+            QMessageBox.warning(self, "Warning", "Finish other recordings first!")
