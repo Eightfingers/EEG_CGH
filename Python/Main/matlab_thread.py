@@ -3,30 +3,22 @@ import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
 import matlab.engine
+from matlab_signal import MatlabSignals
 
-# Signals must inherit QObject
-class MatlabSignals(QObject):
-    signal_str = Signal(str)
-    signal_int = Signal(int)
-    signal_np = Signal(np.ndarray) 
-    signal_list = Signal(list)
-    signal_dict = Signal(dict)
-
-# Create the Worker Thread
+# Create the main Thread
 class MatlabMainThread(QThread):
-    def __init__(self, parent=None):
+    def __init__(self,status_widget, menu_widget, parent=None):
         QThread.__init__(self, parent)
 
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
         self.signals = MatlabSignals()
-        self.signals.signal_list.connect(parent.change_label)
+        self._status_widget = status_widget
+        self._menu_widget = menu_widget
 
-        # self.signals.signal_int.connect(parent.update_int_field)
-        # self.signals.signal_np.connect(parent.update_np_field)
-        # self.signals.signal_list.connect(parent.update_list_field)
-
+        self.signals.signal_list.connect(self._status_widget.change_label) # change label function is found in status_widget.py
+ 
     def run(self):
-        # Do something on the worker thread
+        # Start the Matlab Engine
         try:
             # I know this can be a tuple/dictionary but this is the first thing that came to my mind
             self.signals.signal_list.emit(["Matlab","Testing"]) # emit a list signal
@@ -42,13 +34,23 @@ class MatlabMainThread(QThread):
             print(triangle_size)
             print("Success")
             self.signals.signal_list.emit(["Matlab","Okay"]) # emit a list signal
-
         except:
             print("Error in starting or calling matlab engine")
 
+    @Slot()
+    def spawn_thread(self, message):
+        print("Spawn matlab thread called!!!")
+        print(message)
+        
+# Create a worker thread that is responsible for executing of scripts inside the matlab engine
+class MatlabWorkerThread(QThread):
+    def __init__(self,matlab_engine, parent=None):
+        QThread.__init__(self, parent)
+        self._matlab_engine = matlab_engine
 
-
-        # Emit signals whenever you want
-        # self.signals.signal_int.emit(a) 
-        # self.signals.signal_np.emit(coordinates) # emit np
-        # self.signals.signal_list.emit([a,b,c]) # emit list
+    def run(self):
+        # Start the Matlab Engine
+        try:
+            print("I am spawned!@")
+        except:
+            print("wtf")

@@ -34,18 +34,27 @@ class MainWindow(QMainWindow):
         self.left_dock = QDockWidget("Menu", self)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.left_dock)
 
-        # layout of the left dockable widget
+
+        # Create a dummy widget as the main dock widget
+        self.left_dock_main_widget = QWidget()
+
+        # Main layout of the left dockable widget
         self.left_dock_layout = QVBoxLayout()
 
-        ## LOOK INTO THIS 
-        # There is something logically weird here.
-        # Instead of creating an "Actual MenuWidget Object" I am just passing the QVBoxLayout() and adding widgets into
-        # it this layout value. This same goees to the StatusWidget where the QVBoxLayout() value is passed to it too. (not pass by reference??) 
-        self.left_dock_menu_widget = MenuWidget(self.left_dock_layout, self.scatter, self.scatter_series) 
-        self.left_dock_status_widget = StatusWidget(self.left_dock_layout)
+        # Layout of the widgets inside the dockable widgets
+        self.menu_layout = QVBoxLayout()
+        self.status_layout = QVBoxLayout()
 
-        # Anyways when you instead of passing left_dock_menu_widget into self.left_dock.setWidget() and pass left_dock_status_widget, it will show up an empty dock
-        self.left_dock.setWidget(self.left_dock_menu_widget) 
+        self.left_dock_menu_widget = MenuWidget(self.menu_layout, self.scatter, self.scatter_series)
+        self.left_dock_layout.addLayout(self.menu_layout)
+
+        self.left_dock_status_widget = StatusWidget(self.status_layout)
+        self.left_dock_layout.addLayout(self.status_layout)
+
+        self.left_dock_main_widget.setLayout(self.left_dock_layout)
+
+        self.left_dock.setWidget(self.left_dock_main_widget)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

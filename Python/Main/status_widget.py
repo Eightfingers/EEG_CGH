@@ -36,20 +36,10 @@ class StatusWidget(QWidget):
         self._layout.addWidget(self.specs_qlabel)
         self._layout.addStretch()   
 
-        # Start the Matlab Thread
-        self.start_matlab_thread()
-
-    def start_matlab_thread(self):
-        self.matlab_main_thread = MatlabMainThread(self)
-        self.matlab_main_thread.start()
-
-    @Slot()
+    @Slot(list)
     def change_label(self,message):
         self.label = message[0]
         self.status = message[1]
-
-        print(message)
-        print(self.label)
         
         if self.label == "Matlab":
             self.matlab_qlabel.setText(self.matlab_label + self.status)

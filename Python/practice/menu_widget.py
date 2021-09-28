@@ -19,7 +19,7 @@ class UpdateDataThread(QThread):
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
 
-        self.signals = ScatterSignal()
+        self.signals = ScatterSignal() 
         self.signals.signal_np.connect(parent.update_and_add_scatter)
         print("Update data worker called")
 
@@ -62,9 +62,6 @@ class MenuWidget(QWidget):
         self._layout.addWidget(self.button2)
         self._layout.addWidget(self.button3)
         self._layout.addStretch()
-
-        # set the layout of the menu
-        self.setLayout(self._layout)
 
     def start_thread(self):
         instanced_thread = UpdateDataThread(self)

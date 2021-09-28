@@ -10,24 +10,7 @@ from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBar
 import numpy as np
 import random
 from matlab_thread import MatlabMainThread
-
-# Signals must inherit QObject
-class ScatterSignal(QObject):
-    # Create a Signal class to contain signal data types
-    signal_np = Signal(np.ndarray)
-
-class UpdateDataThread(QThread):
-    def __init__(self, parent=None):
-        QThread.__init__(self, parent)
-        self.signals = ScatterSignal()
-        self.signals.signal_np.connect(parent.update_and_add_scatter)
-        # print("Update data worker called")
-
-    def run(self):
-        random_coordinates = np.random.randint(0, 100, size=(10, 3)) 
-        # Emit signals whenever you want (print to command line)
-        self.signals.signal_np.emit(random_coordinates) 
-        # print("signalemited")
+from matlab_signal import MatlabSignals
 
 class MenuWidget(QWidget):
 
@@ -39,46 +22,79 @@ class MenuWidget(QWidget):
         self._scatter = scatter
         self._scatter_series = scatter_series
 
+        self.is_recording_flag = False # Used to indicate whether any of the button is recording or not. So far not yet used might be useful later?
+
+        self.NZIZbutton_state = False # False is not recording
+        self.Circumbutton_state = False
+        self.EartoEarutton_state = False
+
+        self.NZIZbutton_text = "Start NZIZ"
+        self.Circumbutton_text = "Start Circum"
+        self.EartoEarbutton_text = "Start Ear to Ear"
+
+        self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing in the main.py loop
+        self.matlab_signal = MatlabSignals()
+
         # Create Button widget
-        self.button = QPushButton("Randomize the graph!")
-        self.button.clicked.connect(self.start_thread) # start a thread when the button is clicked
+        self.NZIZbutton = QPushButton(self.NZIZbutton_text)
+        self.NZIZbutton.clicked.connect(self.do_nziz) # start a thread when the button is clicked
 
-        # Create placeholder buttons 
-        self.button2 = QPushButton("Button 2")
-        self.button2.clicked.connect(self.change_label) # start a thread when the button is clicked
-        self.button3 = QPushButton("Button 3")
+        self.Circumbutton = QPushButton(self.Circumbutton_text)
+        self.Circumbutton.clicked.connect(self.do_circum) # start a thread when the button is clicked
 
-        # Create placeholder labels
-        self.matlab_label = QLabel("Matlab status:")
-        self.optitrack_label = QLabel("Optitrack: ")
-        self.wand_label = QLabel("Wand: ")
-        self.specs_label = QLabel("Specs: ")
+        self.EartoearButton = QPushButton(self.EartoEarbutton_text)
+        self.EartoearButton.clicked.connect(self.do_ear_to_ear) # start a thread when the button is clicked
 
-        self._layout.addWidget(self.button)
-        self._layout.addWidget(self.button2)
-        self._layout.addWidget(self.button3)
+        self.predict_button = QPushButton("Predict")
+        self.predict_button.clicked.connect(self.predict_eeg_positions)
+        
+        self._layout.addWidget(self.NZIZbutton)
+        self._layout.addWidget(self.Circumbutton)
+        self._layout.addWidget(self.EartoearButton)
+        self._layout.addWidget(self.predict_button)
         self._layout.addStretch()
 
-        # set the layout of the menu
-        self.setLayout(self._layout)
+    def connect_matlab_signals(self, matlab_thread):
+        self._matlab_thread = matlab_thread
+        self.matlab_signal.signal_int.connect(self._matlab_thread.spawn_thread)
+        print("kek")
 
-    def start_thread(self):
-        instanced_thread = UpdateDataThread(self)
-        instanced_thread.start()
+    @Slot()
+    def do_nziz(self):
+        print("NZIZ started")
+        self.change_button_state(self.NZIZbutton, self.NZIZbutton_state)
+        self.matlab_signal.signal_int.emit(1)
+        print("Spawn thread succesful")
 
-    # Create the Slots that will receive signals from the worker Thread
-    @Slot(np.ndarray)
-    def update_and_add_scatter(self, message):
-        print("signal recieved")
-        self.add_list_to_scatterdata(self._scatter_series, message)
-        self._scatter.addSeries(self._scatter_series)
-        self._scatter.show()
+    @Slot()
+    def do_circum(self):
+        self.change_button_state(self.Circumbutton, self.NZIZbutton_state)
+        print("Circum started")
+
+    @Slot()
+    def do_ear_to_ear(self):
+        self.change_button_state(self.EartoearButton, self.EartoEarutton_state)
+        print("Ear 2 Ear started")
     
     @Slot()
-    def change_label(self,message):
-        self.hello = ["Hallo Welt", "Hei maailma", "Hola Mundo", "Привет мир"]
-        self.matlab_label.setText(random.choice(self.hello))
+    def predict_eeg_positions(self):
+        print("Tryna predict eeg positions")
 
-    def add_list_to_scatterdata(self, scatter_series, data):
-        for d in data:
-            scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
+    def change_button_state(self, button, button_state):
+        button_state = not button_state # this is somehow legal?
+        print(self.NZIZbutton_state)
+        print(self.Circumbutton_state)
+        print(self.EartoEarutton_state)
+        if (self.NZIZbutton_state or self.Circumbutton_state or self.EartoEarutton_state):
+            self.is_recording_flag = True # If any of the state is True that means its recording
+        else:
+            self.is_recording_flag = False # else its not
+        
+        print("The recording state is ..", self.is_recording_flag)
+        if (self.is_recording_flag is False):
+            print("Button state going to change!")
+            button.setText('Stop!')
+            button.setStyleSheet('QPushButton {background-color: light gray; color: red;}')
+        else:
+            print("You cant do any recording till you stop the current recording!")
+
