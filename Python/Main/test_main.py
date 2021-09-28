@@ -11,6 +11,7 @@ from matlab_thread import MatlabMainThread
 from menu_widget import MenuWidget
 from status_widget import StatusWidget
 from NatNetClient import NatNetClient
+from optitrack_thread import OptitrackMainThread
 
 class MainWindow(QMainWindow):
 
@@ -65,27 +66,10 @@ class MainWindow(QMainWindow):
 
         # Now connect the Signals in the MenuWidget to the matlab_thread main
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
-        
-        # This is a callback function that gets connected to the NatNet client and called once per mocap frame.
-        def receiveNewFrame( frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
-                            labeledMarkerCount, timecode, timecodeSub, timestamp, isRecording, trackedModelsChanged ):
-            print( "Received frame", frameNumber )
 
-        # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
-        def receiveRigidBodyFrame( id, position, rotation ):
-            print( "Received frame for rigid body", id )
-
-        # This will create a new NatNet client
-        streamingClient = NatNetClient()
-
-        # Configure the streaming client to call our rigid body handler on the emulator to send data out.
-        streamingClient.newFrameListener = receiveNewFrame
-        streamingClient.rigidBodyListener = receiveRigidBodyFrame
-
-        # Start up the streaming client now that the callbacks are set up.
-        # This will run perpetually, and operate on a separate thread.
-        streamingClient.run()
         # Start the Optitrack Thread
+        self.optitrack_main_thread = OptitrackMainThread()
+        self.optitrack_main_thread.start()
 
     # Create the Slots that will receive signals from the worker Thread
     @Slot(np.ndarray)
