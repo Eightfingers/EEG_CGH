@@ -16,6 +16,7 @@ class OptitrackMainThread(QThread):
 
         # This will create a new NatNet client
         self.streamingClient = NatNetClient()
+        
 
     def run(self):
         try:
@@ -29,13 +30,17 @@ class OptitrackMainThread(QThread):
             print("ERROR ON THE OPTITRACKMAIN THREAD")
 
     # This is a callback function that gets connected to the NatNet client and called once per mocap frame.
-    def receiveNewFrame( frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
+    def receiveNewFrame(self, frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
                         labeledMarkerCount, timecode, timecodeSub, timestamp, isRecording, trackedModelsChanged ):
-        print( "Received frame", frameNumber )
+        # print( "Received frame", frameNumber )
+        pass
 
     # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
-    def receiveRigidBodyFrame( id, position, rotation ):
-        print( "Received frame for rigid body", id )
+    def receiveRigidBodyFrame(self, id, position, rotation ):
+        print( "Received frame for rigid body", id, position, rotation)
+        print(type(position), type(rotation))
+        pass 
+
 
     @Slot()
     def spawn_thread(self, message):

@@ -33,7 +33,7 @@ def receiveRigidBodyFrame( id, position, rotation ):
 streamingClient = NatNetClient()
 
 # Configure the streaming client to call our rigid body handler on the emulator to send data out.
-streamingClient.newFrameListener = None
+streamingClient.newFrameListener = receiveNewFrame
 streamingClient.rigidBodyListener = receiveRigidBodyFrame
 
 # Start up the streaming client now that the callbacks are set up.

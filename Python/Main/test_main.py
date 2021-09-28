@@ -10,7 +10,7 @@ import numpy as np
 from matlab_thread import MatlabMainThread
 from menu_widget import MenuWidget
 from status_widget import StatusWidget
-import optitrack_thread 
+from optitrack_thread import OptitrackMainThread
 
 class MainWindow(QMainWindow):
 
@@ -67,8 +67,8 @@ class MainWindow(QMainWindow):
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
 
         # Start the Optitrack Thread
-        # self.optitrack_main_thread = OptitrackMainThread()
-        # self.optitrack_main_thread.start()
+        self.optitrack_main_thread = OptitrackMainThread()
+        self.optitrack_main_thread.start()
 
     # Create the Slots that will receive signals from the worker Thread
     @Slot(np.ndarray)
