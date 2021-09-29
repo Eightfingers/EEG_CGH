@@ -8,3 +8,4 @@ import matlab.engine
 class OptitrackSignals(QObject):
     signal_bool = Signal(bool)
     signal_int = Signal(int)
+    signal_numpy = Signal(np.ndarray)

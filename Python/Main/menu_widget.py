@@ -12,6 +12,7 @@ import random
 from matlab_thread import MatlabMainThread
 from matlab_signal import MatlabSignals
 from optitrack_signal import OptitrackSignals
+import pandas as pd
 
 class MenuWidget(QWidget):
 
@@ -40,6 +41,7 @@ class MenuWidget(QWidget):
         # I dont think this is being used yet for now.. Also
         self._optitrack_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
         self.optitrack_signals = OptitrackSignals()
+        self.optitrack_signals.signal_numpy.connect(parent.update_and_add_scatter)
 
         # Create Button widget
         self.NZIZbutton = QPushButton(self.NZIZbutton_text)
@@ -73,11 +75,9 @@ class MenuWidget(QWidget):
 
     @Slot()
     def do_nziz(self):
-        print("NZIZ started")
         self.change_button_state(self.NZIZbutton, self.NZIZbutton_text)
         # self.matlab_signal.signal_int.emit(1)
         # print("Spawn thread succesful")
-        self.optitrack_signals.signal_bool.emit(True)
         # print("Okay bool signal emitted from menu widget")
 
     @Slot()
@@ -99,7 +99,21 @@ class MenuWidget(QWidget):
             button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
             button.setText(button_label)
             button.setFlat(False)
+            self.optitrack_signals.signal_bool.emit(False) # Stop recording
             
+            self.stylus_data = self._optitrack_thread.stylus_data
+            self.specs_data = self._optitrack_thread.specs_data
+
+            # strip the zeros
+            # self.stylus_data = self.stylus_data[self.stylus_data != 0]
+            # self.specs_data = self.specs_data[self.specs_data != 0]
+
+            np.savetxt('data_stylus.csv',self.stylus_data, delimiter=',')
+            np.savetxt('data_specs.csv',self.specs_data, delimiter=',')
+
+            self.optitrack_signals.signal_numpy.emit(self.specs_data)
+
+
         elif (not self.NZIZbutton.isFlat() and not self.Circumbutton.isFlat() and not self.EartoearButton.isFlat()): # only press the button when it is the only button not flat?
             # Not setting border width here causes a bug where the background colour isnt changed at all ?
             # I can't seem to replicate this on an standalone code that only has a button widget (without the rest of the dock and stuff)
@@ -107,6 +121,7 @@ class MenuWidget(QWidget):
             button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
             button.setText('Stop!')
             button.setFlat(True)
+            self.optitrack_signals.signal_bool.emit(True)
 
         else:
             QMessageBox.warning(self, "Warning", "Finish other recordings first!")

@@ -50,10 +50,10 @@ class MainWindow(QMainWindow):
         # object at all. I am just passing self.menu_layout parameter to it and then reusing that self.menu_layout paremeter. 
         # I did it this way because I want to have a more seperate codes for the contents in the dock widget and have a more 
         # neat code layout. I realize QT doesn't allow nesting widgets inside widgets. And layouts and widgets are 2 seperate entities.
-        self.left_dock_menu_widget = MenuWidget(self.menu_layout, self.scatter, self.scatter_series)
+        self.left_dock_menu_widget = MenuWidget(self.menu_layout, self.scatter, self.scatter_series, self)
         self.left_dock_main_layout.addLayout(self.menu_layout)
 
-        self.left_dock_status_widget = StatusWidget(self.status_layout)
+        self.left_dock_status_widget = StatusWidget(self.status_layout, self)
         self.left_dock_main_layout.addLayout(self.status_layout)
 
         self.left_dock_main_widget.setLayout(self.left_dock_main_layout)
@@ -71,13 +71,12 @@ class MainWindow(QMainWindow):
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
         self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
 
-
     # Create the Slots that will receive signals from the worker Thread
     @Slot(np.ndarray)
     def update_and_add_scatter(self, message):
-        self.add_list_to_scatterdata(self._scatter_series, message)
-        self._scatter.addSeries(self._scatter_series)
-        self._scatter.show()
+        self.add_list_to_scatterdata(self.scatter_series, message)
+        self.scatter.addSeries(self.scatter_series)
+        self.scatter.show()
     
     def add_list_to_scatterdata(self, scatter_series, data):
         for d in data:

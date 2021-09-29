@@ -15,14 +15,21 @@ class OptitrackMainThread(QThread):
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
         self.matlab_signals = MatlabSignals()
         self.optitrack_signals = OptitrackSignals()
-
+        
         # This will create a new NatNet client
         self.streamingClient = NatNetClient()
 
         # Control variables 
         self.record = False
-        self.stylus_record = np.array()
+        self.stylus_record = None
         self.specs_record = None
+
+        # Allocate numpy array for rigidbody data
+        self.row = 2000 # max number of data sets
+        self.columns = 3
+        self.index_counter = 0 # used to loopthrough numpy array and replace the values inside
+        self.stylus_data = np.zeros(shape=[self.row, self.columns])
+        self.specs_data = np.zeros(shape=[self.row, self.columns])
 
     def run(self):
         try:
@@ -45,8 +52,16 @@ class OptitrackMainThread(QThread):
     def receiveRigidBodyFrame(self, id, position, rotation ):
         # print( "Received frame for rigid body", id )
         if self.record == True:
-            print("Running")
-            print(type(position))
+            # Record the positions into numpy array
+            print(id, position)
+            if (id == 1004):
+                self.stylus_data[self.index_counter,:] = position 
+            elif (id == 1005):
+                self.specs_data[self.index_counter,:] = position 
+                self.index_counter += 1 # Increment the index counter everytime the final rigidbody is sent
+            print(self.index_counter)
+            if self.index_counter > self.row:
+                print("Handle overflow error!!") 
         else:
             pass
 
@@ -59,3 +74,4 @@ class OptitrackMainThread(QThread):
     def set_recording(self, message):
         # print("bool signal recieved from menu widget with bool ", message)
         self.record = message
+        print(self.record)
