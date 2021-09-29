@@ -21,7 +21,7 @@ class OptitrackMainThread(QThread):
 
         # Control variables 
         self.record = False
-        self.stylus_record = None
+        self.stylus_record = np.array()
         self.specs_record = None
 
     def run(self):
@@ -44,8 +44,9 @@ class OptitrackMainThread(QThread):
     # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
     def receiveRigidBodyFrame(self, id, position, rotation ):
         # print( "Received frame for rigid body", id )
-        if self.specs_record == True:
+        if self.record == True:
             print("Running")
+            print(type(position))
         else:
             pass
 
