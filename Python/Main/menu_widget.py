@@ -11,6 +11,7 @@ import numpy as np
 import random
 from matlab_thread import MatlabMainThread
 from matlab_signal import MatlabSignals
+from optitrack_signal import OptitrackSignals
 
 class MenuWidget(QWidget):
 
@@ -32,8 +33,13 @@ class MenuWidget(QWidget):
         self.Circumbutton_text = "Start Circum"
         self.EartoEarbutton_text = "Start Ear to Ear"
 
-        self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing in the main.py loop
+        # I dont think this is being used yet for now.. Also
+        self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
         self.matlab_signal = MatlabSignals()
+
+        # I dont think this is being used yet for now.. Also
+        self._optitrack_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
+        self.optitrack_signals = OptitrackSignals()
 
         # Create Button widget
         self.NZIZbutton = QPushButton(self.NZIZbutton_text)
@@ -54,16 +60,25 @@ class MenuWidget(QWidget):
         self._layout.addWidget(self.predict_button)
         self._layout.addStretch()
 
-    def connect_matlab_signals(self, matlab_thread):
+    # I am not sure if this is the best way or so but
+    # These functions are called from the main.py and the thread and 
+    # 
+    def connect_matlab_signals(self, matlab_thread): 
         self._matlab_thread = matlab_thread
-        self.matlab_signal.signal_int.connect(self._matlab_thread.spawn_thread)
+        self.matlab_signals.signal_int.connect(self._matlab_thread.spawn_thread)
+
+    def connect_matlab_signals (self, optitrack_thread):
+        self._optitrack_thread = optitrack_thread
+        self.optitrack_signals.signal_bool.connect(self.set_recording) 
 
     @Slot()
     def do_nziz(self):
         print("NZIZ started")
         self.change_button_state(self.NZIZbutton, self.NZIZbutton_text)
-        self.matlab_signal.signal_int.emit(1)
-        print("Spawn thread succesful")
+        # self.matlab_signal.signal_int.emit(1)
+        # print("Spawn thread succesful")
+        self.optitrack_signals.signal_bool.emit(True)
+        print("Okay bool signal emitted from menu widget")
 
     @Slot()
     def do_circum(self):

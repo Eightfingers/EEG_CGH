@@ -18,6 +18,14 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle('CGH EEG Optitrack Assisted EEG localization')
 
+        self.nziz_data = None
+        self.circum_data = None
+        self.eartoear_data = None
+
+        self.nziz_data_specs = None
+        self.circum_data_specs = None
+        self.eartoear_data_specs = None
+
         self.scatter = Q3DScatter()
         self.scatter_series = QScatter3DSeries()
 

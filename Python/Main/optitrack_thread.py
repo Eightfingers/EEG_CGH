@@ -4,6 +4,7 @@ from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
 import matlab.engine
 from matlab_signal import MatlabSignals
+from optitrack_signal import OptitrackSignals
 from PythonClient.NatNetClient import NatNetClient
 
 # Create the main Thread
@@ -12,11 +13,16 @@ class OptitrackMainThread(QThread):
         QThread.__init__(self, parent)
 
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
-        self.signals = MatlabSignals()
+        self.matlab_signals = MatlabSignals()
+        self.optitrack_signals = OptitrackSignals()
 
         # This will create a new NatNet client
         self.streamingClient = NatNetClient()
-        
+
+        # Control variables 
+        self.record = False
+        self.stylus_record = None
+        self.specs_record = None
 
     def run(self):
         try:
@@ -33,16 +39,22 @@ class OptitrackMainThread(QThread):
     def receiveNewFrame(self, frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
                         labeledMarkerCount, timecode, timecodeSub, timestamp, isRecording, trackedModelsChanged ):
         # print( "Received frame", frameNumber )
-        pass
+        pass 
 
     # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
     def receiveRigidBodyFrame(self, id, position, rotation ):
-        print( "Received frame for rigid body", id, position, rotation)
-        print(type(position), type(rotation))
-        pass 
-
+        # print( "Received frame for rigid body", id )
+        if self.specs_record == True:
+            print("Running")
+        else:
+            pass
 
     @Slot()
     def spawn_thread(self, message):
         print("Spawn matlab thread called!!!")
         print(message)
+
+    @Slot(bool)
+    def set_recording(self, message):
+        print("Okay bool signal recieved from menu widget")
+        self.record = message
