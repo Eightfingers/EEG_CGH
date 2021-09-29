@@ -56,5 +56,5 @@ class OptitrackMainThread(QThread):
 
     @Slot(bool)
     def set_recording(self, message):
-        print("Okay bool signal recieved from menu widget")
+        # print("bool signal recieved from menu widget with bool ", message)
         self.record = message

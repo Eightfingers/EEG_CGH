@@ -63,12 +63,14 @@ class MainWindow(QMainWindow):
         self.matlab_main_thread = MatlabMainThread(self.left_dock_status_widget, self.left_dock_menu_widget)
         self.matlab_main_thread.start()
 
-        # Now connect the Signals in the MenuWidget to the matlab_thread main
-        self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
-
         # Start the Optitrack Thread
         self.optitrack_main_thread = OptitrackMainThread()
         self.optitrack_main_thread.start()
+        
+        # Now connect and initialize the Signals in the MenuWidget with the threads
+        self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
+        self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+
 
     # Create the Slots that will receive signals from the worker Thread
     @Slot(np.ndarray)

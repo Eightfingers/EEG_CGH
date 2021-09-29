@@ -35,7 +35,7 @@ class MenuWidget(QWidget):
 
         # I dont think this is being used yet for now.. Also
         self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
-        self.matlab_signal = MatlabSignals()
+        self.matlab_signals = MatlabSignals()
 
         # I dont think this is being used yet for now.. Also
         self._optitrack_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
@@ -67,9 +67,9 @@ class MenuWidget(QWidget):
         self._matlab_thread = matlab_thread
         self.matlab_signals.signal_int.connect(self._matlab_thread.spawn_thread)
 
-    def connect_matlab_signals (self, optitrack_thread):
+    def connect_optitrack_signals (self, optitrack_thread):
         self._optitrack_thread = optitrack_thread
-        self.optitrack_signals.signal_bool.connect(self.set_recording) 
+        self.optitrack_signals.signal_bool.connect(self._optitrack_thread.set_recording) 
 
     @Slot()
     def do_nziz(self):
@@ -78,7 +78,7 @@ class MenuWidget(QWidget):
         # self.matlab_signal.signal_int.emit(1)
         # print("Spawn thread succesful")
         self.optitrack_signals.signal_bool.emit(True)
-        print("Okay bool signal emitted from menu widget")
+        # print("Okay bool signal emitted from menu widget")
 
     @Slot()
     def do_circum(self):
