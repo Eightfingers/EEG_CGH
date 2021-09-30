@@ -7,15 +7,15 @@ from matlab_signal import MatlabSignals
 
 # Create the main Thread
 class MatlabMainThread(QThread):
-    def __init__(self,status_widget, menu_widget, parent=None):
+    def __init__(self, parent=None):
         QThread.__init__(self, parent)
 
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
         self.signals = MatlabSignals()
-        self._status_widget = status_widget
-        self._menu_widget = menu_widget
+        self.status_widget = parent.left_dock_status_widget
+        self.menu_widget = parent.left_dock_menu_widget
 
-        self.signals.signal_list.connect(self._status_widget.change_label) # change label function is found in status_widget.py
+        self.signals.signal_list.connect(self.status_widget.change_label) # change label function is found in status_widget.py
 
     def run(self):
         # Start the Matlab Engine

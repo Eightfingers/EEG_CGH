@@ -2,7 +2,7 @@ import sys
 from PySide6.QtCore import (Signal, QMutex, QElapsedTimer, QMutexLocker,
                             QPoint, QPointF, QSize, Qt, QThread,
                             QWaitCondition)
-from PySide6.QtGui import QGuiApplication, QVector3D
+from PySide6.QtGui import QGuiApplication, QVector3D, QColor
 from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget
 from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBarDataItem,
                                          QCategory3DAxis, QScatter3DSeries, QValue3DAxis, QScatterDataItem)
@@ -17,6 +17,7 @@ class MainWindow(QMainWindow):
 
         self.scatter = Q3DScatter()
         self.scatter_series = QScatter3DSeries()
+        self.scatter_series.setBaseColor(QColor(255, 0, 0))
 
         self.x_axis = QValue3DAxis()
         self.x_axis.setTitle('X')

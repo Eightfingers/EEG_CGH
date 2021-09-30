@@ -1,4 +1,3 @@
-from Python.Main.status_widget import StatusWidget
 import sys
 import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
@@ -10,16 +9,16 @@ from PythonClient.NatNetClient import NatNetClient
 
 # Create the main Thread
 class OptitrackMainThread(QThread):
-    def __init__(self, status_widget, parent=None):
+    def __init__(self, parent=None):
         QThread.__init__(self, parent)
 
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
         self.optitrack_signals = OptitrackSignals()
-        self._status_wiget = status_widget
+        self.status_widget = parent.left_dock_status_widget
         
         # This will create a new NatNet client
         self.streamingClient = NatNetClient()
-        self.optitrack_signals.signal_list.connect(self.status_widget.change_labal)
+        self.optitrack_signals.signal_list.connect(self.status_widget.change_label)
 
         # Control variables 
         self.record = False
@@ -56,7 +55,7 @@ class OptitrackMainThread(QThread):
         # print( "Received frame for rigid body", id )
         if self.record == True:
             # Record the positions into numpy array
-            print(id, position)
+            # print(id, position)
             if (id == 1004):
                 self.stylus_data[self.index_counter,:] = position 
             elif (id == 1005):
@@ -76,3 +75,11 @@ class OptitrackMainThread(QThread):
     @Slot(bool)
     def set_recording(self, message):
         self.record = message
+        if (message == False):
+            self.clear_data()
+
+    def clear_data(self):
+        self.index_counter = 0
+        self.stylus_data = np.zeros(shape=[self.row, self.columns])
+        self.specs_data = np.zeros(shape=[self.row, self.columns])
+

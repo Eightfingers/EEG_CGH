@@ -2,7 +2,7 @@ import sys
 from PySide6.QtCore import (Signal, QMutex, QElapsedTimer, QMutexLocker,
                             QPoint, QPointF, QSize, Qt, QThread, QObject, 
                             QWaitCondition, Slot, QSize)
-from PySide6.QtGui import QGuiApplication, QVector3D
+from PySide6.QtGui import QGuiApplication, QVector3D, QColor
 from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget, QLabel, QBoxLayout
 from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBarDataItem, QAbstract3DGraph,
                                          QCategory3DAxis, QScatter3DSeries, QValue3DAxis, QScatterDataItem)
@@ -20,7 +20,13 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('CGH EEG Optitrack Assisted EEG localization')
 
         self.scatter = Q3DScatter()
-        self.scatter_series = QScatter3DSeries()
+        self.NZIZscatter_series = QScatter3DSeries()
+        self.CIRCUMscatter_series = QScatter3DSeries()
+        self.EarToEarscatter_series = QScatter3DSeries()
+
+        self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace 
+        self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
+        self.EarToEarscatter_series.setBaseColor(QColor(0, 0, 255)) # Blue for Ear to Ear trace
 
         # Set the axis 
         self.x_axis = QValue3DAxis()
@@ -70,21 +76,21 @@ class MainWindow(QMainWindow):
         # object at all. I am just passing self.menu_layout parameter to it and then reusing that self.menu_layout paremeter. 
         # I did it this way because I want to have a more seperate codes for the contents in the dock widget and have a more 
         # neat code layout. I realize QT doesn't allow nesting widgets inside widgets. And layouts and widgets are 2 seperate entities.
-        self.left_dock_menu_widget = MenuWidget(self.menu_layout, self.scatter, self.scatter_series, self)
+        self.left_dock_menu_widget = MenuWidget(self)
         self.left_dock_main_layout.addLayout(self.menu_layout)
 
-        self.left_dock_status_widget = StatusWidget(self.status_layout, self)
+        self.left_dock_status_widget = StatusWidget(self)
         self.left_dock_main_layout.addLayout(self.status_layout)
 
         self.left_dock_main_widget.setLayout(self.left_dock_main_layout)
         self.left_dock.setWidget(self.left_dock_main_widget)
 
         # Start the main thread
-        self.matlab_main_thread = MatlabMainThread(self.left_dock_status_widget, self.left_dock_menu_widget)
+        self.matlab_main_thread = MatlabMainThread(self)
         self.matlab_main_thread.start()
 
         # Start the Optitrack Thread
-        self.optitrack_main_thread = OptitrackMainThread(self.left_dock_status_widget, self)
+        self.optitrack_main_thread = OptitrackMainThread(self)
         self.optitrack_main_thread.start()
         
         # Now connect and initialize the Signals in the MenuWidget with the threads
@@ -93,11 +99,23 @@ class MainWindow(QMainWindow):
 
     # Create the Slots that will receive signals from the worker Thread
     @Slot(np.ndarray)
-    def update_and_add_scatter(self, message):
-        self.add_list_to_scatterdata(self.scatter_series, message)
-        self.scatter.addSeries(self.scatter_series)
+    def update_and_add_scatterNZIZ(self, message):
+        self.add_list_to_scatterdata(self.NZIZscatter_series, message)
+        self.scatter.addSeries(self.NZIZscatter_series)
         self.scatter.show()
-    
+
+    @Slot(np.ndarray)
+    def update_and_add_scatterCIRCUM(self, message):
+        self.add_list_to_scatterdata(self.CIRCUMscatter_series, message)
+        self.scatter.addSeries(self.CIRCUMscatter_series)
+        self.scatter.show()
+
+    @Slot(np.ndarray)
+    def update_and_add_scatterEarToEar(self, message):
+        self.add_list_to_scatterdata(self.EarToEarscatter_series, message)
+        self.scatter.addSeries(self.EarToEarscatter_series)
+        self.scatter.show()
+
     def add_list_to_scatterdata(self, scatter_series, data):
         for d in data:
             scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))

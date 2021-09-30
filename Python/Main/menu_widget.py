@@ -8,20 +8,21 @@ from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBar
                                          QCategory3DAxis, QScatter3DSeries, QValue3DAxis, QScatterDataItem)
 
 import numpy as np
-import random
+import sys, os
 from matlab_thread import MatlabMainThread
 from matlab_signal import MatlabSignals
 from optitrack_signal import OptitrackSignals
 
 class MenuWidget(QWidget):
 
-    def __init__(self, layout,scatter, scatter_series, parent=None):
+    def __init__(self, parent=None):
         QWidget.__init__(self, parent)
 
         # store the format of the layout
-        self._layout = layout
-        self._scatter = scatter
-        self._scatter_series = scatter_series
+        self.layout = parent.menu_layout
+        
+        # https://stackoverflow.com/questions/1296501/find-path-to-currently-running-file
+        self.current_working_dir = os.getcwd() + "\Main\RecordedData"
 
         self.is_recording_flag = False # Used to indicate whether any of the button is recording or not. So far not yet used might be useful later?
 
@@ -37,12 +38,19 @@ class MenuWidget(QWidget):
         self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
         self.matlab_signals = MatlabSignals()
 
-        # I dont think this is being used yet for now.. Also
-        self._optitrack_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
-        self.optitrack_signals = OptitrackSignals()
-        self.optitrack_signals.signal_numpy.connect(parent.update_and_add_scatter)
+        self._optitrack_thread = None 
+        self.NZIZoptitrack_signals = OptitrackSignals()
+        self.NZIZoptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
 
-        # Create Button widget
+        self.CIRCUMoptitrack_signals = OptitrackSignals()
+        self.CIRCUMoptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterCIRCUM)
+
+        self.EarToEaroptitrack_signals = OptitrackSignals()
+        self.EarToEaroptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterEarToEar)
+
+        self.optitrack_signals = OptitrackSignals() # Used to set recording or not
+
+        # Create Button widgets
         self.NZIZbutton = QPushButton(self.NZIZbutton_text)
         self.NZIZbutton.clicked.connect(self.do_nziz) # start a thread when the button is clicked
 
@@ -53,13 +61,15 @@ class MenuWidget(QWidget):
         self.EartoearButton.clicked.connect(self.do_ear_to_ear) # start a thread when the button is clicked
 
         self.predict_button = QPushButton("Predict")
-        self.predict_button.clicked.connect(self.predict_eeg_positions)
+        self.predict_button.clicked.connect(self.predict_eeg_positions) # can only start when there are 3 scatter data
         
-        self._layout.addWidget(self.NZIZbutton)
-        self._layout.addWidget(self.Circumbutton)
-        self._layout.addWidget(self.EartoearButton)
-        self._layout.addWidget(self.predict_button)
-        self._layout.addStretch()
+        self.predict_button = QPushButton("Clear") # Clear EEG positions
+
+        self.layout.addWidget(self.NZIZbutton)
+        self.layout.addWidget(self.Circumbutton)
+        self.layout.addWidget(self.EartoearButton)
+        self.layout.addWidget(self.predict_button)
+        self.layout.addStretch()
 
     # I am not sure if this is the best way or so but
     # These functions are called from the main.py and the thread and 
@@ -71,47 +81,60 @@ class MenuWidget(QWidget):
     def connect_optitrack_signals (self, optitrack_thread):
         self._optitrack_thread = optitrack_thread
         self.optitrack_signals.signal_bool.connect(self._optitrack_thread.set_recording) 
+        self.optitrack_signals.signal_bool.connect(self._optitrack_thread.clear_data)
 
     @Slot()
     def do_nziz(self):
         self.change_button_state(self.NZIZbutton, self.NZIZbutton_text)
-        # self.matlab_signal.signal_int.emit(1)
-        # print("Spawn thread succesful")
-        # print("Okay bool signal emitted from menu widget")
 
     @Slot()
     def do_circum(self):
         self.change_button_state(self.Circumbutton, self.Circumbutton_text)
-        print("Circum started")
 
     @Slot()
     def do_ear_to_ear(self):
         self.change_button_state(self.EartoearButton, self.EartoEarbutton_text)
-        print("Ear 2 Ear started")
     
     @Slot()
     def predict_eeg_positions(self):
         print("Tryna predict eeg positions")
 
     def change_button_state(self, button, button_label):
-        if(button.isFlat()): 
+        if(button.isFlat()): # If the initial state of the button is flat and it is clicked, unflat them
             button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
             button.setText(button_label)
             button.setFlat(False)
-            self.optitrack_signals.signal_bool.emit(False) # Stop recording
             
-            self.stylus_data = self._optitrack_thread.stylus_data
-            self.specs_data = self._optitrack_thread.specs_data
+            # Save the data accordingly
+            if (button_label == "Start NZIZ"):
+                self.NZIZstylus_data = self._optitrack_thread.stylus_data
+                self.NZIZspecs_data = self._optitrack_thread.specs_data
+                np.savetxt(self.current_working_dir + "\data_NZIZstylus.csv",self.NZIZstylus_data, delimiter=',')
+                np.savetxt(self.current_working_dir + "\data_NZIZspecs.csv",self.NZIZspecs_data, delimiter=',')
+                self.NZIZoptitrack_signals.signal_numpy.emit(self.NZIZspecs_data)
+
+            elif (button_label == "Start Circum"):
+                self.CIRCUMstylus_data = self._optitrack_thread.stylus_data
+                self.CIRCUMspecs_data = self._optitrack_thread.specs_data
+                np.savetxt(self.current_working_dir + "\data_CIRCUMstylus.csv",self.CIRCUMstylus_data, delimiter=',')
+                np.savetxt(self.current_working_dir + "\data_CIRCUMspecs.csv",self.CIRCUMspecs_data, delimiter=',')
+                # emit to update to the main widget
+                self.CIRCUMoptitrack_signals.signal_numpy.emit(self.CIRCUMspecs_data)
+
+
+            elif (button_label == "Start Ear to Ear"):
+                self.EarToEarstylus_data = self._optitrack_thread.stylus_data
+                self.EarToEarpecs_data = self._optitrack_thread.specs_data
+                np.savetxt(self.current_working_dir + "\data_EarToEarstylus.csv", self.EarToEarstylus_data, delimiter=',')
+                np.savetxt(self.current_working_dir + "\data_EarToEarspecs.csv", self.EarToEarpecs_data, delimiter=',')
+                self.EarToEaroptitrack_signals.signal_numpy.emit(self.EarToEarpecs_data)
+
+            self.optitrack_signals.signal_bool.emit(False) # Stop recording
+
 
             # strip the zeros
             # self.stylus_data = self.stylus_data[self.stylus_data != 0]
             # self.specs_data = self.specs_data[self.specs_data != 0]
-
-            np.savetxt('data_stylus.csv',self.stylus_data, delimiter=',')
-            np.savetxt('data_specs.csv',self.specs_data, delimiter=',')
-
-            self.optitrack_signals.signal_numpy.emit(self.specs_data)
-
 
         elif (not self.NZIZbutton.isFlat() and not self.Circumbutton.isFlat() and not self.EartoearButton.isFlat()): # only press the button when it is the only button not flat?
             # Not setting border width here causes a bug where the background colour isnt changed at all ?
