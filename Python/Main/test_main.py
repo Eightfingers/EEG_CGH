@@ -22,6 +22,23 @@ class MainWindow(QMainWindow):
         self.scatter = Q3DScatter()
         self.scatter_series = QScatter3DSeries()
 
+        # Set the axis 
+        self.x_axis = QValue3DAxis()
+        self.x_axis.setTitle('X')
+        self.x_axis.setTitleVisible(True)
+
+        self.y_axis = QValue3DAxis()
+        self.y_axis.setTitle('Y')
+        self.y_axis.setTitleVisible(True)    
+
+        self.z_axis = QValue3DAxis()
+        self.z_axis.setTitle('Z')
+        self.z_axis.setTitleVisible(True)
+
+        self.scatter.setAxisX(self.x_axis)
+        self.scatter.setAxisY(self.y_axis)
+        self.scatter.setAxisZ(self.z_axis)
+
         # Main central widget
         self.graph = QWidget.createWindowContainer(self.scatter)
         geometry = QGuiApplication.primaryScreen().geometry()

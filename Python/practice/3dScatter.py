@@ -18,17 +18,33 @@ class MainWindow(QMainWindow):
         self.scatter = Q3DScatter()
         self.scatter_series = QScatter3DSeries()
 
+        self.x_axis = QValue3DAxis()
+        self.x_axis.setTitle('X')
+        self.x_axis.setTitleVisible(True)
+
+        self.y_axis = QValue3DAxis()
+        self.y_axis.setTitle('Y')
+        self.y_axis.setTitleVisible(True)    
+
+        self.z_axis = QValue3DAxis()
+        self.z_axis.setTitle('Z')
+        self.z_axis.setTitleVisible(True)
+
+        self.scatter.setAxisX(self.x_axis)
+        self.scatter.setAxisY(self.y_axis)
+        self.scatter.setAxisZ(self.z_axis)
+
         # create 10000 random spatial positions 
         self.coordinates = np.random.randint(0, 100, size=(10000, 3)) 
         self.add_list_to_scatterdata(self.scatter_series, self.coordinates)
         self.scatter.addSeries(self.scatter_series)
-
         self.container = QWidget.createWindowContainer(self.scatter)
         geometry = QGuiApplication.primaryScreen().geometry()
         size = geometry.height() * 3 / 4
         self.container.setMinimumSize(size, size)
         self.container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.container.setFocusPolicy(Qt.StrongFocus)
+        
         self.setCentralWidget(self.container)
 
         # set starting position of camera
