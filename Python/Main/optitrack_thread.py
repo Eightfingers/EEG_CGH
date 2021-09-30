@@ -1,3 +1,4 @@
+from Python.Main.status_widget import StatusWidget
 import sys
 import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
@@ -9,15 +10,16 @@ from PythonClient.NatNetClient import NatNetClient
 
 # Create the main Thread
 class OptitrackMainThread(QThread):
-    def __init__(self, parent=None):
+    def __init__(self, status_widget, parent=None):
         QThread.__init__(self, parent)
 
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
-        self.matlab_signals = MatlabSignals()
         self.optitrack_signals = OptitrackSignals()
+        self._status_wiget = status_widget
         
         # This will create a new NatNet client
         self.streamingClient = NatNetClient()
+        self.optitrack_signals.signal_list.connect(self.status_widget.change_labal)
 
         # Control variables 
         self.record = False
@@ -39,6 +41,7 @@ class OptitrackMainThread(QThread):
             # Start up the streaming client now that the callbacks are set up.
             # This will run perpetually, and operate on a separate thread.
             self.streamingClient.run() 
+            self.optitrack_signals.signal_list.emit(["Optitrack","Okay"])
         except:
             print("ERROR ON THE OPTITRACKMAIN THREAD")
 
@@ -72,6 +75,4 @@ class OptitrackMainThread(QThread):
 
     @Slot(bool)
     def set_recording(self, message):
-        # print("bool signal recieved from menu widget with bool ", message)
         self.record = message
-        print(self.record)

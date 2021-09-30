@@ -3,8 +3,8 @@ from PySide6.QtCore import (Signal, QMutex, QElapsedTimer, QMutexLocker,
                             QPoint, QPointF, QSize, Qt, QThread, QObject, 
                             QWaitCondition, Slot, QSize)
 from PySide6.QtGui import QGuiApplication, QVector3D
-from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget, QLabel, QBoxLayout 
-from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBarDataItem,
+from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget, QLabel, QBoxLayout
+from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBarDataItem, QAbstract3DGraph,
                                          QCategory3DAxis, QScatter3DSeries, QValue3DAxis, QScatterDataItem)
 import numpy as np
 from matlab_thread import MatlabMainThread
@@ -38,6 +38,9 @@ class MainWindow(QMainWindow):
         self.scatter.setAxisX(self.x_axis)
         self.scatter.setAxisY(self.y_axis)
         self.scatter.setAxisZ(self.z_axis)
+
+        # Set no Shadow
+        self.scatter.setShadowQuality(QAbstract3DGraph.ShadowQualityNone)
 
         # Main central widget
         self.graph = QWidget.createWindowContainer(self.scatter)
@@ -81,7 +84,7 @@ class MainWindow(QMainWindow):
         self.matlab_main_thread.start()
 
         # Start the Optitrack Thread
-        self.optitrack_main_thread = OptitrackMainThread()
+        self.optitrack_main_thread = OptitrackMainThread(self.left_dock_status_widget, self)
         self.optitrack_main_thread.start()
         
         # Now connect and initialize the Signals in the MenuWidget with the threads

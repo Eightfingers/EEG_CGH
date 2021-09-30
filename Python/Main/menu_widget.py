@@ -12,7 +12,6 @@ import random
 from matlab_thread import MatlabMainThread
 from matlab_signal import MatlabSignals
 from optitrack_signal import OptitrackSignals
-import pandas as pd
 
 class MenuWidget(QWidget):
 
@@ -34,7 +33,7 @@ class MenuWidget(QWidget):
         self.Circumbutton_text = "Start Circum"
         self.EartoEarbutton_text = "Start Ear to Ear"
 
-        # I dont think this is being used yet for now.. Also
+        # I dont think this is being used yet for now.. 
         self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
         self.matlab_signals = MatlabSignals()
 
