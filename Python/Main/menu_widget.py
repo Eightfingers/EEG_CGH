@@ -39,6 +39,7 @@ class MenuWidget(QWidget):
         self.matlab_signals = MatlabSignals()
 
         self._optitrack_thread = None 
+        
         self.NZIZoptitrack_signals = OptitrackSignals()
         self.NZIZoptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
 

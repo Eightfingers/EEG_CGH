@@ -7,18 +7,19 @@ from matlab_signal import MatlabSignals
 from optitrack_signal import OptitrackSignals
 from PythonClient.NatNetClient import NatNetClient
 
+
 # Create the main Thread
 class OptitrackMainThread(QThread):
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
 
-        # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
-        self.optitrack_signals = OptitrackSignals()
-        self.status_widget = parent.left_dock_status_widget
-        
-        # This will create a new NatNet client
         self.streamingClient = NatNetClient()
-        self.optitrack_signals.signal_list.connect(self.status_widget.change_label)
+
+        self.status_optitrack_signals = OptitrackSignals()
+        self.status_optitrack_signals.signal_list.connect(parent.left_dock_status_widget.change_label)
+
+        self.data_optitrack_signals = OptitrackSignals()
+        self.data_optitrack_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
 
         # Control variables 
         self.record = False
@@ -39,8 +40,8 @@ class OptitrackMainThread(QThread):
             self.streamingClient.rigidBodyListener = self.receiveRigidBodyFrame
             # Start up the streaming client now that the callbacks are set up.
             # This will run perpetually, and operate on a separate thread.
-            self.streamingClient.run() 
-            self.optitrack_signals.signal_list.emit(["Optitrack","Okay"])
+            self.streamingClient.run()
+            self.status_optitrack_signals.signal_list.emit(["Optitrack","Okay"])
         except:
             print("ERROR ON THE OPTITRACKMAIN THREAD")
 
@@ -56,10 +57,15 @@ class OptitrackMainThread(QThread):
         if self.record == True:
             # Record the positions into numpy array
             # print(id, position)
+            position = np.round(position, 4)
+            rotation = np.round(rotation, 4)
+            
             if (id == 1004):
-                self.stylus_data[self.index_counter,:] = position 
+                self.stylus_data[self.index_counter,:] = position
+                numpy_position = np.array(position)
+                self.data_optitrack_signals.signal_numpy.emit(numpy_position)
             elif (id == 1005):
-                self.specs_data[self.index_counter,:] = position 
+                self.specs_data[self.index_counter,:] = position
                 self.index_counter += 1 # Increment the index counter everytime the final rigidbody is sent
             print(self.index_counter)
             if self.index_counter > self.row:
