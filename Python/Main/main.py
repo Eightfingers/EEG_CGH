@@ -79,7 +79,8 @@ class MainWindow(QMainWindow):
         self.add_list_to_scatterdata(self.scatter_series, message)
         self.scatter.addSeries(self.scatter_series)
         self.scatter.show()
-    
+
+
     def add_list_to_scatterdata(self, scatter_series, data):
         for d in data:
             scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))

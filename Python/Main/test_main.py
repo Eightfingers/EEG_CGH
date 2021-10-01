@@ -116,6 +116,13 @@ class MainWindow(QMainWindow):
         self.scatter.addSeries(self.EarToEarscatter_series)
         self.scatter.show()
 
+    @Slot(bool)
+    def clear_data(self, message):
+        self.scatter.removeSeries(self.NZIZscatter_series)
+        self.scatter.removeSeries(self.CIRCUMscatter_series)
+        self.scatter.removeSeries(self.EarToEarscatter_series)
+        self.scatter.show()
+
     def add_list_to_scatterdata(self, scatter_series, data):
         if (data.ndim != 1):
             for d in data:
