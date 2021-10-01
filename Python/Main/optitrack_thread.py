@@ -18,13 +18,15 @@ class OptitrackMainThread(QThread):
         self.status_optitrack_signals = OptitrackSignals()
         self.status_optitrack_signals.signal_list.connect(parent.left_dock_status_widget.change_label)
 
-        self.data_optitrack_signals = OptitrackSignals()
-        self.data_optitrack_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
-
         # Control variables 
         self.record = False
         self.stylus_record = None
         self.specs_record = None
+        self.stylus_lose_track_counter = 0
+        self.specs_lose_track_counter = 0
+
+        self.stylus_previous_position = np.array([0,0,0])
+        self.specs_previous_position = np.array([0,0,0])
 
         # Allocate numpy array for rigidbody data
         self.row = 2000 # max number of data sets
@@ -62,11 +64,28 @@ class OptitrackMainThread(QThread):
             
             if (id == 1004):
                 self.stylus_data[self.index_counter,:] = position
-                numpy_position = np.array(position)
-                self.data_optitrack_signals.signal_numpy.emit(numpy_position)
+                if np.all(self.stylus_previous_position != position):  # if its not the same update to the new position
+                    self.stylus_previous_position = position # update the new position
+                    self.status_optitrack_signals.signal_list.emit(["Stylus","Detected"])
+                    self.stylus_lose_track_counter = 0
+                else:  # if the new position is the same as the old one, there is a big chance that it has lost detection.
+                    self.stylus_lose_track_counter += 1
+                    print("STYLUS NOT SHOWING!")
+                    if (self.stylus_lose_track_counter > 100):
+                        self.status_optitrack_signals.signal_list.emit(["Stylus","Lost detection"])
             elif (id == 1005):
                 self.specs_data[self.index_counter,:] = position
                 self.index_counter += 1 # Increment the index counter everytime the final rigidbody is sent
+                if np.all(self.specs_previous_position != position): 
+                    self.specs_previous_position = position 
+                    self.status_optitrack_signals.signal_list.emit(["Specs","Detected"])
+                    self.specs_lose_track_counter = 0
+                else:
+                    self.specs_lose_track_counter += 1
+                    print("specs NOT SHOWING!")
+                    if (self.specs_lose_track_counter > 100):
+                        self.status_optitrack_signals.signal_list.emit(["Specs","Lost detection"])
+
             print(self.index_counter)
             if self.index_counter > self.row:
                 print("Handle overflow error!!") 

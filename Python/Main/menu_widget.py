@@ -39,16 +39,7 @@ class MenuWidget(QWidget):
         self.matlab_signals = MatlabSignals()
 
         self._optitrack_thread = None 
-<<<<<<< HEAD
-        self.optitrack_signals = OptitrackSignals() # Used to set recording or not
-
-        # This is connected to the main thread
-        self.clear_signal = OptitrackSignals() # Used to set recording or not
-
-        # This is connected to main thread
-=======
         
->>>>>>> parent of 173f7c8 (Fix ripping out of zeroes)
         self.NZIZoptitrack_signals = OptitrackSignals()
         self.NZIZoptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
 
@@ -58,11 +49,9 @@ class MenuWidget(QWidget):
         self.EarToEaroptitrack_signals = OptitrackSignals()
         self.EarToEaroptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterEarToEar)
 
-<<<<<<< HEAD
-=======
-        self.optitrack_signals = OptitrackSignals() # Used to set recording or not
+        self.optitrack_signals = OptitrackSignals() 
+        self.optitrack_signals.signal_list.connect(parent.left_dock_status_widget.change_label)
 
->>>>>>> parent of 173f7c8 (Fix ripping out of zeroes)
         # Create Button widgets
         self.NZIZbutton = QPushButton(self.NZIZbutton_text)
         self.NZIZbutton.clicked.connect(self.do_nziz) # start a thread when the button is clicked
@@ -94,12 +83,8 @@ class MenuWidget(QWidget):
 
     def connect_optitrack_signals (self, optitrack_thread):
         self._optitrack_thread = optitrack_thread
-<<<<<<< HEAD
-        self.clear_signal.signal_bool.emit(True)
-=======
         self.optitrack_signals.signal_bool.connect(self._optitrack_thread.set_recording) 
         self.optitrack_signals.signal_bool.connect(self._optitrack_thread.clear_data)
->>>>>>> parent of 173f7c8 (Fix ripping out of zeroes)
 
     @Slot()
     def do_nziz(self):
@@ -112,13 +97,8 @@ class MenuWidget(QWidget):
     @Slot()
     def do_ear_to_ear(self):
         self.change_button_state(self.EartoearButton, self.EartoEarbutton_text)
-<<<<<<< HEAD
-        self.optitrack_signals.signal_int.emit(3)        
-
-=======
     
     @Slot()
->>>>>>> parent of 173f7c8 (Fix ripping out of zeroes)
     def predict_eeg_positions(self):
         print("Tryna predict eeg positions")
 
@@ -128,18 +108,23 @@ class MenuWidget(QWidget):
             button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
             button.setText(button_label)
             button.setFlat(False)
-            
+            self.stylus_data = self._optitrack_thread.stylus_data 
+            self.specs = self._optitrack_thread.specs_data 
+
+            self.stylus_data = self.stylus_data[~np.all(self.stylus_data == 0, axis=1)]
+            self.specs = self.specs[~np.all(self.specs == 0, axis=1)]
+
             # Save the data accordingly
             if (button_label == "Start NZIZ"):
-                self.NZIZstylus_data = self._optitrack_thread.stylus_data
-                self.NZIZspecs_data = self._optitrack_thread.specs_data
+                self.NZIZstylus_data = self.stylus_data
+                self.NZIZspecs_data = self.specs
                 np.savetxt(self.current_working_dir + "\data_NZIZstylus.csv",self.NZIZstylus_data, delimiter=',')
                 np.savetxt(self.current_working_dir + "\data_NZIZspecs.csv",self.NZIZspecs_data, delimiter=',')
                 self.NZIZoptitrack_signals.signal_numpy.emit(self.NZIZspecs_data)
 
             elif (button_label == "Start Circum"):
-                self.CIRCUMstylus_data = self._optitrack_thread.stylus_data
-                self.CIRCUMspecs_data = self._optitrack_thread.specs_data
+                self.CIRCUMstylus_data = self.stylus_data
+                self.CIRCUMspecs_data = self.specs
                 np.savetxt(self.current_working_dir + "\data_CIRCUMstylus.csv",self.CIRCUMstylus_data, delimiter=',')
                 np.savetxt(self.current_working_dir + "\data_CIRCUMspecs.csv",self.CIRCUMspecs_data, delimiter=',')
                 # emit to update to the main widget
@@ -147,18 +132,16 @@ class MenuWidget(QWidget):
 
 
             elif (button_label == "Start Ear to Ear"):
-                self.EarToEarstylus_data = self._optitrack_thread.stylus_data
-                self.EarToEarpecs_data = self._optitrack_thread.specs_data
+                self.EarToEarstylus_data = self.stylus_data
+                self.EarToEarpecs_data = self.specs
                 np.savetxt(self.current_working_dir + "\data_EarToEarstylus.csv", self.EarToEarstylus_data, delimiter=',')
                 np.savetxt(self.current_working_dir + "\data_EarToEarspecs.csv", self.EarToEarpecs_data, delimiter=',')
                 self.EarToEaroptitrack_signals.signal_numpy.emit(self.EarToEarpecs_data)
 
             self.optitrack_signals.signal_bool.emit(False) # Stop recording
+            self.optitrack_signals.signal_list.emit(["Stylus","Stopped"])
+            self.optitrack_signals.signal_list.emit(["Specs","Stopped"])
 
-
-            # strip the zeros
-            # self.stylus_data = self.stylus_data[self.stylus_data != 0]
-            # self.specs_data = self.specs_data[self.specs_data != 0]
 
         elif (not self.NZIZbutton.isFlat() and not self.Circumbutton.isFlat() and not self.EartoearButton.isFlat()): # only press the button when it is the only button not flat?
             # Not setting border width here causes a bug where the background colour isnt changed at all ?

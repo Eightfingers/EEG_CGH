@@ -76,11 +76,11 @@ class MainWindow(QMainWindow):
         # object at all. I am just passing self.menu_layout parameter to it and then reusing that self.menu_layout paremeter. 
         # I did it this way because I want to have a more seperate codes for the contents in the dock widget and have a more 
         # neat code layout. I realize QT doesn't allow nesting widgets inside widgets. And layouts and widgets are 2 seperate entities.
-        self.left_dock_menu_widget = MenuWidget(self)
-        self.left_dock_main_layout.addLayout(self.menu_layout)
-
         self.left_dock_status_widget = StatusWidget(self)
         self.left_dock_main_layout.addLayout(self.status_layout)
+        
+        self.left_dock_menu_widget = MenuWidget(self)
+        self.left_dock_main_layout.addLayout(self.menu_layout)
 
         self.left_dock_main_widget.setLayout(self.left_dock_main_layout)
         self.left_dock.setWidget(self.left_dock_main_widget)
@@ -96,6 +96,21 @@ class MainWindow(QMainWindow):
         # Now connect and initialize the Signals in the MenuWidget with the threads
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
         self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+
+    @Slot()
+    def clear_data(self):
+        self.scatter.removeSeries(self.NZIZscatter_series)
+        self.scatter.removeSeries(self.CIRCUMscatter_series)
+        self.scatter.removeSeries(self.EarToEarscatter_series)
+
+        # reset them. I Couldn't really figure out the method in the python function. Hope this will do for now
+        self.NZIZscatter_series = QScatter3DSeries()
+        self.CIRCUMscatter_series = QScatter3DSeries()
+        self.EarToEarscatter_series = QScatter3DSeries()
+
+        self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace 
+        self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
+        self.EarToEarscatter_series.setBaseColor(QColor(0, 0, 255)) # Blue for Ear to Ear trace
 
     # Create the Slots that will receive signals from the worker Thread
     @Slot(np.ndarray)
@@ -117,8 +132,11 @@ class MainWindow(QMainWindow):
         self.scatter.show()
 
     def add_list_to_scatterdata(self, scatter_series, data):
-        for d in data:
-            scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
+        if data.ndim == 1:
+            scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(data[0], data[1], data[2])))
+        else:
+            for d in data:
+                scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
