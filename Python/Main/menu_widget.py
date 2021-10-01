@@ -42,9 +42,6 @@ class MenuWidget(QWidget):
 <<<<<<< HEAD
         self.optitrack_signals = OptitrackSignals() # Used to set recording or not
 
-        # This is connected to the main thread
-        self.clear_signal = OptitrackSignals() # Used to set recording or not
-
         # This is connected to main thread
 =======
         
@@ -59,10 +56,14 @@ class MenuWidget(QWidget):
         self.EarToEaroptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterEarToEar)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
         self.optitrack_signals = OptitrackSignals() # Used to set recording or not
 
 >>>>>>> parent of 173f7c8 (Fix ripping out of zeroes)
+=======
+
+>>>>>>> parent of f7e43a0 (cockedup)
         # Create Button widgets
         self.NZIZbutton = QPushButton(self.NZIZbutton_text)
         self.NZIZbutton.clicked.connect(self.do_nziz) # start a thread when the button is clicked
@@ -77,7 +78,6 @@ class MenuWidget(QWidget):
         self.predict_button.clicked.connect(self.predict_eeg_positions) # can only start when there are 3 scatter data
         
         self.predict_button = QPushButton("Clear") # Clear EEG positions
-        self.predict_button.clicked.connect(parent.clear_data) # can only start when there are 3 scatter data
 
         self.layout.addWidget(self.NZIZbutton)
         self.layout.addWidget(self.Circumbutton)
@@ -95,11 +95,17 @@ class MenuWidget(QWidget):
     def connect_optitrack_signals (self, optitrack_thread):
         self._optitrack_thread = optitrack_thread
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.clear_signal.signal_bool.emit(True)
 =======
         self.optitrack_signals.signal_bool.connect(self._optitrack_thread.set_recording) 
         self.optitrack_signals.signal_bool.connect(self._optitrack_thread.clear_data)
 >>>>>>> parent of 173f7c8 (Fix ripping out of zeroes)
+=======
+        self.optitrack_signals.signal_bool.connect(self._optitrack_thread.set_recording) 
+        self.optitrack_signals.signal_bool.connect(self._optitrack_thread.clear_data)
+        self.optitrack_signals.signal_int.connect(self._optitrack_thread.set_trace_number) 
+>>>>>>> parent of f7e43a0 (cockedup)
 
     @Slot()
     def do_nziz(self):
@@ -113,7 +119,11 @@ class MenuWidget(QWidget):
     def do_ear_to_ear(self):
         self.change_button_state(self.EartoearButton, self.EartoEarbutton_text)
 <<<<<<< HEAD
+<<<<<<< HEAD
         self.optitrack_signals.signal_int.emit(3)        
+=======
+        self.optitrack_signals.signal_int.emit(3)
+>>>>>>> parent of f7e43a0 (cockedup)
 
 =======
     
@@ -121,7 +131,6 @@ class MenuWidget(QWidget):
 >>>>>>> parent of 173f7c8 (Fix ripping out of zeroes)
     def predict_eeg_positions(self):
         print("Tryna predict eeg positions")
-
 
     def change_button_state(self, button, button_label):
         if(button.isFlat()): # If the initial state of the button is flat and it is clicked, unflat them
