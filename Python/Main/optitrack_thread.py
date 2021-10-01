@@ -7,6 +7,7 @@ from matlab_signal import MatlabSignals
 from optitrack_signal import OptitrackSignals
 from PythonClient.NatNetClient import NatNetClient
 
+
 # Create the main Thread
 class OptitrackMainThread(QThread):
     def __init__(self, parent=None):
@@ -17,20 +18,13 @@ class OptitrackMainThread(QThread):
         self.status_optitrack_signals = OptitrackSignals()
         self.status_optitrack_signals.signal_list.connect(parent.left_dock_status_widget.change_label)
 
-        # self.NZIZ_optitrack_signals = OptitrackSignals()
-        # self.NZIZ_optitrack_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
-
-        # self.CIRCUM_optitrack_signals = OptitrackSignals()
-        # self.CIRCUM_optitrack_signals.signal_numpy.connect(parent.update_and_add_scatterCIRCUM)
-
-        # self.EarToEar_optitrack_signals = OptitrackSignals()
-        # self.EarToEar_optitrack_signals.signal_numpy.connect(parent.update_and_add_scatterEarToEar)
+        self.data_optitrack_signals = OptitrackSignals()
+        self.data_optitrack_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
 
         # Control variables 
         self.record = False
         self.stylus_record = None
         self.specs_record = None
-        self.trace_number = None  # 1 = NZIZ, 2 Circum, 3 Ear 2 Ear
 
         # Allocate numpy array for rigidbody data
         self.row = 2000 # max number of data sets
@@ -68,6 +62,8 @@ class OptitrackMainThread(QThread):
             
             if (id == 1004):
                 self.stylus_data[self.index_counter,:] = position
+                numpy_position = np.array(position)
+                self.data_optitrack_signals.signal_numpy.emit(numpy_position)
             elif (id == 1005):
                 self.specs_data[self.index_counter,:] = position
                 self.index_counter += 1 # Increment the index counter everytime the final rigidbody is sent
@@ -87,10 +83,6 @@ class OptitrackMainThread(QThread):
         self.record = message
         if (message == False):
             self.clear_data()
-
-    @Slot(int) # unused
-    def set_trace_number(self, message):
-        self.trace_number = message
 
     def clear_data(self):
         self.index_counter = 0
