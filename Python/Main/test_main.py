@@ -117,8 +117,11 @@ class MainWindow(QMainWindow):
         self.scatter.show()
 
     def add_list_to_scatterdata(self, scatter_series, data):
-        for d in data:
-            scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
+        if (data.ndim != 1):
+            for d in data:
+                scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
+        else:
+            scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(data[0], data[1], data[2])))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
