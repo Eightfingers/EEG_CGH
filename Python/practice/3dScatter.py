@@ -48,6 +48,9 @@ class MainWindow(QMainWindow):
         
         self.setCentralWidget(self.container)
 
+        if (self.scatter_series.dataProxy().itemCount() != 0 ):
+            print("The number of items is.. ", self.scatter_series.dataProxy().itemCount())
+
         # set starting position of camera
         camera = self.scatter.scene().activeCamera()
         camera.setYRotation(25)

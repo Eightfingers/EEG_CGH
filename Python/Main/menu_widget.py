@@ -24,13 +24,8 @@ class MenuWidget(QWidget):
         
         # https://stackoverflow.com/questions/1296501/find-path-to-currently-running-file
         self.save_directory = os.getcwd() + "\Main\RecordedData"
-        
 
         self.is_recording_flag = False # Used to indicate whether any of the button is recording or not. So far not yet used might be useful later?
-
-        self.NZIZbutton_state = False # False is not recording
-        self.Circumbutton_state = False
-        self.EartoEarutton_state = False
 
         self.NZIZbutton_text = "Start NZIZ"
         self.Circumbutton_text = "Start Circum"
@@ -65,20 +60,22 @@ class MenuWidget(QWidget):
         self.EartoearButton.clicked.connect(self.do_ear_to_ear) # start a thread when the button is clicked
 
         self.predict_button = QPushButton("Predict")
-        self.predict_button.clicked.connect(self.predict_eeg_positions) # can only start when there are 3 scatter data
+        self.predict_button.clicked.connect(self.predict_eeg_positions(parent)) # can only start when there are 3 scatter data
         
-        self.predict_button = QPushButton("Clear") # Clear EEG positions
-        self.predict_button.clicked.connect(parent.clear_data) # can only start when there are 3 scatter data
+        self.clear_button = QPushButton("Clear") # Clear EEG positions
+        self.clear_button.clicked.connect(parent.clear_data) 
 
         self.layout.addWidget(self.NZIZbutton)
         self.layout.addWidget(self.Circumbutton)
         self.layout.addWidget(self.EartoearButton)
         self.layout.addWidget(self.predict_button)
+        self.layout.addWidget(self.clear_button)
         self.layout.addStretch()
 
     # I am not sure if this is the best way or so but
     # These functions are called from the main.py and the thread and 
     # 
+
     def connect_matlab_signals(self, matlab_thread): 
         self._matlab_thread = matlab_thread
         self.matlab_signals.signal_int.connect(self._matlab_thread.spawn_thread)
@@ -101,8 +98,12 @@ class MenuWidget(QWidget):
         self.change_button_state(self.EartoearButton, self.EartoEarbutton_text)
     
     @Slot()
-    def predict_eeg_positions(self):
+    def predict_eeg_positions(self, parent):
         print("Tryna predict eeg positions")
+        if (parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and parent.EarToEarscatter_series.dataProxy().itemCount() == 0 ):
+            QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
+        else:
+            print("Predict stuff now")
 
 
     def change_button_state(self, button, button_label):
