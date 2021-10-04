@@ -10,7 +10,7 @@ print("Matlab says its ...")
 print(tf)
 
 print("Trying to call matlab script")
-triangle_size = eng.triarea(1,2)
+triangle_size = eng.test(1,2)
 print(triangle_size)
 
 print("Success")

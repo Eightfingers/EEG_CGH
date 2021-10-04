@@ -7,3 +7,4 @@ Python/Main/__pycache__/menu_widget.cpython-37.pyc
 Python/Main/RecordedData/data_NZIZspecs.csv
 *.csv
 *.csv
+*.pyc

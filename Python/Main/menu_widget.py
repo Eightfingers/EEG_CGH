@@ -12,6 +12,7 @@ import sys, os
 from matlab_thread import MatlabMainThread
 from matlab_signal import MatlabSignals
 from optitrack_signal import OptitrackSignals
+from pathlib import Path
 
 class MenuWidget(QWidget):
 
@@ -22,7 +23,8 @@ class MenuWidget(QWidget):
         self.layout = parent.menu_layout
         
         # https://stackoverflow.com/questions/1296501/find-path-to-currently-running-file
-        self.current_working_dir = os.getcwd() + "\Main\RecordedData"
+        self.save_directory = os.getcwd() + "\Main\RecordedData"
+        
 
         self.is_recording_flag = False # Used to indicate whether any of the button is recording or not. So far not yet used might be useful later?
 
@@ -118,15 +120,15 @@ class MenuWidget(QWidget):
             if (button_label == "Start NZIZ"):
                 self.NZIZstylus_data = self.stylus_data
                 self.NZIZspecs_data = self.specs
-                np.savetxt(self.current_working_dir + "\data_NZIZstylus.csv",self.NZIZstylus_data, delimiter=',')
-                np.savetxt(self.current_working_dir + "\data_NZIZspecs.csv",self.NZIZspecs_data, delimiter=',')
+                np.savetxt(self.save_directory + "\data_NZIZstylus.csv",self.NZIZstylus_data, delimiter=',')
+                np.savetxt(self.save_directory + "\data_NZIZspecs.csv",self.NZIZspecs_data, delimiter=',')
                 self.NZIZoptitrack_signals.signal_numpy.emit(self.NZIZspecs_data)
 
             elif (button_label == "Start Circum"):
                 self.CIRCUMstylus_data = self.stylus_data
                 self.CIRCUMspecs_data = self.specs
-                np.savetxt(self.current_working_dir + "\data_CIRCUMstylus.csv",self.CIRCUMstylus_data, delimiter=',')
-                np.savetxt(self.current_working_dir + "\data_CIRCUMspecs.csv",self.CIRCUMspecs_data, delimiter=',')
+                np.savetxt(self.save_directory + "\data_CIRCUMstylus.csv",self.CIRCUMstylus_data, delimiter=',')
+                np.savetxt(self.save_directory + "\data_CIRCUMspecs.csv",self.CIRCUMspecs_data, delimiter=',')
                 # emit to update to the main widget
                 self.CIRCUMoptitrack_signals.signal_numpy.emit(self.CIRCUMspecs_data)
 
@@ -134,8 +136,8 @@ class MenuWidget(QWidget):
             elif (button_label == "Start Ear to Ear"):
                 self.EarToEarstylus_data = self.stylus_data
                 self.EarToEarpecs_data = self.specs
-                np.savetxt(self.current_working_dir + "\data_EarToEarstylus.csv", self.EarToEarstylus_data, delimiter=',')
-                np.savetxt(self.current_working_dir + "\data_EarToEarspecs.csv", self.EarToEarpecs_data, delimiter=',')
+                np.savetxt(self.save_directory + "\data_EarToEarstylus.csv", self.EarToEarstylus_data, delimiter=',')
+                np.savetxt(self.save_directory + "\data_EarToEarspecs.csv", self.EarToEarpecs_data, delimiter=',')
                 self.EarToEaroptitrack_signals.signal_numpy.emit(self.EarToEarpecs_data)
 
             self.optitrack_signals.signal_bool.emit(False) # Stop recording

@@ -12,6 +12,8 @@ from menu_widget import MenuWidget
 from status_widget import StatusWidget
 from optitrack_thread import OptitrackMainThread
 
+from scipy.spatial.transform import Rotation as R
+
 class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
@@ -90,12 +92,12 @@ class MainWindow(QMainWindow):
         self.matlab_main_thread.start()
 
         # Start the Optitrack Thread
-        self.optitrack_main_thread = OptitrackMainThread(self)
-        self.optitrack_main_thread.start()
+        #self.optitrack_main_thread = OptitrackMainThread(self)
+        #self.optitrack_main_thread.start()
         
         # Now connect and initialize the Signals in the MenuWidget with the threads
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
-        self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+        #self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
 
     @Slot()
     def clear_data(self):
