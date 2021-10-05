@@ -3,7 +3,6 @@ import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QMessageBox
 import matlab.engine
-from matlab_signal import MatlabSignals
 from app_signals import AppSignals
 
 # Create the main Thread
