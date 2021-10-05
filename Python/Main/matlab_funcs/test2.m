@@ -57,25 +57,17 @@ hold on;
 % Quaternion way
 new_markers_circum2 = [];
 for i = 1:1:length(circum_wand)
+    
     disp(i);
     quat_vector = quaternion(quaternions(i,:));
     RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
-    
     rot_vector_circum = [RPY1(1), RPY1(3), RPY1(2)];
-
-    % quat_vector_inv = quatinv(quat_vector) % get the inverse
     dis_vector_circum = dis_matrix_circum(i,:);
-    
     wand_vector_circum = [circum_wand(i,4); ... % X,Y,Z 
               circum_wand(i,6); ...
               circum_wand(i,5); ...
                1];
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_circum);    
-
-%     quat_vector_circum = quatrotate(quat_vector_inv,wand_vector_circum.');
-%     new_vector = quat_vector_circum - dis_vector_circum;
-%     new_markers_circum2 = [new_markers_circum2; new_vector;];
-
     new_vector_circum = inv(transform_matrix_circum) * wand_vector_circum;
     new_markers_circum2 = [new_markers_circum; new_vector_circum.';];
 

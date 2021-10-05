@@ -1,15 +1,12 @@
-function [predicted] = EEGpoints(circumference,ear2ear,nziz)
+function [predicted] = EEGpoints(circumference, circumference_spec, ear2ear, ear2ear_spec, nziz ,nziz_spec)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% Load the different wanded data
 %%% Circumference
-circum_wand = circumference(:,3:8); 
-circum_wand = rmmissing(circum_wand);
-circum_specs= circumference(:,34:39); 
-circum_specs = rmmissing(circum_specs);
-circum_specs = circum_specs(:, :); 
+circum_wand = circumference; 
 
-circum_specs = circum_specs(:, :);
+circum_specs= circumference_spec;
+
 rot_matrix_circum = circum_specs(:,1:3); % extract the rotation vector out
 dis_matrix_circum = circum_specs(:,4:6); % extract the displacement vector out
 dis_matrix_circum = [dis_matrix_circum(:,1), dis_matrix_circum(:,3), dis_matrix_circum(:,2)];
@@ -18,7 +15,7 @@ y_rot_circum = rot_matrix_circum(:,3);
 z_rot_circum = rot_matrix_circum(:,2);
 
 new_markers_circum = [];
-rot_matrix2_circum = rotx(-x_rot_circum(1)) * roty(-y_rot_circum(1)) * rotz(-z_rot_circum(1));
+
 for i = 1:1:length(circum_wand)
     disp(i);
     rot_vector_circum = [-x_rot_circum(i), -y_rot_circum(i), -z_rot_circum(i)];
@@ -38,16 +35,12 @@ end
 
 %%% Ear to Ear
 
-e2e_wand = ear2ear(:,3:8); 
-e2e_wand = rmmissing(e2e_wand);
-e2e_specs= ear2ear(:,34:39); 
-e2e_specs = rmmissing(e2e_specs);
-e2e_specs = e2e_specs(:, :); 
-
-e2e_specs = e2e_specs(:, :);
+e2e_wand = ear2ear;
+e2e_specs= ear2ear_spec;
 rot_matrix_e2e = e2e_specs(:,1:3); % extract the rotation vector out
 dis_matrix_e2e = e2e_specs(:,4:6); % extract the displacement vector out
 dis_matrix_e2e = [dis_matrix_e2e(:,1), dis_matrix_e2e(:,3), dis_matrix_e2e(:,2)];
+
 x_rot_e2e = rot_matrix_e2e(:,1);
 y_rot_e2e = rot_matrix_e2e(:,3);
 z_rot_e2e = rot_matrix_e2e(:,2);
@@ -71,13 +64,9 @@ for i = 1:1:length(e2e_wand)
 end
 
 %%% NZIZ
-nziz_wand = nziz(:,3:8); 
-nziz_wand = rmmissing(nziz_wand);
-nziz_specs = nziz(:,34:39); 
-nziz_specs = rmmissing(nziz_specs);
-nziz_specs = nziz_specs(:, :); 
+nziz_wand = nziz;
+nziz_specs = nziz_spec; 
 
-nziz_specs = nziz_specs(:, :);
 rot_matrix_nziz = nziz_specs(:,1:3); % extract the rotation vector out
 dis_matrix_nziz = nziz_specs(:,4:6); % extract the displacement vector out
 dis_matrix_nziz = [dis_matrix_nziz(:,1), dis_matrix_nziz(:,3), dis_matrix_nziz(:,2)];
@@ -86,6 +75,7 @@ y_rot_nziz = rot_matrix_nziz(:,3);
 z_rot_nziz = rot_matrix_nziz(:,2);
 new_markers_nziz = [];
 rot_matrix2_nziz = rotx(-x_rot_nziz(1)) * roty(-y_rot_nziz(1)) * rotz(-z_rot_nziz(1));
+
 for i = 1:1:length(nziz_wand)
     disp(i);
     rot_vector_nziz = [-x_rot_nziz(i), -y_rot_nziz(i), -z_rot_nziz(i)];
@@ -384,23 +374,23 @@ final_points = final_points.';
 %     text(final_points(i,1), final_points(i,2), final_points(i,3),string(i));
 % end
 %%% Labelling of points - Predicted
-Fpz = final_points(1,:);
-Fp2 = final_points(12,:);
-F8 = final_points(11,:);
-T4 = final_points(10,:);
-T6 = final_points(9,:);
-O2 = final_points(8,:);
-Oz = final_points(7,:);
-O1 = final_points(6,:);
-T5 = final_points(5,:);
-T3 = final_points(4,:);
-F7 = final_points(3,:);
-Fp1 = final_points(2,:);
-Fz = final_points(16,:);
-Cz = final_points(14,:);
-Pz = final_points(17,:);
-C4 = final_points(15,:);
-C3 = final_points(13,:);
+% Fpz = final_points(1,:);
+% Fp2 = final_points(12,:);
+% F8 = final_points(11,:);
+% T4 = final_points(10,:);
+% T6 = final_points(9,:);
+% O2 = final_points(8,:);
+% Oz = final_points(7,:);
+% O1 = final_points(6,:);
+% T5 = final_points(5,:);
+% T3 = final_points(4,:);
+% F7 = final_points(3,:);
+% Fp1 = final_points(2,:);
+% Fz = final_points(16,:);
+% Cz = final_points(14,:);
+% Pz = final_points(17,:);
+% C4 = final_points(15,:);
+% C3 = final_points(13,:);
 % [ x, y, z ; x, y, z;]
 %%% P3 spline approximation
 %%% Find X
@@ -551,11 +541,11 @@ four_points = [F4; F3; P3; P4];
 % plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
 % hold on;
 % plot(F3_YZ(1), F3_YZ(2), 'o');
-figure;
-title('Predicted Electrode Locations');
-plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
-xlabel('x');
-ylabel('y');
-zlabel('z');
+% figure;
+% title('Predicted Electrode Locations');
+% plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
+% xlabel('x');
+% ylabel('y');
+% zlabel('z');
 end
 
