@@ -4,6 +4,7 @@ from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QMessageBox
 import matlab.engine
 from matlab_signal import MatlabSignals
+from app_signals import AppSignals
 
 # Create the main Thread
 class MatlabMainThread(QThread):
@@ -11,7 +12,7 @@ class MatlabMainThread(QThread):
         QThread.__init__(self, parent)
 
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
-        self.signals = MatlabSignals()
+        self.signals = AppSignals()
         self.status_widget = parent.left_dock_status_widget
         self.menu_widget = parent.left_dock_menu_widget
 

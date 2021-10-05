@@ -3,10 +3,8 @@ import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
 import matlab.engine
-from matlab_signal import MatlabSignals
-from optitrack_signal import OptitrackSignals
 from PythonClient.NatNetClient import NatNetClient
-
+from app_signals import AppSignals
 
 # Create the main Thread
 class OptitrackMainThread(QThread):
@@ -15,7 +13,7 @@ class OptitrackMainThread(QThread):
 
         self.streamingClient = NatNetClient()
 
-        self.status_optitrack_signals = OptitrackSignals()
+        self.status_optitrack_signals = AppSignals()
         self.status_optitrack_signals.signal_list.connect(parent.left_dock_status_widget.change_label)
 
         # Control variables 

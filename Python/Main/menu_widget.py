@@ -10,9 +10,8 @@ from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBar
 import numpy as np
 import sys, os
 from matlab_thread import MatlabMainThread
-from matlab_signal import MatlabSignals
-from optitrack_signal import OptitrackSignals
 from pathlib import Path
+from app_signals import AppSignals
 
 class MenuWidget(QWidget):
 
@@ -33,20 +32,20 @@ class MenuWidget(QWidget):
 
         # I dont think this is being used yet for now.. 
         self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
-        self.matlab_signals = MatlabSignals()
+        self.matlab_signals = AppSignals()
 
         self._optitrack_thread = None 
         
-        self.NZIZoptitrack_signals = OptitrackSignals()
+        self.NZIZoptitrack_signals = AppSignals()
         self.NZIZoptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
 
-        self.CIRCUMoptitrack_signals = OptitrackSignals()
+        self.CIRCUMoptitrack_signals = AppSignals()
         self.CIRCUMoptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterCIRCUM)
 
-        self.EarToEaroptitrack_signals = OptitrackSignals()
+        self.EarToEaroptitrack_signals = AppSignals()
         self.EarToEaroptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterEarToEar)
 
-        self.optitrack_signals = OptitrackSignals() 
+        self.optitrack_signals = AppSignals() 
         self.optitrack_signals.signal_list.connect(parent.left_dock_status_widget.change_label)
 
         # Create Button widgets

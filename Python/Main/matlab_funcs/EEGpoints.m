@@ -1,16 +1,15 @@
-%%% This code would be the final code that is used to determine the 17 EEG
-%%% locations. 
-%% Add to path different folders containing data and code
-
-function eeg_positions = predict_eeg_positions(nziz_stylus, nziz_specs, circum_stylus, circum_specs, e2e_stylus, e2e_specs)
-
-%% Load the different wanded data
+function [predicted] = EEGpoints(circumference,ear2ear,nziz)
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
 %% Load the different wanded data
 %%% Circumference
-circum_stylus = rmmissing(circum_stylus);
+circum_wand = circumference(:,3:8); 
+circum_wand = rmmissing(circum_wand);
+circum_specs= circumference(:,34:39); 
 circum_specs = rmmissing(circum_specs);
+circum_specs = circum_specs(:, :); 
 
-
+circum_specs = circum_specs(:, :);
 rot_matrix_circum = circum_specs(:,1:3); % extract the rotation vector out
 dis_matrix_circum = circum_specs(:,4:6); % extract the displacement vector out
 dis_matrix_circum = [dis_matrix_circum(:,1), dis_matrix_circum(:,3), dis_matrix_circum(:,2)];
@@ -20,8 +19,7 @@ z_rot_circum = rot_matrix_circum(:,2);
 
 new_markers_circum = [];
 rot_matrix2_circum = rotx(-x_rot_circum(1)) * roty(-y_rot_circum(1)) * rotz(-z_rot_circum(1));
-
-for i = 1:1:length(circum_stylus)
+for i = 1:1:length(circum_wand)
     disp(i);
     rot_vector_circum = [-x_rot_circum(i), -y_rot_circum(i), -z_rot_circum(i)];
 %     rot_vector = [-z_rot(i), -y_rot(i), -x_rot(i)];
@@ -29,9 +27,9 @@ for i = 1:1:length(circum_stylus)
     dis_vector_circum = dis_matrix_circum(i,:);
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_circum);    
     
-    wand_vector_circum = [circum_stylus(i,4); ... % X,Y,Z 
-              circum_stylus(i,6); ...
-              circum_stylus(i,5); ...
+    wand_vector_circum = [circum_wand(i,4); ... % X,Y,Z 
+              circum_wand(i,6); ...
+              circum_wand(i,5); ...
                1];
 
     new_vector_circum = inv(transform_matrix_circum) * wand_vector_circum;
@@ -39,10 +37,14 @@ for i = 1:1:length(circum_stylus)
 end
 
 %%% Ear to Ear
-e2e_stylus = rmmissing(e2e_stylus);
 
+e2e_wand = ear2ear(:,3:8); 
+e2e_wand = rmmissing(e2e_wand);
+e2e_specs= ear2ear(:,34:39); 
 e2e_specs = rmmissing(e2e_specs);
+e2e_specs = e2e_specs(:, :); 
 
+e2e_specs = e2e_specs(:, :);
 rot_matrix_e2e = e2e_specs(:,1:3); % extract the rotation vector out
 dis_matrix_e2e = e2e_specs(:,4:6); % extract the displacement vector out
 dis_matrix_e2e = [dis_matrix_e2e(:,1), dis_matrix_e2e(:,3), dis_matrix_e2e(:,2)];
@@ -51,7 +53,7 @@ y_rot_e2e = rot_matrix_e2e(:,3);
 z_rot_e2e = rot_matrix_e2e(:,2);
 new_markers_e2e = [];
 rot_matrix2_e2e = rotx(-x_rot_e2e(1)) * roty(-y_rot_e2e(1)) * rotz(-z_rot_e2e(1));
-for i = 1:1:length(e2e_stylus)
+for i = 1:1:length(e2e_wand)
     disp(i);
     rot_vector_e2e = [-x_rot_e2e(i), -y_rot_e2e(i), -z_rot_e2e(i)];
 %     rot_vector = [-z_rot(i), -y_rot(i), -x_rot(i)];
@@ -59,9 +61,9 @@ for i = 1:1:length(e2e_stylus)
     dis_vector_e2e = dis_matrix_e2e(i,:);
     transform_matrix_e2e = construct_matrix_transform_xyz(dis_vector_e2e, rot_vector_e2e);    
     
-    wand_vector_e2e = [e2e_stylus(i,4); ... % X,Y,Z 
-              e2e_stylus(i,6); ...
-              e2e_stylus(i,5); ...
+    wand_vector_e2e = [e2e_wand(i,4); ... % X,Y,Z 
+              e2e_wand(i,6); ...
+              e2e_wand(i,5); ...
                1];
 
     new_vector_e2e = inv(transform_matrix_e2e) * wand_vector_e2e;
@@ -69,9 +71,13 @@ for i = 1:1:length(e2e_stylus)
 end
 
 %%% NZIZ
-nziz_stylus = rmmissing(nziz_stylus);
+nziz_wand = nziz(:,3:8); 
+nziz_wand = rmmissing(nziz_wand);
+nziz_specs = nziz(:,34:39); 
 nziz_specs = rmmissing(nziz_specs);
+nziz_specs = nziz_specs(:, :); 
 
+nziz_specs = nziz_specs(:, :);
 rot_matrix_nziz = nziz_specs(:,1:3); % extract the rotation vector out
 dis_matrix_nziz = nziz_specs(:,4:6); % extract the displacement vector out
 dis_matrix_nziz = [dis_matrix_nziz(:,1), dis_matrix_nziz(:,3), dis_matrix_nziz(:,2)];
@@ -80,8 +86,7 @@ y_rot_nziz = rot_matrix_nziz(:,3);
 z_rot_nziz = rot_matrix_nziz(:,2);
 new_markers_nziz = [];
 rot_matrix2_nziz = rotx(-x_rot_nziz(1)) * roty(-y_rot_nziz(1)) * rotz(-z_rot_nziz(1));
-
-for i = 1:1:length(nziz_stylus)
+for i = 1:1:length(nziz_wand)
     disp(i);
     rot_vector_nziz = [-x_rot_nziz(i), -y_rot_nziz(i), -z_rot_nziz(i)];
 %     rot_vector = [-z_rot(i), -y_rot(i), -x_rot(i)];
@@ -89,36 +94,33 @@ for i = 1:1:length(nziz_stylus)
     dis_vector_nziz = dis_matrix_nziz(i,:);
     transform_matrix_nziz = construct_matrix_transform_xyz(dis_vector_nziz, rot_vector_nziz);    
     
-    wand_vector_nziz = [nziz_stylus(i,4); ... % X,Y,Z 
-              nziz_stylus(i,6); ...
-              nziz_stylus(i,5); ...
+    wand_vector_nziz = [nziz_wand(i,4); ... % X,Y,Z 
+              nziz_wand(i,6); ...
+              nziz_wand(i,5); ...
                1];
 
     new_vector_nziz = inv(transform_matrix_nziz) * wand_vector_nziz;
     new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
 end
-
+%%
 %%% Circumferene
 circumference_dataset= new_markers_circum;
 circumference_dataset = rmmissing(circumference_dataset);
 circumference_x = circumference_dataset(:,1);
 circumference_y = circumference_dataset(:,2);
 circumference_z = circumference_dataset(:,3);
-
 %%% Ear to Ear
 e2e_dataset= new_markers_e2e;
 e2e_dataset = rmmissing(e2e_dataset);
 e2e_x = e2e_dataset(:,1);
 e2e_y = e2e_dataset(:,2);
 e2e_z = e2e_dataset(:,3);
-
 %%% NZ-IZ
 nziz_dataset =  new_markers_nziz;
 nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
-
 %% Perform Geometerical Fitting and Extract the datatips from the plots.
 
 %%% Circumferene - The circumference is considered as and ellipse in 2D
@@ -157,7 +159,6 @@ spline_e2e = splinetest_e2e(e2e_x,e2e_z);
 points = fnplt(spline_e2e);
 xdata_e2e = points(1,:);
 zdata_e2e = points(2,:);
-
 %% The least square fit of the plot has excess length that exceed the starting 
 %% and ending position of the e2e dataset. Uncomment the code below to see it.
 % fnplt(spline_e2e);
@@ -225,23 +226,6 @@ zdata_nziz_front = points(2,:);
 %% Combine them back togather
 ydata_nziz = [ydata_nziz_back ydata_nziz_front];
 zdata_nziz = [zdata_nziz_back zdata_nziz_front];
-
-figure;
-hold on
-scatter(ydata_nziz,zdata_nziz,'r*');
-hold on
-plot(ydata_nziz(1:1),zdata_nziz(1:1),'rs','MarkerSize',20);
-hold on
-plot(ydata_nziz(end),zdata_nziz(end),'ms','MarkerSize',20);
-% hold on 
-% plot(ydata_nziz(end-100),zdata_nziz(end-100),'ms','MarkerSize',20);
-
-% % hold on
-% scatter(nziz_y,nziz_z,'gd');
-% hold on;
-% plot(nziz_y(1:1),nziz_z(1:1),'rs','MarkerSize',20);
-% plot(nziz_y(end),nziz_z(end),'bs','MarkerSize',20);
-
 %% Predict EEG positions
 %%% The EEG positions are determined using the conventional standard 10/20
 %%% system. Here we are using the Distance Method/ Path Independant Method.
@@ -285,10 +269,9 @@ plot(ydata_nziz(end),zdata_nziz(end),'ms','MarkerSize',20);
 %%% Circuference
 circum = [pt_circum.' pt1_circum.' pt2_circum.' pt3_circum.' pt4_circum.' pt5_circum.' pt6_circum.' pt7_circum.' pt8_circum.' pt9_circum.' pt10_circum.' pt11_circum.'];
 %%% Ear to Ear
-e2e = [pt14_e2e.' pt15_e2e.' pt16_e2e.' pt17_e2e.' pt18_e2e.'];
+ear2ear = [pt14_e2e.' pt15_e2e.' pt16_e2e.' pt17_e2e.' pt18_e2e.'];
 %%% NZIZ
 nziz = [pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
-
 %% Find Shortest Euclidean Distance.
 %%% The nearest point on the wanded data is found based on the predicted
 %%% points. This is done such that we care able to determine the left out
@@ -302,7 +285,7 @@ closest_array_circum = find_closest_from_predicted_to_wanded(circum, A1);
 
 %%% Ear to Ear
 A2 = [e2e_x e2e_z];
-closest_array_e2e = find_closest_from_predicted_to_wanded(e2e, A2);
+closest_array_e2e = find_closest_from_predicted_to_wanded(ear2ear, A2);
 
 %%%NZ-IZ
 A3 = [nziz_y nziz_z];
@@ -338,7 +321,7 @@ convert_final_circumference = num2cell(final_circumference);
 circumference_label = {'Fpz' 'Fp2' 'F8' 'T4' 'T6' 'O2' 'Oz' 'O1' 'T5' 'T3' 'F7' 'Fp1'};
 final_circumference_label = [circumference_label;  convert_final_circumference];
 %%% Ear to Ear
-final_e2e = [e2e(1:1,:);trans_intrapolate_closest_e2e;e2e(2:2,:)];
+final_e2e = [ear2ear(1:1,:);trans_intrapolate_closest_e2e;ear2ear(2:2,:)];
 % scatter3(final_e2e(1:1,:),final_e2e(2:2,:),final_e2e(3:3,:)); 
 convert_final_e2e = num2cell(final_e2e);
 e2e_label = {'T4' 'C4' 'Cz' 'C3' 'T3'};
@@ -346,23 +329,10 @@ final_e2e_label = [e2e_label;  convert_final_e2e];
 
 %%% NZIZ 
 final_nziz = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
-% scatter3(final_nziz(1,:),final_nziz(2,:),final_nziz(3,:), 'ro'); 
-% hold on
-% plot3(final_nziz(1,1),final_nziz(2,1),final_nziz(3,1), 'rs','MarkerSize', 20); 
-% plot3(final_nziz(1,2),final_nziz(2,2),final_nziz(3,2), 'bs','MarkerSize', 20); 
-% plot3(final_nziz(1,3),final_nziz(2,3),final_nziz(3,3), 'gs','MarkerSize', 20); 
-% plot3(final_nziz(1,4),final_nziz(2,4),final_nziz(3,4), 'ms','MarkerSize', 20); 
-% plot3(final_nziz(1,5),final_nziz(2,5),final_nziz(3,5), 'ks','MarkerSize', 20); 
 convert_final_nziz = num2cell(final_nziz);
 nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
 final_nziz_label = [nziz_label;  convert_final_nziz];
-
-% figure;
-% scatter3(final_circumference(1:1,:),final_circumference(2:2,:),final_circumference(3:3,:)); 
-% hold on
-% scatter3(final_e2e(1:1,:),final_e2e(2:2,:),final_e2e(3:3,:)); 
-% hold on
-% scatter3(final_nziz(1:1,:),final_nziz(2:2,:),final_nziz(3:3,:)); 
+ 
 
 %% Append all together. 
 %%% Create a new variable and append final_circumference, final_e2e and
@@ -392,25 +362,27 @@ midpoint_T4 = mean(common_T4,2);
 
 %%% 17 electrode positions
 final_points = [midpoint_Fpz final_points_mat(:,2) final_points_mat(:,3) midpoint_T4 final_points_mat(:,5) final_points_mat(:,6) midpoint_Oz final_points_mat(:,8) final_points_mat(:,9) midpoint_T3 final_points_mat(:,11) final_points_mat(:,12) final_points_mat(:,14) midpoint_Cz final_points_mat(:,16) final_points_mat(:,19) final_points_mat(:,21)];
-%% fvrv
-ff=figure;
-ff.Position = [10 10 550 400]; 
-xlabel('X')
-ylabel('Y')
-zlabel('Z')
-scatter3(final_points(1:1,:),final_points(2:2,:),final_points(3:3,:),'r*');
-hold on
-scatter3(new_markers_static(:,1), new_markers_static(:,2),new_markers_static(:,3));
+%% Plotting
+% ff=figure;
+% ff.Position = [10 10 550 400]; 
+% xlabel('X')
+% ylabel('Y')
+% zlabel('Z')
+% scatter3(final_points(1:1,:),final_points(2:2,:),final_points(3:3,:),'r*');
 % hold on
-% scatter3(final_points_converted_x, final_points_converted_y, final_points_converted_z);
-legend('Final points','Initial 22 electrodes');
-return;
-
+% scatter3(new_markers_static(:,1), new_markers_static(:,2),new_markers_static(:,3));
+% % hold on
+% % scatter3(final_points_converted_x, final_points_converted_y, final_points_converted_z);
+% legend('Final points','Initial 22 electrodes');
 % hold on
 % scatter3(D1_x,D1_y,D1_z,'p');
 %% Final 4 Points 
 
-
+% MATLAB XYZ convention
+final_points = final_points.';
+% for i = 1:1:length(final_points)
+%     text(final_points(i,1), final_points(i,2), final_points(i,3),string(i));
+% end
 %%% Labelling of points - Predicted
 Fpz = final_points(1,:);
 Fp2 = final_points(12,:);
@@ -436,7 +408,10 @@ C3 = final_points(13,:);
 spline_pts = [T5; Pz; T6];
 x_vector = spline_pts(:,1);
 z_vector = spline_pts(:,3);
-[xxdata, zzdata] = splineplot(x_vector, z_vector);
+spline_plot = splineplot(x_vector, z_vector);
+points = fnplt(spline_plot);
+xxdata = points(1,:);
+zzdata = points(2,:);
 [P3_XZ,~,~] = interparc(0.25, xxdata, zzdata,'spline');
 % Visual XZ spline plot
 % figure;
@@ -450,7 +425,10 @@ z_vector = spline_pts(:,3);
 spline_pts2 = [O1; C3; Fp1];
 y_spline = spline_pts2(:,2);
 z_spline = spline_pts2(:,3);
-[xx_fit2, yy_fit2] = splineplot(y_spline, z_spline);
+spline_plot = splineplot(y_spline, z_spline);
+points = fnplt(spline_plot);
+xx_fit2 = points(1,:);
+yy_fit2 = points(2,:);
 [P3_YZ,~,~] = interparc(0.25, xx_fit2, yy_fit2,'spline');
 P3 = [P3_XZ(1) , P3_YZ(1), P3_YZ(2)];
 % plot3(P3(1), P3(2), P3(3), 'ko');
@@ -467,9 +445,11 @@ P3 = [P3_XZ(1) , P3_YZ(1), P3_YZ(2)];
 spline_pts = [T5; Pz; T6];
 x_vector = spline_pts(:,1);
 z_vector = spline_pts(:,3);
-[xxdata, zzdata] = splineplot(x_vector, z_vector);
+spline_plot = splineplot(x_vector, z_vector);
+points = fnplt(spline_plot);
+xxdata = points(1,:);
+zzdata = points(2,:);
 [P4_XZ,~,~] = interparc(0.75, xxdata, zzdata,'spline');
-
 % % Visual XZ spline plot
 % figure;
 % plot(P4_XZ(1), P4_XZ(2) ,'d');
@@ -481,7 +461,10 @@ z_vector = spline_pts(:,3);
 spline_pts3 = [O2; C4; Fp2];
 y_spline = spline_pts3(:,2);
 z_spline = spline_pts3(:,3);
-[yy_fit3, zz_fit3] = splineplot(y_spline, z_spline);
+spline_plot = splineplot(y_spline, z_spline);
+points = fnplt(spline_plot);
+yy_fit3 = points(1,:);
+zz_fit3 = points(2,:);
 [P4_YZ,~,~] = interparc(0.25, yy_fit3, zz_fit3,'spline');
 P4 = [P4_XZ(1) , P4_YZ(1), P4_YZ(2)];
 % plot3(P4(1), P4(2), P4(3), 'ko');
@@ -498,7 +481,10 @@ P4 = [P4_XZ(1) , P4_YZ(1), P4_YZ(2)];
 spline_pts4 = [F7; Fz; F8];
 x_spline = spline_pts4(:,1);
 z_spline = spline_pts4(:,3);
-[xxdata4, zzdata4] = splineplot(x_spline, z_spline);
+spline_plot = splineplot(x_spline, z_spline);
+points = fnplt(spline_plot);
+xxdata4 = points(1,:);
+zzdata4 = points(2,:);
 [F4_XZ,~,~] = interparc(0.80, xxdata4,zzdata4,'spline'); % F4 is located from the right 
 
 % % Visual XZ spline plot
@@ -512,7 +498,10 @@ z_spline = spline_pts4(:,3);
 % P4 however we find at the 75% position
 y_spline = spline_pts3(:,2);
 z_spline = spline_pts3(:,3);
-[yy_fit3, zz_fit3] = splineplot(y_spline, z_spline);
+spline_plot = splineplot(y_spline, z_spline);
+points = fnplt(spline_plot);
+yy_fit3 = points(1,:);
+zz_fit3 = points(2,:);
 [F4_YZ,~,~] = interparc(0.80, yy_fit3, zz_fit3,'spline');
 F4 = [F4_XZ(1) , F4_YZ(1), F4_YZ(2)];
 % plot3(F4(1), F4(2), F4(3), 'ko');
@@ -530,7 +519,10 @@ F4 = [F4_XZ(1) , F4_YZ(1), F4_YZ(2)];
 spline_pts4 = [F7; Fz; F8];
 x_spline = spline_pts4(:,1);
 z_spline = spline_pts4(:,3);
-[xxdata4, zzdata4] = splineplot(x_spline, z_spline);
+spline_plot = splineplot(x_spline, z_spline);
+points = fnplt(spline_plot);
+xxdata4 = points(1,:);
+zzdata4 = points(2,:);
 [F3_XZ,~,~] = interparc(0.20, xxdata4,zzdata4,'spline'); % F3 is located from the right 
 
 % % Visual XZ spline plot
@@ -544,12 +536,26 @@ z_spline = spline_pts4(:,3);
 spline_pts2 = [O1; C3; Fp1];
 y_spline = spline_pts2(:,2);
 z_spline = spline_pts2(:,3);
-[yy_fit2, zz_fit2] = splineplot(y_spline, z_spline);
+spline_plot = splineplot(y_spline, z_spline);
+points = fnplt(spline_plot);
+yy_fit2 = points(1,:);
+zz_fit2 = points(2,:);
 [F3_YZ,~,~] = interparc(0.80, yy_fit2, zz_fit2,'spline');
 F3 = [F3_XZ(1) , F3_YZ(1), F3_YZ(2)];
 % plot3(F3(1), F3(2), F3(3), 'ko');
 % hold on;
 
-eeg_positions = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; C3; F4; F3; P3; P4 ];
+predicted = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; C3; F4; F3; P3; P4 ];
+four_points = [F4; F3; P3; P4];
 
+% plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
+% hold on;
+% plot(F3_YZ(1), F3_YZ(2), 'o');
+figure;
+title('Predicted Electrode Locations');
+plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
+xlabel('x');
+ylabel('y');
+zlabel('z');
 end
+
