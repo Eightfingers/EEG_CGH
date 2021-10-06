@@ -1,32 +1,36 @@
 function final_nziz_label = get_nziz( nziz ,nziz_spec)
+addpath('Main/RecordedData')
+addpath('C:\Users\65859\Desktop\eeg_cgh_main\Python\Main')
+addpath('helperfuncs');
+addpath('myfuncs');
 
 %%% NZIZ
-nziz_wand = nziz;
-nziz_specs = nziz_spec; 
+nziz_wand = readmatrix('data_NZIZstylus');
 
-rot_matrix_nziz = nziz_specs(:,1:3); % extract the rotation vector out
-dis_matrix_nziz = nziz_specs(:,4:6); % extract the displacement vector out
+quaternions = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
+dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+
+% disp(rot_matrix_nziz);
+% disp(nziz_wand);
+% disp(dis_matrix_nziz);
+
 dis_matrix_nziz = [dis_matrix_nziz(:,1), dis_matrix_nziz(:,3), dis_matrix_nziz(:,2)];
-x_rot_nziz = rot_matrix_nziz(:,1);
-y_rot_nziz = rot_matrix_nziz(:,3);
-z_rot_nziz = rot_matrix_nziz(:,2);
+quaternions = [quaternions(:,4), quaternions(:,1), quaternions(:,2), quaternions(:,3)];
+
 new_markers_nziz = [];
-rot_matrix2_nziz = rotx(-x_rot_nziz(1)) * roty(-y_rot_nziz(1)) * rotz(-z_rot_nziz(1));
-
+% Quaternion way
+new_markers_nziz = [];
 for i = 1:1:length(nziz_wand)
-    disp(i);
-    rot_vector_nziz = [-x_rot_nziz(i), -y_rot_nziz(i), -z_rot_nziz(i)];
-%     rot_vector = [-z_rot(i), -y_rot(i), -x_rot(i)];
-
+    quat_vector = quaternion(quaternions(i,:));
+    RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
+    rot_vector_circum = [RPY1(1), RPY1(3), RPY1(2)];
     dis_vector_nziz = dis_matrix_nziz(i,:);
-    transform_matrix_nziz = construct_matrix_transform_xyz(dis_vector_nziz, rot_vector_nziz);    
-    
-    wand_vector_nziz = [nziz_wand(i,4); ... % X,Y,Z 
-              nziz_wand(i,6); ...
-              nziz_wand(i,5); ...
+    wand_vector_nziz = [nziz_wand(i,1); ... % X,Y,Z 
+              nziz_wand(i,2); ...
+              nziz_wand(i,3); ...
                1];
-
-    new_vector_nziz = inv(transform_matrix_nziz) * wand_vector_nziz;
+    transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_nziz, rot_vector_circum);    
+    new_vector_nziz = inv(transform_matrix_circum) * wand_vector_nziz;
     new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
 end
 
@@ -117,8 +121,12 @@ trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 final_nziz = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
 predicted_nziz = num2cell(final_nziz);
 nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
-final_nziz_label = [nziz_label;  convert_final_nziz];
- 
+final_nziz_label = [nziz_label;  predicted_nziz];
+writecell(final_nziz_label,'NZIZ_POSITIONS__SADKASNDJJASNCJKX.csv') 
+disp("ANSWER ISSSSS ");
+disp(final_nziz_label);
+final_nziz_label = [1,2,3];
+
 
 end
 

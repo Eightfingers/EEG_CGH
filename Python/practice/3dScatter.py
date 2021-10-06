@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         self.scatter.setAxisZ(self.z_axis)
 
         # create 10000 random spatial positions 
-        self.coordinates = np.random.randint(0, 100, size=(10000, 3)) 
+        self.coordinates = np.random.randint(0, 100, size=(100, 3)) 
         self.add_list_to_scatterdata(self.scatter_series, self.coordinates)
         self.scatter.addSeries(self.scatter_series)
         self.container = QWidget.createWindowContainer(self.scatter)
@@ -51,11 +51,18 @@ class MainWindow(QMainWindow):
         if (self.scatter_series.dataProxy().itemCount() != 0 ):
             print("The number of items is.. ", self.scatter_series.dataProxy().itemCount())
 
+        if (self.scatter_series.dataProxy().itemCount() != 0 ):
+            # kekw = self.scatter_series.dataProxy().array() this will crash the app
+            # print(kekw)
+            pass
+
         # set starting position of camera
         camera = self.scatter.scene().activeCamera()
         camera.setYRotation(25)
 
         self.scatter.show()
+        self.NZIZ_specs_rotation = np.array([0,0,0,0])
+        np.savetxt("fuck.csv",self.NZIZ_specs_rotation, delimiter=',')
 
     def add_list_to_scatterdata(self, scatter_series, data):
         for d in data:

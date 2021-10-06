@@ -5,6 +5,9 @@ from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, Q
 import matlab.engine
 from app_signals import AppSignals
 
+
+# https://www.geeksforgeeks.org/python-call-parent-class-method/
+
 # Create the main Thread
 class MatlabMainThread(QThread):
     def __init__(self, parent=None):
@@ -39,22 +42,34 @@ class MatlabMainThread(QThread):
             self.signals.signal_list.emit(["Matlab","Error"]) # emit a list signal
             print(e)
 
-    @Slot(int)
+    @Slot(list)
     def spawn_thread(self, message):
-        self.worker_thread = MatlabWorkerThread(self)
+        stylus_data = message[0]
+        specs_data = message[1]
+
+        self.worker_thread = MatlabWorkerThread(stylus_data, specs_data, self)
         self.worker_thread.start()
         # print("Spawn matlab thread called!!!")
         # print(message)
         
 # Create a worker thread that is responsible for executing of scripts inside the matlab engine
 class MatlabWorkerThread(QThread):
-    def __init__(self, parent=None):
+    def __init__(self, specs_data, stylus_data, parent=None):
         QThread.__init__(self, parent)
         self.matlab_engine = parent.eng
+        self._stylus_data = stylus_data 
+        self._specs_data = specs_data
+        # print("specs_Data iss")
+        # print(self._specs_data)
         # print("Tryna do some stuff")
         kekw = self.matlab_engine.test(3,2)
         # parent.signals.signal_numpy.emit(kekw) # emit da results
+        nziz_positions = self.matlab_engine.get_nziz(1,2)
         print(kekw)
+        print("THE POSITIONS ARE")
+        print(nziz_positions)
+
+
 
     def run(self):
         try:

@@ -28,10 +28,13 @@ class OptitrackMainThread(QThread):
 
         # Allocate numpy array for rigidbody data
         self.row = 2000 # max number of data sets
-        self.columns = 3
+        self.columns = 3 #
+        self.rot_columns = 4 # quaternions
+
         self.index_counter = 0 # used to loopthrough numpy array and replace the values inside
         self.stylus_data = np.zeros(shape=[self.row, self.columns])
         self.specs_data = np.zeros(shape=[self.row, self.columns])
+        self.specs_rotation_data = np.zeros(shape=[self.row, self.rot_columns])
 
     def run(self):
         try:
@@ -62,6 +65,7 @@ class OptitrackMainThread(QThread):
             
             if (id == 1004):
                 self.stylus_data[self.index_counter,:] = position
+                self.specs_rotation_data[self.index_counter,:] = rotation
                 if np.all(self.stylus_previous_position != position):  # if its not the same update to the new position
                     self.stylus_previous_position = position # update the new position
                     self.status_optitrack_signals.signal_list.emit(["Stylus","Detected"])

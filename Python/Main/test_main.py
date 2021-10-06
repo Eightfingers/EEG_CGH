@@ -21,10 +21,22 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle('CGH EEG Optitrack Assisted EEG localization')
 
+        # Used to be shown
         self.scatter = Q3DScatter()
         self.NZIZscatter_series = QScatter3DSeries()
         self.CIRCUMscatter_series = QScatter3DSeries()
         self.EarToEarscatter_series = QScatter3DSeries()
+
+        # Unfortunately, i think to access the array data that has been added QScatter3DSeries()
+        # is buggy, it just crashes the app. Below is just a quick remedy by having a seperate 
+        # variables to store all the array data.
+
+        self.NZIZ_data = None
+        self.NZIZ_specs_data = None
+        self.CIRCUM_data = None
+        self.CIRCUM_specs_data = None
+        self.EarToEar_data = None
+        self.EarToEar_specs_data = None
 
         self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace 
         self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
@@ -92,12 +104,12 @@ class MainWindow(QMainWindow):
         self.matlab_main_thread.start()
 
         # Start the Optitrack Thread
-        # self.optitrack_main_thread = OptitrackMainThread(self)
-        # self.optitrack_main_thread.start()
+        self.optitrack_main_thread = OptitrackMainThread(self)
+        self.optitrack_main_thread.start()  
         
         # Now connect and initialize the Signals in the MenuWidget with the threads
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
-        # self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+        self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
 
     @Slot()
     def clear_data(self):
