@@ -58,15 +58,19 @@ class MenuWidget(QWidget):
         self.EartoearButton = QPushButton(self.EartoEarbutton_text)
         self.EartoearButton.clicked.connect(self.do_ear_to_ear) # start a thread when the button is clicked
 
-        self.predict_button = QPushButton("Predict")
+        self.predictpz_button = QPushButton("Predict Fpz")
+        self.predictpz_button.clicked.connect(self.predict_fpz_position) # can only start when there are 3 scatter data
+
+        self.predict_button = QPushButton("Predict 21")
         self.predict_button.clicked.connect(self.predict_eeg_positions(parent)) # can only start when there are 3 scatter data
-        
+
         self.clear_button = QPushButton("Clear") # Clear EEG positions
         self.clear_button.clicked.connect(parent.clear_data) 
 
         self.layout.addWidget(self.NZIZbutton)
         self.layout.addWidget(self.Circumbutton)
         self.layout.addWidget(self.EartoearButton)
+        self.layout.addWidget(self.predictpz_button)
         self.layout.addWidget(self.predict_button)
         self.layout.addWidget(self.clear_button)
         self.layout.addStretch()
@@ -104,6 +108,16 @@ class MenuWidget(QWidget):
         else:
             print("Predict stuff now")
 
+    @Slot()
+    def predict_fpz_position(self):
+        print("Predicting FPZ position")
+        self.matlab_signals.signal_int.emit(1)
+
+        # if (parent.NZIZscatter_series.dataProxy().itemCount() == 0):
+        #     QMessageBox.warning(self, "Warning", "Please complete NZIZ trace first!!")
+        # else:
+        #     # Call the matlab engine 
+        #     print("Predict stuff now")
 
     def change_button_state(self, button, button_label):
         if(button.isFlat()): # If the initial state of the button is flat and it is clicked, unflat them
@@ -131,7 +145,6 @@ class MenuWidget(QWidget):
                 np.savetxt(self.save_directory + "\data_CIRCUMspecs.csv",self.CIRCUMspecs_data, delimiter=',')
                 # emit to update to the main widget
                 self.CIRCUMoptitrack_signals.signal_numpy.emit(self.CIRCUMspecs_data)
-
 
             elif (button_label == "Start Ear to Ear"):
                 self.EarToEarstylus_data = self.stylus_data

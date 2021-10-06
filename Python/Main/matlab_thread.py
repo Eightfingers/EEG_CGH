@@ -16,6 +16,7 @@ class MatlabMainThread(QThread):
         self.menu_widget = parent.left_dock_menu_widget
 
         self.signals.signal_list.connect(self.status_widget.change_label) # change label function is found in status_widget.py
+        self.signals.signal_numpy.connect(parent.show_nziz_positions)
 
     def run(self):
         # Start the Matlab Engine
@@ -38,20 +39,25 @@ class MatlabMainThread(QThread):
             self.signals.signal_list.emit(["Matlab","Error"]) # emit a list signal
             print(e)
 
-    @Slot()
+    @Slot(int)
     def spawn_thread(self, message):
-        print("Spawn matlab thread called!!!")
-        print(message)
+        self.worker_thread = MatlabWorkerThread(self)
+        self.worker_thread.start()
+        # print("Spawn matlab thread called!!!")
+        # print(message)
         
 # Create a worker thread that is responsible for executing of scripts inside the matlab engine
 class MatlabWorkerThread(QThread):
-    def __init__(self,matlab_engine, parent=None):
+    def __init__(self, parent=None):
         QThread.__init__(self, parent)
-        self._matlab_engine = matlab_engine
+        self.matlab_engine = parent.eng
+        # print("Tryna do some stuff")
+        kekw = self.matlab_engine.test(3,2)
+        # parent.signals.signal_numpy.emit(kekw) # emit da results
+        print(kekw)
 
     def run(self):
-        # Start the Matlab Engine
         try:
-            print("I am spawned!@")
+            pass
         except:
-            print("wtf")
+            pass

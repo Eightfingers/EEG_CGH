@@ -121,6 +121,14 @@ class MainWindow(QMainWindow):
         self.scatter.addSeries(self.NZIZscatter_series)
         self.scatter.show()
 
+    # Create the Slots that will receive signals from the worker Thread
+    @Slot(np.ndarray)
+    def show_nziz_positions(self, message):
+        print(message)
+        # self.add_list_to_scatterdata(self.NZIZscatter_series, message)
+        # self.scatter.addSeries(self.NZIZscatter_series)
+        # self.scatter.show()
+
     @Slot(np.ndarray)
     def update_and_add_scatterCIRCUM(self, message):
         self.add_list_to_scatterdata(self.CIRCUMscatter_series, message)
