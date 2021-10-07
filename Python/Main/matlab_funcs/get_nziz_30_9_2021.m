@@ -1,4 +1,3 @@
-% function final_nziz_label = get_nziz( nziz ,nziz_spec)
 %%% This code would be the final code that is used to determine the 17 EEG
 %%% locations. 
 %% Add to path different folders containing data and code
@@ -6,25 +5,65 @@
 % addpath('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept\helperfuncs');
 % addpath('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept\myfuncs');
 % addpath ('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Data\30_9_2021');
-function final_nziz_python = get_nziz();
-% addpath('6_10_2021');
+function final_nziz_python = get_nziz_30_9_2021();
 
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\RecordedData');
+addpath('30_9_2021');
+addpath('helperfuncs');
+addpath('myfuncs');
 
-% addpath('Main/RecordedData');
+%% NZIZ
+%% Load the different wanded data
+data = readmatrix('NZIZ_shake_30_9_2021.csv');
 
-%%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus');
-quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
+quaternion_data = readmatrix('quat_NZIZ_shake_30_9_2021');
+
+stylus_data = data(:,3:8); 
+stylus_data = rmmissing(stylus_data);
+
+plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), 'd');
+
+specs_data = data(:,34:39); 
+specs_data = rmmissing(specs_data);
+
+rot_matrix_stylus = specs_data(:,1:3); % extract the rotation vector out
+rot_matrix_stylus = rmmissing(rot_matrix_stylus);
+
+dis_matrix_nziz = specs_data(:,4:6); % extract the displacement vector out
+dis_matrix_nziz = [dis_matrix_nziz(:,1), dis_matrix_nziz(:,3), dis_matrix_nziz(:,2)];
+dis_matrix_nziz = rmmissing(dis_matrix_nziz);
+
+x_rot_circum = rot_matrix_stylus(:,1);
+y_rot_circum = rot_matrix_stylus(:,3);
+z_rot_circum = rot_matrix_stylus(:,2);
+
+quaternion_extracted = quaternion_data(:,35:38);
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+quaternion_extracted = rmmissing(quaternion_extracted);
 
-plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), '*');
-hold on ;
+new_markers_nziz = [];
+% Euler Matrix rotation
+% for i = 1:1:length(stylus_data)
+%     disp(i);
+%     rot_vector_nziz = [-x_rot_circum(i), -y_rot_circum(i), -z_rot_circum(i)];
+% %     rot_vector = [-z_rot(i), -y_rot(i), -x_rot(i)];
+%     
+%     dis_vector_circum = dis_matrix_nziz(i,:);
+%     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
+% 
+%     wand_vector_circum = [stylus_data(i,4); ... % X,Y,Z 
+%               stylus_data(i,6); ...
+%               stylus_data(i,5); ...
+%                1];
+% 
+%     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
+%     new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
+% end
+% 
+% plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'd');
+% hold on;
 
 % Quaternion way
 new_markers_nziz = [];
-rotation_matrix = [];
 % disp("Doing quaternion");
 for i = 1:1:length(stylus_data)
     
@@ -32,12 +71,10 @@ for i = 1:1:length(stylus_data)
     quat_vector = quaternion(quaternion_extracted(i,:));
     RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
     rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
-    rotation_matrix = [rotation_matrix; rot_vector_nziz ];
-    
     dis_vector_circum = dis_matrix_nziz(i,:);
-    wand_vector_circum = [stylus_data(i,1); ... % X,Y,Z 
-              stylus_data(i,3); ...
-              stylus_data(i,2); ...
+    wand_vector_circum = [stylus_data(i,4); ... % X,Y,Z 
+              stylus_data(i,6); ...
+              stylus_data(i,5); ...
                1];
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
@@ -134,11 +171,10 @@ trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 final_nziz_python = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
 % final_nziz_python = final_nziz_python *1000; % convert m to mm
 % plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd');
-hold on ;
-
+% hold on ;
+% plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd', 'MarkerSize', 10);
 predicted_nziz = num2cell(final_nziz_python);
 nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
 final_nziz_label = [nziz_label;  predicted_nziz];
 
 end
-

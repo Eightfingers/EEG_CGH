@@ -1,5 +1,8 @@
 function output = test(b,h)
     addpath('Main/matlab_funcs/')
+    addpath('Main/helper_funcs/helperfuncs')
+    addpath('Main/matlab_funcs/')
+
     a = 0.5*(b.* h);
     x = [1,2,3]
     y = [1,2,3]

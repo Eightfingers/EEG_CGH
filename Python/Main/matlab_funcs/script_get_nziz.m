@@ -1,58 +1,51 @@
-% function final_nziz_label = get_nziz( nziz ,nziz_spec)
-%%% This code would be the final code that is used to determine the 17 EEG
-%%% locations. 
-%% Add to path different folders containing data and code
-%  addpath ('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept');
-% addpath('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept\helperfuncs');
-% addpath('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept\myfuncs');
-% addpath ('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Data\30_9_2021');
-function final_nziz_python = get_nziz();
-% addpath('6_10_2021');
 
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\RecordedData');
-
-% addpath('Main/RecordedData');
+% addpath('Main/RecordedData')
+% addpath('C:\Users\65859\Desktop\eeg_cgh_main\Python\Main')
+addpath('helperfuncs');
+addpath('myfuncs');
+addpath('6_10_2021');
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus');
-quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
+nziz_wand = readmatrix('data_NZIZstylus');
+
+quaternions = readmatrix('rotation_data_NZIZspecs.csv'); % extract the rotation vector out
+
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
 
-plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), '*');
-hold on ;
+plot3(nziz_wand(:,1), nziz_wand(:,3), nziz_wand(:,2), 'o');
+hold on;
+plot3(dis_matrix_nziz(:,1), dis_matrix_nziz(:,3), dis_matrix_nziz(:,2), 'd');
 
-% Quaternion way
+% disp(rot_matrix_nziz);
+% disp(nziz_wand);
+% disp(dis_matrix_nziz);
+
+dis_matrix_nziz = [dis_matrix_nziz(:,1), dis_matrix_nziz(:,3), dis_matrix_nziz(:,2)];
+quaternions = [quaternions(:,4), quaternions(:,1), quaternions(:,2), quaternions(:,3)];
+
 new_markers_nziz = [];
-rotation_matrix = [];
-% disp("Doing quaternion");
-for i = 1:1:length(stylus_data)
-    
-%     disp(i);
-    quat_vector = quaternion(quaternion_extracted(i,:));
-    RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
-    rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
-    rotation_matrix = [rotation_matrix; rot_vector_nziz ];
-    
-    dis_vector_circum = dis_matrix_nziz(i,:);
-    wand_vector_circum = [stylus_data(i,1); ... % X,Y,Z 
-              stylus_data(i,3); ...
-              stylus_data(i,2); ...
-               1];
-    transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
-    new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
-    new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
+% Quaternion way
 
-end
-
-% plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'o', 'MarkerSize',10);
+% for i = 1:1:length(nziz_wand)
+%     quat_vector = quaternion(quaternions(i,:));
+%     RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
+%     rot_vector_circum = [RPY1(1), RPY1(3), RPY1(2)];
+%     dis_vector_nziz = dis_matrix_nziz(i,:);
+%     wand_vector_nziz = [nziz_wand(i,1); ... % X,Y,Z 
+%               nziz_wand(i,2); ...
+%               nziz_wand(i,3); ...
+%                1];
+%     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_nziz, rot_vector_circum);    
+%     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_nziz;
+%     new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
+% end
 
 %%% NZ-IZ
-nziz_dataset =  new_markers_nziz;
+nziz_dataset =  nziz_wand;
 nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
-nziz_z = nziz_dataset(:,3);
+nziz_z = nziz_dataset(:,3); 
 
 %% Perform Geometerical Fitting and Extract the datatips from the plots.
 %%% NZ-IZ - The NZIZ tracking data is considered as a spline in
@@ -125,20 +118,26 @@ closest_array_nziz = find_closest_from_predicted_to_wanded(nziz, A3);
 %%% ZY plane and the X values need to be found. 
 %%% If A(:,3)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its X value (1st column).
+
+% nziz_dataset = unique(nziz_dataset, 'rows');
 interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, A3, nziz_dataset, 1, 2, 1);
+
+% from_dataset = [1,1,1; 2,2,2; 3,3,3;]
+% A4 = [from_dataset(:,2), from_dataset(:,2)];
+% kekw = [5,5, 6,6]; 
+% interpolate_test = find_left_out_axis_values(from_dataset, A3, nziz_dataset, 1, 2, 1);
+
 trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 
 %% Reorganize the data
 
 %%% NZIZ 
-final_nziz_python = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
-% final_nziz_python = final_nziz_python *1000; % convert m to mm
-% plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd');
-hold on ;
-
-predicted_nziz = num2cell(final_nziz_python);
+final_nziz = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
+predicted_nziz = num2cell(final_nziz);
 nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
 final_nziz_label = [nziz_label;  predicted_nziz];
+writecell(final_nziz_label,'NZIZ_POSITIONS__SADKASNDJJASNCJKX.csv') 
+disp("ANSWER ISSSSS ");
+disp(final_nziz_label);
 
-end
-
+plot3(final_nziz(1,:), final_nziz(2,:), final_nziz(3,:),'ro', 'MarkerSize', 20);

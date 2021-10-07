@@ -65,7 +65,6 @@ class OptitrackMainThread(QThread):
             
             if (id == 1004):
                 self.stylus_data[self.index_counter,:] = position
-                self.specs_rotation_data[self.index_counter,:] = rotation
                 if np.all(self.stylus_previous_position != position):  # if its not the same update to the new position
                     self.stylus_previous_position = position # update the new position
                     self.status_optitrack_signals.signal_list.emit(["Stylus","Detected"])
@@ -77,6 +76,7 @@ class OptitrackMainThread(QThread):
                         self.status_optitrack_signals.signal_list.emit(["Stylus","Lost detection"])
             elif (id == 1005):
                 self.specs_data[self.index_counter,:] = position
+                self.specs_rotation_data[self.index_counter,:] = rotation
                 self.index_counter += 1 # Increment the index counter everytime the final rigidbody is sent
                 if np.all(self.specs_previous_position != position): 
                     self.specs_previous_position = position 

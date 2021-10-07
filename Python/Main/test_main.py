@@ -104,12 +104,12 @@ class MainWindow(QMainWindow):
         self.matlab_main_thread.start()
 
         # Start the Optitrack Thread
-        self.optitrack_main_thread = OptitrackMainThread(self)
-        self.optitrack_main_thread.start()  
+        # self.optitrack_main_thread = OptitrackMainThread(self)
+        # self.optitrack_main_thread.start()  
         
         # Now connect and initialize the Signals in the MenuWidget with the threads
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
-        self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+        # self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
 
     @Slot()
     def clear_data(self):
@@ -137,9 +137,9 @@ class MainWindow(QMainWindow):
     @Slot(np.ndarray)
     def show_nziz_positions(self, message):
         print(message)
-        # self.add_list_to_scatterdata(self.NZIZscatter_series, message)
-        # self.scatter.addSeries(self.NZIZscatter_series)
-        # self.scatter.show()
+        self.add_list_to_scatterdata_z_y_swapped(self.NZIZscatter_series, message)
+        self.scatter.addSeries(self.NZIZscatter_series)
+        self.scatter.show()
 
     @Slot(np.ndarray)
     def update_and_add_scatterCIRCUM(self, message):
@@ -159,6 +159,14 @@ class MainWindow(QMainWindow):
         else:
             for d in data:
                 scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
+
+    def add_list_to_scatterdata_z_y_swapped(self, scatter_series, data):
+        if data.ndim == 1:
+            scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(data[0], data[2], data[1])))
+        else:
+            for d in data:
+                scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[2], d[1])))
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

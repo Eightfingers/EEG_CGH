@@ -1,4 +1,5 @@
 import sys
+from matlab.engine import matlabengine
 import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QMessageBox
@@ -19,7 +20,6 @@ class MatlabMainThread(QThread):
         self.menu_widget = parent.left_dock_menu_widget
 
         self.signals.signal_list.connect(self.status_widget.change_label) # change label function is found in status_widget.py
-        self.signals.signal_numpy.connect(parent.show_nziz_positions)
 
     def run(self):
         # Start the Matlab Engine
@@ -62,14 +62,13 @@ class MatlabWorkerThread(QThread):
         # print("specs_Data iss")
         # print(self._specs_data)
         # print("Tryna do some stuff")
-        kekw = self.matlab_engine.test(3,2)
-        # parent.signals.signal_numpy.emit(kekw) # emit da results
-        nziz_positions = self.matlab_engine.get_nziz(1,2)
-        print(kekw)
-        print("THE POSITIONS ARE")
-        print(nziz_positions)
 
-
+        nziz_positions = self.matlab_engine.get_nziz()
+        # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
+        
+        nziz_positions = np.array([nziz_positions[0], nziz_positions[1], nziz_positions[2]])
+        nziz_positions = np.transpose(nziz_positions)
+        parent.signals.signal_numpy.emit(nziz_positions) # emit da results
 
     def run(self):
         try:
