@@ -49,4 +49,3 @@ class StatusWidget(QWidget):
             self.wand_qlabel.setText(self.wand_label + self.status) 
         elif self.label == "Specs" :
             self.specs_qlabel.setText(self.specs_label + self.status) 
-

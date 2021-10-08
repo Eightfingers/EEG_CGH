@@ -15,18 +15,17 @@ class MatlabMainThread(QThread):
         QThread.__init__(self, parent)
 
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
-        self.signals = AppSignals()
-        self.status_widget = parent.left_dock_status_widget
-        self.menu_widget = parent.left_dock_menu_widget
-        self.signals.signal_numpy.connect(parent.show_nziz_positions)
-
-        self.signals.signal_list.connect(self.status_widget.change_label) # change label function is found in status_widget.py
+        self.signals_to_main = AppSignals()
+        self.signals_to_status = AppSignals()
+        
+        self.signals_to_main.signal_numpy.connect(parent.show_nziz_positions)
+        self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label) # change label function is found in status_widget.py
 
     def run(self):
         # Start the Matlab Engine
         try:
             # I know this can be a tuple/dictionary but this is the first thing that came to my mind
-            self.signals.signal_list.emit(["Matlab","Testing"]) # emit a list signal
+            self.signals_to_status.signal_list.emit(["Matlab","Testing"]) # emit a list signal
             print("Starting Matlab engine!")
             self.eng = matlab.engine.start_matlab()
             print("Matlab engine running!")
@@ -38,9 +37,9 @@ class MatlabMainThread(QThread):
             triangle_size = self.eng.test(1,2)
             print(triangle_size)
             print("Success")
-            self.signals.signal_list.emit(["Matlab","Okay"]) # emit a list signal
+            self.signals_to_status.signal_list.emit(["Matlab","Okay"]) # emit a list signal
         except Exception as e:
-            self.signals.signal_list.emit(["Matlab","Error"]) # emit a list signal
+            self.signals_to_status.signal_list.emit(["Matlab","Error"]) # emit a list signal
             print(e)
 
     @Slot(list)

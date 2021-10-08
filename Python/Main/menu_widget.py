@@ -33,22 +33,21 @@ class MenuWidget(QWidget):
 
         # I dont think this is being used yet for now.. 
         self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
-        self.matlab_signals = AppSignals()
-        self.fpz_signals = AppSignals()
-
         self._optitrack_thread = None 
         
-        self.NZIZoptitrack_signals = AppSignals()
-        self.NZIZoptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
+        self.signals_to_matlab = AppSignals()
 
-        self.CIRCUMoptitrack_signals = AppSignals()
-        self.CIRCUMoptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterCIRCUM)
+        self.NZIZdata_to_main_signals = AppSignals()
+        self.NZIZdata_to_main_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
 
-        self.EarToEaroptitrack_signals = AppSignals()
-        self.EarToEaroptitrack_signals.signal_numpy.connect(parent.update_and_add_scatterEarToEar)
+        self.CIRCUMdata_to_main_signals = AppSignals()
+        self.CIRCUMdata_to_main_signals.signal_numpy.connect(parent.update_and_add_scatterCIRCUM)
 
-        self.optitrack_signals = AppSignals() 
-        self.optitrack_signals.signal_list.connect(parent.left_dock_status_widget.change_label)
+        self.EarToEardata_to_main_signals = AppSignals()
+        self.EarToEardata_to_main_signals.signal_numpy.connect(parent.update_and_add_scatterEarToEar)
+
+        self.signals_to_status = AppSignals() 
+        self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label)
 
         # Create Button widgets
         self.NZIZbutton = QPushButton(self.NZIZbutton_text)
@@ -78,18 +77,17 @@ class MenuWidget(QWidget):
         self.layout.addStretch()
 
     # I am not sure if this is the best way or so but
-    # These functions are called from the main.py and the thread and 
-    # 
+    # These functions are called from the main.py and these signals are only initialized after 
+    # matlab engine is fullying running and stuff
 
     def connect_matlab_signals(self, matlab_thread): 
         self._matlab_thread = matlab_thread
-        self.matlab_signals.signal_list.connect(self.parent.update_and_add_scatterNZIZ)
-        self.fpz_signals.signal_list.connect(self._matlab_thread.spawn_thread)
+        self.signals_to_matlab.signal_list.connect(self._matlab_thread.spawn_thread)
 
     def connect_optitrack_signals (self, optitrack_thread):
         self._optitrack_thread = optitrack_thread
-        self.optitrack_signals.signal_bool.connect(self._optitrack_thread.set_recording) 
-        self.optitrack_signals.signal_bool.connect(self._optitrack_thread.clear_data)
+        self.signals_to_status.signal_bool.connect(self._optitrack_thread.set_recording) 
+        self.signals_to_status.signal_bool.connect(self._optitrack_thread.clear_data)
 
     @Slot()
     def do_nziz(self):
@@ -114,7 +112,7 @@ class MenuWidget(QWidget):
     def predict_fpz_position(self):
         print("Predicting FPZ position")
         message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
-        self.fpz_signals.signal_list.emit(message)
+        self.signals_to_matlab.signal_list.emit(message)
 
         # if (parent.NZIZscatter_series.dataProxy().itemCount() == 0):
         #     QMessageBox.warning(self, "Warning", "Please complete NZIZ trace first!!")
@@ -155,7 +153,7 @@ class MenuWidget(QWidget):
                 np.savetxt("data_NZIZspecs.csv",self.NZIZspecs_data, delimiter=',')
                 np.savetxt("rotation_data_NZIZspecs.csv",self.NZIZ_specs_rotation, delimiter=',')
 
-                self.NZIZoptitrack_signals.signal_numpy.emit(self.NZIZstylus_data)
+                self.NZIZdata_to_main_signals.signal_numpy.emit(self.NZIZstylus_data)
 
             elif (button_label == "Start Circum"):
                 self.CIRCUMstylus_data = self.stylus_data
@@ -163,18 +161,18 @@ class MenuWidget(QWidget):
                 np.savetxt(self.save_directory + "\data_CIRCUMstylus.csv",self.CIRCUMstylus_data, delimiter=',')
                 np.savetxt(self.save_directory + "\data_CIRCUMspecs.csv",self.CIRCUMspecs_data, delimiter=',')
                 # emit to update to the main widget
-                self.CIRCUMoptitrack_signals.signal_numpy.emit(self.CIRCUMstylus_data)
+                self.CIRCUMdata_to_main_signals.signal_numpy.emit(self.CIRCUMstylus_data)
 
             elif (button_label == "Start Ear to Ear"):
                 self.EarToEarstylus_data = self.stylus_data
                 self.EarToEarpecs_data = self.specs
                 np.savetxt(self.save_directory + "\data_EarToEarstylus.csv", self.EarToEarstylus_data, delimiter=',')
                 np.savetxt(self.save_directory + "\data_EarToEarspecs.csv", self.EarToEarpecs_data, delimiter=',')
-                self.EarToEaroptitrack_signals.signal_numpy.emit(self.EarToEarstylus_data)
+                self.EarToEardata_to_main_signals.signal_numpy.emit(self.EarToEarstylus_data)
 
-            self.optitrack_signals.signal_bool.emit(False) # Stop recording
-            self.optitrack_signals.signal_list.emit(["Stylus","Stopped"])
-            self.optitrack_signals.signal_list.emit(["Specs","Stopped"])
+            self.signals_to_status.signal_bool.emit(False) # Stop recording
+            self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
+            self.signals_to_status.signal_list.emit(["Specs","Stopped"])
 
 
         elif (not self.NZIZbutton.isFlat() and not self.Circumbutton.isFlat() and not self.EartoearButton.isFlat()): # only press the button when it is the only button not flat?
@@ -184,7 +182,7 @@ class MenuWidget(QWidget):
             button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
             button.setText('Stop!')
             button.setFlat(True)
-            self.optitrack_signals.signal_bool.emit(True)
+            self.signals_to_status.signal_bool.emit(True)
 
         else:
             QMessageBox.warning(self, "Warning", "Finish other recordings first!")

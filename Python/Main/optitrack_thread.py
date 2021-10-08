@@ -13,8 +13,8 @@ class OptitrackMainThread(QThread):
 
         self.streamingClient = NatNetClient()
 
-        self.status_optitrack_signals = AppSignals()
-        self.status_optitrack_signals.signal_list.connect(parent.left_dock_status_widget.change_label)
+        self.signals_to_status = AppSignals()
+        self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label)
 
         # Control variables 
         self.record = False
@@ -44,7 +44,7 @@ class OptitrackMainThread(QThread):
             # Start up the streaming client now that the callbacks are set up.
             # This will run perpetually, and operate on a separate thread.
             self.streamingClient.run()
-            self.status_optitrack_signals.signal_list.emit(["Optitrack","Okay"])
+            self.signals_to_status.signal_list.emit(["Optitrack","Okay"])
         except:
             print("ERROR ON THE OPTITRACKMAIN THREAD")
 
@@ -67,26 +67,26 @@ class OptitrackMainThread(QThread):
                 self.stylus_data[self.index_counter,:] = position
                 if np.all(self.stylus_previous_position != position):  # if its not the same update to the new position
                     self.stylus_previous_position = position # update the new position
-                    self.status_optitrack_signals.signal_list.emit(["Stylus","Detected"])
+                    self.signals_to_status.signal_list.emit(["Stylus","Detected"])
                     self.stylus_lose_track_counter = 0
                 else:  # if the new position is the same as the old one, there is a big chance that it has lost detection.
                     self.stylus_lose_track_counter += 1
                     print("STYLUS NOT SHOWING!")
                     if (self.stylus_lose_track_counter > 100):
-                        self.status_optitrack_signals.signal_list.emit(["Stylus","Lost detection"])
+                        self.signals_to_status.signal_list.emit(["Stylus","Lost detection"])
             elif (id == 1005):
                 self.specs_data[self.index_counter,:] = position
                 self.specs_rotation_data[self.index_counter,:] = rotation
                 self.index_counter += 1 # Increment the index counter everytime the final rigidbody is sent
                 if np.all(self.specs_previous_position != position): 
                     self.specs_previous_position = position 
-                    self.status_optitrack_signals.signal_list.emit(["Specs","Detected"])
+                    self.signals_to_status.signal_list.emit(["Specs","Detected"])
                     self.specs_lose_track_counter = 0
                 else:
                     self.specs_lose_track_counter += 1
                     print("specs NOT SHOWING!")
                     if (self.specs_lose_track_counter > 100):
-                        self.status_optitrack_signals.signal_list.emit(["Specs","Lost detection"])
+                        self.signals_to_status.signal_list.emit(["Specs","Lost detection"])
 
             print(self.index_counter)
             if self.index_counter > self.row:
