@@ -26,17 +26,17 @@ class MatlabMainThread(QThread):
         try:
             # I know this can be a tuple/dictionary but this is the first thing that came to my mind
             self.signals_to_status.signal_list.emit(["Matlab","Testing"]) # emit a list signal
-            print("Starting Matlab engine!")
+            print("MATLAB: Starting Matlab engine!")
             self.eng = matlab.engine.start_matlab()
-            print("Matlab engine running!")
-            print("Is 37 a prime?")
+            print("MATLAB: Matlab engine running!")
+            print("MATLAB: Is 37 a prime?")
             tf = self.eng.isprime(37)
-            print("Matlab says its ...")
+            print("MATLAB: Matlab says its ...")
             print(tf)
-            print("Trying to call matlab script")
+            print("MATLAB: Trying to call matlab script")
             triangle_size = self.eng.test(1,2)
             print(triangle_size)
-            print("Success")
+            print("MATLAB: Success")
             self.signals_to_status.signal_list.emit(["Matlab","Okay"]) # emit a list signal
         except Exception as e:
             self.signals_to_status.signal_list.emit(["Matlab","Error"]) # emit a list signal
@@ -62,14 +62,16 @@ class MatlabWorkerThread(QThread):
         # print("specs_Data iss")
         # print(self._specs_data)
         # print("Tryna do some stuff")
-
-        nziz_positions = self.matlab_engine.get_nziz()
-        # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
-        nziz_positions = np.array([nziz_positions[0], nziz_positions[1], nziz_positions[2]])
-        nziz_positions = np.transpose(nziz_positions)
-        print(nziz_positions)
-        parent.signals_to_main.signal_numpy.emit(nziz_positions) # emit da results
-
+        try:
+            nziz_positions = self.matlab_engine.get_nziz()
+            # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
+            nziz_positions = np.array([nziz_positions[0], nziz_positions[1], nziz_positions[2]])
+            nziz_positions = np.transpose(nziz_positions)
+            print("Matlab: The NZIZ positions are:", nziz_positions)
+            parent.signals_to_main.signal_numpy.emit(nziz_positions) 
+        except Exception as e:
+            print("Matlab: Error in running the script")
+            print(e)
 
     def run(self):
         try:

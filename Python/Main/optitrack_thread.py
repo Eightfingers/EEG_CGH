@@ -45,8 +45,8 @@ class OptitrackMainThread(QThread):
             # This will run perpetually, and operate on a separate thread.
             self.streamingClient.run()
             self.signals_to_status.signal_list.emit(["Optitrack","Okay"])
-        except:
-            print("ERROR ON THE OPTITRACKMAIN THREAD")
+        except ConnectionResetError:
+            print("Optitrack: Optitrack thread returned an error")
 
     # This is a callback function that gets connected to the NatNet client and called once per mocap frame.
     def receiveNewFrame(self, frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
@@ -71,7 +71,7 @@ class OptitrackMainThread(QThread):
                     self.stylus_lose_track_counter = 0
                 else:  # if the new position is the same as the old one, there is a big chance that it has lost detection.
                     self.stylus_lose_track_counter += 1
-                    print("STYLUS NOT SHOWING!")
+                    print("Optitrack: Stylus is not detected!")
                     if (self.stylus_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Stylus","Lost detection"])
             elif (id == 1005):
@@ -84,19 +84,19 @@ class OptitrackMainThread(QThread):
                     self.specs_lose_track_counter = 0
                 else:
                     self.specs_lose_track_counter += 1
-                    print("specs NOT SHOWING!")
+                    print("Optitrack: Specs is not detected!!")
                     if (self.specs_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Specs","Lost detection"])
 
             print(self.index_counter)
             if self.index_counter > self.row:
-                print("Handle overflow error!!") 
+                print("Optitrack: Overflow of data!") 
         else:
             pass
 
     @Slot()
     def spawn_thread(self, message):
-        print("Spawn matlab thread called!!!")
+        print("Optitrack: Spawn matlab thread called!!!")
         print(message)
 
     @Slot(bool)

@@ -102,7 +102,7 @@ class MenuWidget(QWidget):
         self.change_button_state(self.EartoearButton, self.EartoEarbutton_text)
     
     def predict_eeg_positions(self):
-        print("Tryna predict eeg positions")
+        print("Menu: Predict eeg positions")
         if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0 ):
             QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
         else:
@@ -110,7 +110,7 @@ class MenuWidget(QWidget):
 
     @Slot()
     def predict_fpz_position(self):
-        print("Predicting FPZ position")
+        print("Menu: Predicting FPZ position")
         message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
         self.signals_to_matlab.signal_list.emit(message)
 
@@ -173,7 +173,6 @@ class MenuWidget(QWidget):
             self.signals_to_status.signal_bool.emit(False) # Stop recording
             self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
             self.signals_to_status.signal_list.emit(["Specs","Stopped"])
-
 
         elif (not self.NZIZbutton.isFlat() and not self.Circumbutton.isFlat() and not self.EartoearButton.isFlat()): # only press the button when it is the only button not flat?
             # Not setting border width here causes a bug where the background colour isnt changed at all ?
