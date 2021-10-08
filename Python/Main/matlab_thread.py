@@ -68,7 +68,7 @@ class MatlabWorkerThread(QThread):
         nziz_positions = np.array([nziz_positions[0], nziz_positions[1], nziz_positions[2]])
         nziz_positions = np.transpose(nziz_positions)
         print(nziz_positions)
-        parent.signals.signal_numpy.emit(nziz_positions) # emit da results
+        parent.signals_to_main.signal_numpy.emit(nziz_positions) # emit da results
 
 
     def run(self):
