@@ -32,12 +32,12 @@ class MainWindow(QMainWindow):
         # is buggy, it just crashes the app. Below is just a quick remedy by having a seperate 
         # variables to store all the array data.
 
-        # self.NZIZ_data = None
-        # self.NZIZ_specs_data = None
-        # self.CIRCUM_data = None
-        # self.CIRCUM_specs_data = None
-        # self.EarToEar_data = None
-        # self.EarToEar_specs_data = None
+        self.NZIZ_data = None
+        self.NZIZ_specs_data = None
+        self.CIRCUM_data = None
+        self.CIRCUM_specs_data = None
+        self.EarToEar_data = None
+        self.EarToEar_specs_data = None
 
         self.save_directory = os.getcwd() + "\RecordedData"
 

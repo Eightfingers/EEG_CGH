@@ -120,7 +120,8 @@ class MenuWidget(QWidget):
     @Slot()
     def predict_fpz_position(self):
         print("Menu: Predicting FPZ position")
-        message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
+        # message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
+        message =[1,2]
         self.signals_to_matlab.signal_list.emit(message)
 
         # if (parent.NZIZscatter_series.dataProxy().itemCount() == 0):
