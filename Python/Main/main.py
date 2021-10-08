@@ -143,11 +143,6 @@ class MainWindow(QMainWindow):
             self.NZIZ_data = self.stylus_data
             self.NZIZ_specs_data = self.specs
             self.NZIZ_specs_rotate = self.specs_rotation
-            print("KEKW")
-            print(self.NZIZ_data)
-            print(self.NZIZ_specs_data)
-            print(self.NZIZ_specs_rotate)
-
             self.update_and_add_scatterNZIZ(self.stylus_data)
 
             # self.NZIZdata_to_main_signals.signal_numpy.emit(self.NZIZstylus_data)
@@ -166,7 +161,7 @@ class MainWindow(QMainWindow):
             print("Main: Saving Ear to Ear data")
             np.savetxt("data_EarToEarstylus.csv", self.stylus_data, delimiter=',')
             np.savetxt("data_EarToEarspecs.csv", self.specs, delimiter=',')
-            np.savetxt("rotation_data_CIRCUMspecs.csv", self.specs_rotation, delimiter=',')
+            np.savetxt("rotation_data_EarToEarspecs.csv", self.specs_rotation, delimiter=',')
             self.EartoEar_data = self.stylus_data
             self.EartoEar_specs_data = self.specs
             self.EartoEar_specs_rotate = self.specs_rotation

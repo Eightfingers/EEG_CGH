@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import pathlib
 
 array_1 = np.zeros((3,3)) # create 3 row and 3 column of 0 data
 print(array_1)
@@ -9,26 +11,11 @@ split_numpy = np.transpose(split_numpy)
 print(split_numpy)
 split_numpy = np.array([split_numpy[:,0], split_numpy[:,2], split_numpy[:,1]])
 print(split_numpy)
+# cwd = pathlib.Path.cwd()
+# save_path = cwd.joinpath('RecordedData')
+# print(str(save_path))
+cwd = os.getcwd()
+save_path = str(cwd) + '\RecordData'
+print(save_path)
 
-# # Insert array to the end of numpy
-# np.append(array_1, tuple_1, axis = 0)
-
-class Man():
-    def __init__(self, parent=None):
-        self.hello = "Hellow1"
-        print("Man init finished")
-
-class Man2():
-    def __init__(self, parent=None):
-        self.hello2 = "Hellow"
-        self.parent = parent
-        print(self.parent)
-    
-    def kekw(self):
-        print(self.parent.hello)
-        print(self.hello2)
-
-test1 = Man()
-test = Man2(test1)
-test.kekw()
-# print(array_1)
+np.savetxt(save_path+"\%test2.csv", split_numpy, delimiter=',')

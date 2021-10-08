@@ -1,2 +1,2 @@
 numpy, pyside6, PyOpenGl, moderngl
-pip install pyside6 numpy
+pip install pyside6 numpy pathlib
