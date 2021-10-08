@@ -16,15 +16,16 @@ from app_signals import AppSignals
 class MenuWidget(QWidget):
 
     # Button number convention
-    NZIZ_BUTTON = 1
-    CIRCUM_BUTTON = 2
-    EARTOEAR_BUTTON = 3
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
 
         # store the format of the layout
         self.layout = parent.menu_layout
+
+        self.NZIZ_BUTTON = 1
+        self.CIRCUM_BUTTON = 2
+        self.EARTOEAR_BUTTON = 3
 
         self.parent = parent # Couldn't find a way to reference the parent, from the class functions.
         
@@ -139,13 +140,13 @@ class MenuWidget(QWidget):
 
             # Save the data accordingly
             if (button_label == "Start NZIZ"):
-                self.signals_to_main.signal_int.emit(1)
+                self.signals_to_main.signal_int.emit(self.NZIZ_BUTTON)
 
             elif (button_label == "Start Circum"):
-                self.signals_to_main.signal_int.emit(2)
+                self.signals_to_main.signal_int.emit(self.CIRCUM_BUTTON)
 
             elif (button_label == "Start Ear to Ear"):
-                self.signals_to_main.signal_int.emit(3)
+                self.signals_to_main.signal_int.emit(self.EARTOEAR_BUTTON)
 
             self.signals_to_status.signal_bool.emit(False) # Stop recording
             self.signals_to_status.signal_list.emit(["Stylus","Stopped"])

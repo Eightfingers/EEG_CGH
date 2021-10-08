@@ -34,10 +34,17 @@ class MainWindow(QMainWindow):
 
         self.NZIZ_data = None
         self.NZIZ_specs_data = None
+        self.NZIZ_specs_rotate = None
         self.CIRCUM_data = None
         self.CIRCUM_specs_data = None
+        self.CIRCUM_specs_rotate = None
         self.EarToEar_data = None
         self.EarToEar_specs_data = None
+        self.EarToEar_specs_rotate = None
+
+        self.NZIZ_BUTTON = 1
+        self.CIRCUM_BUTTON = 2
+        self.EARTOEAR_BUTTON = 3
 
         self.save_directory = os.getcwd() + "RecordedData"
 
@@ -128,26 +135,41 @@ class MainWindow(QMainWindow):
         self.specs = self.specs[~np.all(self.specs == 0, axis=1)]
         self.specs_rotation = self.specs_rotation[~np.all(self.specs_rotation == 0, axis=1)]
 
-        if (message == 1):
+        if (message == self.NZIZ_BUTTON): # NZIZ
             print("Main: Saving NZIZ data")
             np.savetxt("data_NZIZstylus.csv", self.stylus_data, delimiter=',')
             np.savetxt("data_NZIZspecs.csv", self.specs, delimiter=',')
             np.savetxt("rotation_data_NZIZspecs.csv", self.specs_rotation, delimiter=',')
+            self.NZIZ_data = self.stylus_data
+            self.NZIZ_specs_data = self.specs
+            self.NZIZ_specs_rotate = self.specs_rotation
+            print("KEKW")
+            print(self.NZIZ_data)
+            print(self.NZIZ_specs_data)
+            print(self.NZIZ_specs_rotate)
+
             self.update_and_add_scatterNZIZ(self.stylus_data)
 
             # self.NZIZdata_to_main_signals.signal_numpy.emit(self.NZIZstylus_data)
-        elif (message == 2): # Circum
+        elif (message == self.CIRCUM_BUTTON): # Circum
             print("Main: Saving Circum data")
             np.savetxt("data_CIRCUMstylus.csv", self.stylus_data, delimiter=',')
             np.savetxt("data_CIRCUMspecs.csv", self.specs, delimiter=',')
             np.savetxt("rotation_data_CIRCUMspecs.csv", self.specs_rotation, delimiter=',')
+            self.CIRCUM_data = self.stylus_data
+            self.CIRCUM_specs_data = self.specs
+            self.CIRCUM_specs_rotate = self.specs_rotation
+
             self.update_and_add_scatterCIRCUM(self.stylus_data)
 
-        elif (message ==3): # Ear to Ear
+        elif (message == self.EARTOEAR_BUTTON): # Ear to Ear
             print("Main: Saving Ear to Ear data")
             np.savetxt("data_EarToEarstylus.csv", self.stylus_data, delimiter=',')
             np.savetxt("data_EarToEarspecs.csv", self.specs, delimiter=',')
             np.savetxt("rotation_data_CIRCUMspecs.csv", self.specs_rotation, delimiter=',')
+            self.EartoEar_data = self.stylus_data
+            self.EartoEar_specs_data = self.specs
+            self.EartoEar_specs_rotate = self.specs_rotation
             self.update_and_add_scatterEarToEar(self.stylus_data)
 
     @Slot()
