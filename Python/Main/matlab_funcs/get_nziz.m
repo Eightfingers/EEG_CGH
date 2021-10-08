@@ -8,9 +8,10 @@
 % addpath ('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Data\30_9_2021');
 function final_nziz_python = get_nziz();
 % addpath('6_10_2021');
-
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\RecordedData');
-
+addpath('helperfuncs');
+addpath('myfuncs');
+% addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\RecordedData');
+addpath('C:\Users\65859\Desktop\eeg_cgh_main\Python\Main\RecordedData');
 % addpath('Main/RecordedData');
 
 %%% NZIZ
@@ -19,7 +20,7 @@ quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rota
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
 
-plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), '*');
+% plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), '*');
 hold on ;
 
 % Quaternion way
@@ -133,7 +134,7 @@ trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 %%% NZIZ 
 final_nziz_python = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
 % final_nziz_python = final_nziz_python *1000; % convert m to mm
-% plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd');
+plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd');
 hold on ;
 
 predicted_nziz = num2cell(final_nziz_python);

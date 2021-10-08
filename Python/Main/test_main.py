@@ -104,12 +104,12 @@ class MainWindow(QMainWindow):
         self.matlab_main_thread.start()
 
         # Start the Optitrack Thread
-        # self.optitrack_main_thread = OptitrackMainThread(self)
-        # self.optitrack_main_thread.start()  
+        self.optitrack_main_thread = OptitrackMainThread(self)
+        self.optitrack_main_thread.start()  
         
         # Now connect and initialize the Signals in the MenuWidget with the threads
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
-        # self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+        self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
 
     @Slot()
     def clear_data(self):
@@ -136,6 +136,7 @@ class MainWindow(QMainWindow):
     # Create the Slots that will receive signals from the worker Thread
     @Slot(np.ndarray)
     def show_nziz_positions(self, message):
+        print("LOL")
         print(message)
         self.add_list_to_scatterdata_z_y_swapped(self.NZIZscatter_series, message)
         self.scatter.addSeries(self.NZIZscatter_series)

@@ -60,8 +60,8 @@ class OptitrackMainThread(QThread):
         if self.record == True:
             # Record the positions into numpy array
             # print(id, position)
-            position = np.round(position, 4)
-            rotation = np.round(rotation, 4)
+            position = np.round(position, 5)
+            rotation = np.round(rotation, 5)
             
             if (id == 1004):
                 self.stylus_data[self.index_counter,:] = position

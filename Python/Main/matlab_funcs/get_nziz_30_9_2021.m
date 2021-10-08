@@ -20,7 +20,7 @@ quaternion_data = readmatrix('quat_NZIZ_shake_30_9_2021');
 stylus_data = data(:,3:8); 
 stylus_data = rmmissing(stylus_data);
 
-plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), 'd');
+% plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), 'd');
 
 specs_data = data(:,34:39); 
 specs_data = rmmissing(specs_data);
@@ -170,8 +170,8 @@ trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 %%% NZIZ 
 final_nziz_python = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
 % final_nziz_python = final_nziz_python *1000; % convert m to mm
-% plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd');
-% hold on ;
+plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd');
+hold on ;
 % plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd', 'MarkerSize', 10);
 predicted_nziz = num2cell(final_nziz_python);
 nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};

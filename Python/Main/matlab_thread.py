@@ -18,6 +18,7 @@ class MatlabMainThread(QThread):
         self.signals = AppSignals()
         self.status_widget = parent.left_dock_status_widget
         self.menu_widget = parent.left_dock_menu_widget
+        self.signals.signal_numpy.connect(parent.show_nziz_positions)
 
         self.signals.signal_list.connect(self.status_widget.change_label) # change label function is found in status_widget.py
 
@@ -65,10 +66,11 @@ class MatlabWorkerThread(QThread):
 
         nziz_positions = self.matlab_engine.get_nziz()
         # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
-        
         nziz_positions = np.array([nziz_positions[0], nziz_positions[1], nziz_positions[2]])
         nziz_positions = np.transpose(nziz_positions)
+        print(nziz_positions)
         parent.signals.signal_numpy.emit(nziz_positions) # emit da results
+
 
     def run(self):
         try:
