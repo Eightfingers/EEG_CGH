@@ -11,6 +11,7 @@ from matlab_thread import MatlabMainThread
 from menu_widget import MenuWidget
 from status_widget import StatusWidget
 from optitrack_thread import OptitrackMainThread
+import os
 
 from scipy.spatial.transform import Rotation as R
 
@@ -31,12 +32,14 @@ class MainWindow(QMainWindow):
         # is buggy, it just crashes the app. Below is just a quick remedy by having a seperate 
         # variables to store all the array data.
 
-        self.NZIZ_data = None
-        self.NZIZ_specs_data = None
-        self.CIRCUM_data = None
-        self.CIRCUM_specs_data = None
-        self.EarToEar_data = None
-        self.EarToEar_specs_data = None
+        # self.NZIZ_data = None
+        # self.NZIZ_specs_data = None
+        # self.CIRCUM_data = None
+        # self.CIRCUM_specs_data = None
+        # self.EarToEar_data = None
+        # self.EarToEar_specs_data = None
+
+        self.save_directory = os.getcwd() + "\RecordedData"
 
         self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace 
         self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
@@ -110,6 +113,42 @@ class MainWindow(QMainWindow):
         # Now connect and initialize the Signals in the MenuWidget with the threads
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
         self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+
+    @Slot(int)
+    def save_data (self, message):
+        print(message)
+
+        # Get the data from the optitrack thread
+        self.stylus_data = self.optitrack_main_thread.stylus_data 
+        self.specs = self.optitrack_main_thread.specs_data 
+        self.specs_rotation = self.optitrack_main_thread.specs_rotation_data
+
+        # Strip of all the zeroes
+        self.stylus_data = self.stylus_data[~np.all(self.stylus_data == 0, axis=1)]
+        self.specs = self.specs[~np.all(self.specs == 0, axis=1)]
+        self.specs_rotation = self.specs_rotation[~np.all(self.specs_rotation == 0, axis=1)]
+
+        if (message == 1):
+            print("Main: Saving NZIZ data")
+            np.savetxt(self.save_directory + "data_NZIZstylus.csv", self.stylus_data, delimiter=',')
+            np.savetxt(self.save_directory + "data_NZIZspecs.csv", self.specs, delimiter=',')
+            np.savetxt("rotation_data_NZIZspecs.csv", self.specs_rotation, delimiter=',')
+            self.update_and_add_scatterNZIZ(self.stylus_data)
+
+            # self.NZIZdata_to_main_signals.signal_numpy.emit(self.NZIZstylus_data)
+        elif (message == 2): # Circum
+            print("Main: Saving Circum data")
+            np.savetxt(self.save_directory + "\data_CIRCUMstylus.csv", self.stylus_data, delimiter=',')
+            np.savetxt(self.save_directory + "\data_CIRCUMspecs.csv", self.specs, delimiter=',')
+            np.savetxt("rotation_data_CIRCUMspecs.csv", self.specs_rotation, delimiter=',')
+            self.update_and_add_scatterCIRCUM(self.stylus_data)
+
+        elif (message ==3): # Ear to Ear
+            print("Main: Saving Ear to Ear data")
+            np.savetxt(self.save_directory + "\data_EarToEarstylus.csv", self.stylus_data, delimiter=',')
+            np.savetxt(self.save_directory + "\data_EarToEarspecs.csv", self.specs, delimiter=',')
+            np.savetxt("rotation_data_CIRCUMspecs.csv", self.specs_rotation, delimiter=',')
+            self.update_and_add_scatterEarToEar(self.stylus_data)
 
     @Slot()
     def clear_data(self):

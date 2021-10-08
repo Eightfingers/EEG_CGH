@@ -15,12 +15,18 @@ from app_signals import AppSignals
 
 class MenuWidget(QWidget):
 
+    # Button number convention
+    NZIZ_BUTTON = 1
+    CIRCUM_BUTTON = 2
+    EARTOEAR_BUTTON = 3
+
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
 
         # store the format of the layout
         self.layout = parent.menu_layout
-        self.parent = parent
+
+        self.parent = parent # Couldn't find a way to reference the parent, from the class functions.
         
         # https://stackoverflow.com/questions/1296501/find-path-to-currently-running-file
         self.save_directory = os.getcwd() + "\RecordedData"
@@ -36,6 +42,9 @@ class MenuWidget(QWidget):
         self._optitrack_thread = None 
         
         self.signals_to_matlab = AppSignals()
+
+        self.signals_to_main = AppSignals()
+        self.signals_to_main.signal_int.connect(parent.save_data)
 
         self.NZIZdata_to_main_signals = AppSignals()
         self.NZIZdata_to_main_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
@@ -120,55 +129,22 @@ class MenuWidget(QWidget):
         #     # Call the matlab engine 
         #     print("Predict stuff now")
 
+    @Slot()
     def change_button_state(self, button, button_label):
         if(button.isFlat()): # If the initial state of the button is flat and it is clicked, unflat them
             button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
             button.setText(button_label)
             button.setFlat(False)
 
-            # Get the data from the optitrack thread
-            self.stylus_data = self._optitrack_thread.stylus_data 
-            self.specs = self._optitrack_thread.specs_data 
-            self.specs_rotation = self._optitrack_thread.specs_rotation_data
-
-            # Strip of all the zeroes
-            self.stylus_data = self.stylus_data[~np.all(self.stylus_data == 0, axis=1)]
-            self.specs = self.specs[~np.all(self.specs == 0, axis=1)]
-            self.specs_rotation = self.specs_rotation[~np.all(self.specs_rotation == 0, axis=1)]
-
             # Save the data accordingly
             if (button_label == "Start NZIZ"):
-                self.NZIZstylus_data = self.stylus_data
-                self.NZIZspecs_data = self.specs
-
-                # self.parent.NZIZ_data = self.NZIZstylus_data
-                # self.parent.NZIZ_specs_data = self.NZIZspecs_data # SHIT NOT WORKING ?
-                # print("IS DATA SAVE ACCORDINGLY/")
-                # print(self.parent.NZIZ_specs_data)
-                # print(self.parent.NZIZ_data)
-                self.NZIZ_specs_rotation = self.specs_rotation
-                print(self.NZIZstylus_data)
-                # update parent variables
-                np.savetxt("data_NZIZstylus.csv",self.NZIZstylus_data, delimiter=',')
-                np.savetxt("data_NZIZspecs.csv",self.NZIZspecs_data, delimiter=',')
-                np.savetxt("rotation_data_NZIZspecs.csv",self.NZIZ_specs_rotation, delimiter=',')
-
-                self.NZIZdata_to_main_signals.signal_numpy.emit(self.NZIZstylus_data)
+                self.signals_to_main.signal_int.emit(1)
 
             elif (button_label == "Start Circum"):
-                self.CIRCUMstylus_data = self.stylus_data
-                self.CIRCUMspecs_data = self.specs
-                np.savetxt(self.save_directory + "\data_CIRCUMstylus.csv",self.CIRCUMstylus_data, delimiter=',')
-                np.savetxt(self.save_directory + "\data_CIRCUMspecs.csv",self.CIRCUMspecs_data, delimiter=',')
-                # emit to update to the main widget
-                self.CIRCUMdata_to_main_signals.signal_numpy.emit(self.CIRCUMstylus_data)
+                self.signals_to_main.signal_int.emit(2)
 
             elif (button_label == "Start Ear to Ear"):
-                self.EarToEarstylus_data = self.stylus_data
-                self.EarToEarpecs_data = self.specs
-                np.savetxt(self.save_directory + "\data_EarToEarstylus.csv", self.EarToEarstylus_data, delimiter=',')
-                np.savetxt(self.save_directory + "\data_EarToEarspecs.csv", self.EarToEarpecs_data, delimiter=',')
-                self.EarToEardata_to_main_signals.signal_numpy.emit(self.EarToEarstylus_data)
+                self.signals_to_main.signal_int.emit(3)
 
             self.signals_to_status.signal_bool.emit(False) # Stop recording
             self.signals_to_status.signal_list.emit(["Stylus","Stopped"])

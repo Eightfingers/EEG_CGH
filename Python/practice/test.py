@@ -13,4 +13,22 @@ print(split_numpy)
 # # Insert array to the end of numpy
 # np.append(array_1, tuple_1, axis = 0)
 
+class Man():
+    def __init__(self, parent=None):
+        self.hello = "Hellow1"
+        print("Man init finished")
+
+class Man2():
+    def __init__(self, parent=None):
+        self.hello2 = "Hellow"
+        self.parent = parent
+        print(self.parent)
+    
+    def kekw(self):
+        print(self.parent.hello)
+        print(self.hello2)
+
+test1 = Man()
+test = Man2(test1)
+test.kekw()
 # print(array_1)
