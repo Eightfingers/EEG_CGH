@@ -11,7 +11,7 @@ addpath('30_9_2021')
 stylus_data = readmatrix('data_CIRCUMstylus.csv');
 quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_nziz = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
+dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
 
 %% Run Function to give points
 % Quaternion way
