@@ -71,8 +71,8 @@ class MatlabWorkerThread(QThread):
     def run(self):
         try:
             if self._command == "NZIZ positions":
-                # nziz_positions = self.matlab_engine.get_nziz()
-                nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
+                nziz_positions = self.matlab_engine.get_nziz()
+                # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
                 nziz_positions = np.array(nziz_positions)
                 print("Matlab: The NZIZ positions are:", nziz_positions)
                 self.parent.signals_to_main.signal_numpy.emit(nziz_positions) 

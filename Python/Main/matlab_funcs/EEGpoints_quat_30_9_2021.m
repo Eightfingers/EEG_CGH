@@ -6,7 +6,7 @@ function predicted = EEGpoints_quat_30_9_2021()
 
 addpath('helperfuncs\')
 addpath('myfuncs\')
-addpath('30_9_2021')
+addpath('6_10_2021')
 
 %% Load the different wanded data
 circumference = readmatrix('circum_shake_30_9_2021_quat.csv');

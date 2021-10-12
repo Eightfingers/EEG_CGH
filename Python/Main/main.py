@@ -27,10 +27,8 @@ class MainWindow(QMainWindow):
         self.NZIZscatter_series = QScatter3DSeries()
         self.CIRCUMscatter_series = QScatter3DSeries()
         self.EarToEarscatter_series = QScatter3DSeries()
-
-        # Unfortunately, i think to access the array data that has been added QScatter3DSeries()
-        # is buggy, it just crashes the app. Below is just a quick remedy by having a seperate 
-        # variables to store all the array data.
+        self.Predicted_series = QScatter3DSeries()
+        self.specs_series = QScatter3DSeries()
 
         self.NZIZ_data = None
         self.NZIZ_specs_data = None
@@ -51,6 +49,8 @@ class MainWindow(QMainWindow):
         self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace 
         self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
         self.EarToEarscatter_series.setBaseColor(QColor(0, 0, 255)) # Blue for Ear to Ear trace
+        self.Predicted_series.setBaseColor(QColor(50, 168, 82)) # Cyan-greenish for predicted
+        self.specs_series.setBaseColor(QColor(0, 0, 255)) # Specs position
 
         # Set the axis 
         self.x_axis = QValue3DAxis()
@@ -172,15 +172,21 @@ class MainWindow(QMainWindow):
         self.scatter.removeSeries(self.NZIZscatter_series)
         self.scatter.removeSeries(self.CIRCUMscatter_series)
         self.scatter.removeSeries(self.EarToEarscatter_series)
+        self.scatter.removeSeries(self.Predicted_series)
+        self.scatter.removeSeries(self.specs_series)
 
         # Reset the series. I Couldn't really figure out the method in the python function. Hope this will do for now
         self.NZIZscatter_series = QScatter3DSeries()
         self.CIRCUMscatter_series = QScatter3DSeries()
         self.EarToEarscatter_series = QScatter3DSeries()
+        self.Predicted_series = QScatter3DSeries()
+        self.specs_series = QScatter3DSeries()
 
         self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace 
         self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
         self.EarToEarscatter_series.setBaseColor(QColor(0, 0, 255)) # Blue for Ear to Ear trace
+        self.Predicted_series.setBaseColor(QColor(50, 168, 82)) # Cyan-greenish for predicted
+        self.specs_series.setBaseColor(QColor(0, 0, 255)) # Specs position
 
     # Create the Slots that will receive signals from the worker Thread
     @Slot(np.ndarray)
@@ -193,8 +199,8 @@ class MainWindow(QMainWindow):
     @Slot(np.ndarray)
     def show_eeg_positions(self, message):
         print(message)
-        self.add_list_to_scatterdata(self.NZIZscatter_series, message)
-        self.scatter.addSeries(self.NZIZscatter_series)
+        self.add_list_to_scatterdata(self.Predicted_series, message)
+        self.scatter.addSeries(self.Predicted_series)
         self.scatter.show()
 
     @Slot(np.ndarray)

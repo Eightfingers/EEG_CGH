@@ -24,9 +24,9 @@ for i = 1:1:length(stylus_data)
     RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
     rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
     dis_vector_circum = dis_matrix_circum(i,:);
-    wand_vector_circum = [stylus_data(i,5); ... % X,Y,Z 
-              stylus_data(i,7); ...
-              stylus_data(i,6); ...
+    wand_vector_circum = [stylus_data(i,1); ... % X,Y,Z 
+              stylus_data(i,3); ...
+              stylus_data(i,2); ...
                1];
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
@@ -39,7 +39,7 @@ end
 stylus_data = readmatrix('data_EarToEarstylus.csv');
 quaternion_extracted = readmatrix('rotation_data_EarToEarspecs.csv'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_nziz = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
+dis_matrix_ear2ear = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
 
 %% Run Function to give points
 % Quaternion way
@@ -52,9 +52,9 @@ for i = 1:1:length(stylus_data)
     RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
     rot_vector_ear2ear = [-RPY1(1), -RPY1(3), -RPY1(2)];
     dis_vector_ear2ear = dis_matrix_ear2ear(i,:);
-    wand_vector_ear2ear = [stylus_data(i,5); ... % X,Y,Z 
-              stylus_data(i,7); ...
-              stylus_data(i,6); ...
+    wand_vector_ear2ear = [stylus_data(i,1); ... % X,Y,Z 
+              stylus_data(i,3); ...
+              stylus_data(i,2); ...
                1];
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_ear2ear, rot_vector_ear2ear);    
     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_ear2ear;
@@ -78,9 +78,9 @@ for i = 1:1:length(stylus_data)
     RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
     rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
     dis_vector_nziz = dis_matrix_nziz(i,:);
-    wand_vector_nziz = [stylus_data(i,5); ... % X,Y,Z 
-              stylus_data(i,7); ...
-              stylus_data(i,6); ...
+    wand_vector_nziz = [stylus_data(i,1); ... % X,Y,Z 
+              stylus_data(i,3); ...
+              stylus_data(i,2); ...
                1];
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_nziz, rot_vector_nziz);    
     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_nziz;
