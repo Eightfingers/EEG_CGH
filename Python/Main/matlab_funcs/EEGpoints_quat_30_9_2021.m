@@ -1,5 +1,5 @@
-function [predicted] = EEGpoints_quat()
-
+function predicted = EEGpoints_quat_30_9_2021()
+%UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% Load the different wanded data
 %%% Circumference
@@ -8,10 +8,24 @@ addpath('helperfuncs\')
 addpath('myfuncs\')
 addpath('30_9_2021')
 
-stylus_data = readmatrix('data_CIRCUMstylus.csv');
-quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
+%% Load the different wanded data
+circumference = readmatrix('circum_shake_30_9_2021_quat.csv');
+ear2ear = readmatrix('ear2ear_shake_30_9_2021_quat.csv');
+nziz = readmatrix ('NZIZ_shake_30_9_2021_quat.csv');
+
+stylus_data = circumference(:,3:9); 
+stylus_data = rmmissing(stylus_data);
+
+specs_data = circumference(:,35:41); 
+specs_data = rmmissing(specs_data);
+
+dis_matrix_circum = specs_data(:,5:7); % extract the displacement vector out
+dis_matrix_circum = [dis_matrix_circum(:,1), dis_matrix_circum(:,3), dis_matrix_circum(:,2)];
+dis_matrix_circum = rmmissing(dis_matrix_circum);
+
+quaternion_extracted = specs_data(:,1:4);
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_nziz = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
+quaternion_extracted = rmmissing(quaternion_extracted);
 
 %% Run Function to give points
 % Quaternion way
@@ -36,10 +50,19 @@ end
 
 %%% Ear to Ear
 
-stylus_data = readmatrix('data_EarToEarstylus.csv');
-quaternion_extracted = readmatrix('rotation_data_EarToEarspecs.csv'); % extract the rotation vector out
+stylus_data = ear2ear(:,3:9); 
+stylus_data = rmmissing(stylus_data);
+
+specs_data = ear2ear(:,35:41); 
+specs_data = rmmissing(specs_data);
+
+dis_matrix_ear2ear = specs_data(:,5:7); % extract the displacement vector out
+dis_matrix_ear2ear = [dis_matrix_ear2ear(:,1), dis_matrix_ear2ear(:,3), dis_matrix_ear2ear(:,2)];
+dis_matrix_ear2ear = rmmissing(dis_matrix_ear2ear);
+
+quaternion_extracted = specs_data(:,1:4);
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_nziz = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
+quaternion_extracted = rmmissing(quaternion_extracted);
 
 %% Run Function to give points
 % Quaternion way
@@ -63,10 +86,19 @@ for i = 1:1:length(stylus_data)
 end
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus.csv');
-quaternion_extracted = readmatrix('rotation_data_NZIZspecs.csv'); % extract the rotation vector out
+stylus_data = nziz(:,3:9); 
+stylus_data = rmmissing(stylus_data);
+
+specs_data = nziz(:,35:41); 
+specs_data = rmmissing(specs_data);
+
+dis_matrix_nziz = specs_data(:,5:7); % extract the displacement vector out
+dis_matrix_nziz = [dis_matrix_nziz(:,1), dis_matrix_nziz(:,3), dis_matrix_nziz(:,2)];
+dis_matrix_nziz = rmmissing(dis_matrix_nziz);
+
+quaternion_extracted = specs_data(:,1:4);
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+quaternion_extracted = rmmissing(quaternion_extracted);
 
 %% Run Function to give points
 % Quaternion way
@@ -543,6 +575,5 @@ plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
 xlabel('x');
 ylabel('y');
 zlabel('z');
-
 end
 

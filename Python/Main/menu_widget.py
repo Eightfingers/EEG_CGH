@@ -72,8 +72,8 @@ class MenuWidget(QWidget):
         self.predictpz_button = QPushButton("Predict Fpz")
         self.predictpz_button.clicked.connect(self.predict_fpz_position) # can only start when there are 3 scatter data
 
-        self.predict_button = QPushButton("Predict 21")
-        self.predict_button.clicked.connect(self.predict_eeg_positions) # can only start when there are 3 scatter data
+        self.predict_all_button = QPushButton("Predict 21")
+        self.predict_all_button.clicked.connect(self.predict_eeg_positions) # can only start when there are 3 scatter data
 
         self.clear_button = QPushButton("Clear") # Clear EEG positions
         self.clear_button.clicked.connect(parent.clear_data) 
@@ -82,7 +82,7 @@ class MenuWidget(QWidget):
         self.layout.addWidget(self.Circumbutton)
         self.layout.addWidget(self.EartoearButton)
         self.layout.addWidget(self.predictpz_button)
-        self.layout.addWidget(self.predict_button)
+        self.layout.addWidget(self.predict_all_button)
         self.layout.addWidget(self.clear_button)
         self.layout.addStretch()
 
@@ -101,29 +101,44 @@ class MenuWidget(QWidget):
 
     @Slot()
     def do_nziz(self):
-        self.change_button_state(self.NZIZbutton, self.NZIZbutton_text)
+        self.change_trace_button_state(self.NZIZbutton, self.NZIZbutton_text)
 
     @Slot()
     def do_circum(self):
-        self.change_button_state(self.Circumbutton, self.Circumbutton_text)
+        self.change_trace_button_state(self.Circumbutton, self.Circumbutton_text)
 
     @Slot()
     def do_ear_to_ear(self):
-        self.change_button_state(self.EartoearButton, self.EartoEarbutton_text)
+        self.change_trace_button_state(self.EartoearButton, self.EartoEarbutton_text)
+
+    @Slot(str) # used by the matlab thread to indicate that it has finished predicting
+    def change_predict_state(self, message):
+        if message == "21 positions":
+            self.predict_all_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
+            self.predict_all_button.setText("Predict 21")
+        elif message == "NZIZ positions":
+            self.predictpz_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
+            self.predictpz_button.setText("Predict Fpz")
     
     def predict_eeg_positions(self):
         print("Menu: Predict eeg positions")
-        if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0 ):
-            QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
-        else:
-            print("Predict stuff now")
+        # if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0 ):
+        #     QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
+        # else:
+        #     print("Predict stuff now")
+        message =[1,2,"21 positions"] # 1,2 is a dummy message
+        self.signals_to_matlab.signal_list.emit(message)
+        self.predict_all_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
+        self.predict_all_button.setText("Predicting ..")
 
-    @Slot()
     def predict_fpz_position(self):
         print("Menu: Predicting FPZ position")
         # message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
-        message =[1,2]
+        message =[1,2,"NZIZ positions"] # 1,2 is a dummy message
         self.signals_to_matlab.signal_list.emit(message)
+        self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
+        self.predictpz_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
+        self.predictpz_button.setText("Predicting ..")
 
         # if (parent.NZIZscatter_series.dataProxy().itemCount() == 0):
         #     QMessageBox.warning(self, "Warning", "Please complete NZIZ trace first!!")
@@ -132,7 +147,7 @@ class MenuWidget(QWidget):
         #     print("Predict stuff now")
 
     @Slot()
-    def change_button_state(self, button, button_label):
+    def change_trace_button_state(self, button, button_label):
         if(button.isFlat()): # If the initial state of the button is flat and it is clicked, unflat them
             button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
             button.setText(button_label)

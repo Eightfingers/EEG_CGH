@@ -11,6 +11,7 @@ from matlab_thread import MatlabMainThread
 from menu_widget import MenuWidget
 from status_widget import StatusWidget
 from optitrack_thread import OptitrackMainThread
+import os
 
 from scipy.spatial.transform import Rotation as R
 
@@ -33,10 +34,19 @@ class MainWindow(QMainWindow):
 
         self.NZIZ_data = None
         self.NZIZ_specs_data = None
+        self.NZIZ_specs_rotate = None
         self.CIRCUM_data = None
         self.CIRCUM_specs_data = None
+        self.CIRCUM_specs_rotate = None
         self.EarToEar_data = None
         self.EarToEar_specs_data = None
+        self.EarToEar_specs_rotate = None
+
+        self.NZIZ_BUTTON = 1
+        self.CIRCUM_BUTTON = 2
+        self.EARTOEAR_BUTTON = 3
+
+        self.save_directory = os.getcwd() + "RecordedData"
 
         self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace 
         self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
@@ -104,12 +114,58 @@ class MainWindow(QMainWindow):
         self.matlab_main_thread.start()
 
         # Start the Optitrack Thread
-        self.optitrack_main_thread = OptitrackMainThread(self)
-        self.optitrack_main_thread.start()  
+        # self.optitrack_main_thread = OptitrackMainThread(self)
+        # self.optitrack_main_thread.start()  
         
         # Now connect and initialize the Signals in the MenuWidget with the threads
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
-        self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+        # self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+
+    @Slot(int)
+    def save_data (self, message):
+        print(message)
+
+        # Get the data from the optitrack thread
+        self.stylus_data = self.optitrack_main_thread.stylus_data 
+        self.specs = self.optitrack_main_thread.specs_data 
+        self.specs_rotation = self.optitrack_main_thread.specs_rotation_data
+
+        # Strip of all the zeroes
+        self.stylus_data = self.stylus_data[~np.all(self.stylus_data == 0, axis=1)]
+        self.specs = self.specs[~np.all(self.specs == 0, axis=1)]
+        self.specs_rotation = self.specs_rotation[~np.all(self.specs_rotation == 0, axis=1)]
+
+        if (message == self.NZIZ_BUTTON): # NZIZ
+            print("Main: Saving NZIZ data")
+            np.savetxt("data_NZIZstylus.csv", self.stylus_data, delimiter=',')
+            np.savetxt("data_NZIZspecs.csv", self.specs, delimiter=',')
+            np.savetxt("rotation_data_NZIZspecs.csv", self.specs_rotation, delimiter=',')
+            self.NZIZ_data = self.stylus_data
+            self.NZIZ_specs_data = self.specs
+            self.NZIZ_specs_rotate = self.specs_rotation
+            self.update_and_add_scatterNZIZ(self.stylus_data)
+
+            # self.NZIZdata_to_main_signals.signal_numpy.emit(self.NZIZstylus_data)
+        elif (message == self.CIRCUM_BUTTON): # Circum
+            print("Main: Saving Circum data")
+            np.savetxt("data_CIRCUMstylus.csv", self.stylus_data, delimiter=',')
+            np.savetxt("data_CIRCUMspecs.csv", self.specs, delimiter=',')
+            np.savetxt("rotation_data_CIRCUMspecs.csv", self.specs_rotation, delimiter=',')
+            self.CIRCUM_data = self.stylus_data
+            self.CIRCUM_specs_data = self.specs
+            self.CIRCUM_specs_rotate = self.specs_rotation
+
+            self.update_and_add_scatterCIRCUM(self.stylus_data)
+
+        elif (message == self.EARTOEAR_BUTTON): # Ear to Ear
+            print("Main: Saving Ear to Ear data")
+            np.savetxt("data_EarToEarstylus.csv", self.stylus_data, delimiter=',')
+            np.savetxt("data_EarToEarspecs.csv", self.specs, delimiter=',')
+            np.savetxt("rotation_data_EarToEarspecs.csv", self.specs_rotation, delimiter=',')
+            self.EartoEar_data = self.stylus_data
+            self.EartoEar_specs_data = self.specs
+            self.EartoEar_specs_rotate = self.specs_rotation
+            self.update_and_add_scatterEarToEar(self.stylus_data)
 
     @Slot()
     def clear_data(self):
@@ -135,10 +191,9 @@ class MainWindow(QMainWindow):
 
     # Create the Slots that will receive signals from the worker Thread
     @Slot(np.ndarray)
-    def show_nziz_positions(self, message):
-        print("LOL")
+    def show_eeg_positions(self, message):
         print(message)
-        self.add_list_to_scatterdata_z_y_swapped(self.NZIZscatter_series, message)
+        self.add_list_to_scatterdata(self.NZIZscatter_series, message)
         self.scatter.addSeries(self.NZIZscatter_series)
         self.scatter.show()
 
@@ -160,14 +215,6 @@ class MainWindow(QMainWindow):
         else:
             for d in data:
                 scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
-
-    def add_list_to_scatterdata_z_y_swapped(self, scatter_series, data):
-        if data.ndim == 1:
-            scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(data[0], data[2], data[1])))
-        else:
-            for d in data:
-                scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[2], d[1])))
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

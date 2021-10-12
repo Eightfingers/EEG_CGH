@@ -9,4 +9,3 @@ function spline_plot = splineplot(x_spline,y_spline)
 %     y_fit=get(f2,'Ydata'); %// the y-axis vector smoothed data
 
 end
-

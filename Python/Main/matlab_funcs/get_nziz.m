@@ -6,7 +6,7 @@
 % addpath('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept\helperfuncs');
 % addpath('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept\myfuncs');
 % addpath ('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Data\30_9_2021');
-function final_nziz_python = get_nziz();
+function final_nziz_python = get_nziz()
 % addpath('6_10_2021');
 addpath('helperfuncs');
 addpath('myfuncs');
@@ -133,13 +133,17 @@ trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 
 %%% NZIZ 
 final_nziz_python = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
-% final_nziz_python = final_nziz_python *1000; % convert m to mm
-plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd');
-hold on ;
+final_nziz_python = final_nziz_python.';
+final_nziz_python = [final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2)];
 
-predicted_nziz = num2cell(final_nziz_python);
-nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
-final_nziz_label = [nziz_label;  predicted_nziz];
+
+% final_nziz_python = final_nziz_python *1000; % convert m to mm
+% plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd');
+% hold on ;
+% 
+% predicted_nziz = num2cell(final_nziz_python);
+% nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
+% final_nziz_label = [nziz_label;  predicted_nziz];
 
 end
 

@@ -17,9 +17,11 @@ class MatlabMainThread(QThread):
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
         self.signals_to_main = AppSignals()
         self.signals_to_status = AppSignals()
+        self.signals_to_menu = AppSignals()
         
-        self.signals_to_main.signal_numpy.connect(parent.show_nziz_positions)
+        self.signals_to_main.signal_numpy.connect(parent.show_eeg_positions)
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label) # change label function is found in status_widget.py
+        self.signals_to_menu.signal_str.connect(parent.left_dock_menu_widget.change_predict_state) # change button text on the menu widget
 
     def run(self):
         # Start the Matlab Engine
@@ -46,35 +48,43 @@ class MatlabMainThread(QThread):
     def spawn_thread(self, message):
         stylus_data = message[0]
         specs_data = message[1]
+        command = message[2]
 
-        self.worker_thread = MatlabWorkerThread(stylus_data, specs_data, self)
+        self.worker_thread = MatlabWorkerThread(stylus_data, specs_data, command, self)
         self.worker_thread.start()
         # print("Spawn matlab thread called!!!")
         # print(message)
         
 # Create a worker thread that is responsible for executing of scripts inside the matlab engine
 class MatlabWorkerThread(QThread):
-    def __init__(self, specs_data, stylus_data, parent=None):
+    def __init__(self, stylus_data, specs_data, command, parent=None):
         QThread.__init__(self, parent)
+        self.parent = parent
         self.matlab_engine = parent.eng
         self._stylus_data = stylus_data 
         self._specs_data = specs_data
+        self._command = command
         # print("specs_Data iss")
         # print(self._specs_data)
         # print("Tryna do some stuff")
-        try:
-            nziz_positions = self.matlab_engine.get_nziz()
-            # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
-            nziz_positions = np.array([nziz_positions[0], nziz_positions[1], nziz_positions[2]])
-            nziz_positions = np.transpose(nziz_positions)
-            print("Matlab: The NZIZ positions are:", nziz_positions)
-            parent.signals_to_main.signal_numpy.emit(nziz_positions) 
-        except Exception as e:
-            print("Matlab: Error in running the script")
-            print(e)
 
     def run(self):
         try:
-            pass
-        except:
-            pass
+            if self._command == "NZIZ positions":
+                # nziz_positions = self.matlab_engine.get_nziz()
+                nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
+                nziz_positions = np.array(nziz_positions)
+                print("Matlab: The NZIZ positions are:", nziz_positions)
+                self.parent.signals_to_main.signal_numpy.emit(nziz_positions) 
+
+            elif self._command == "21 positions":
+                all_positions = self.matlab_engine.EEGpoints_quat()
+                all_positions = np.array(all_positions)
+                print(all_positions)
+                print("Matlab: The All positions are:", all_positions)
+                self.parent.signals_to_main.signal_numpy.emit(all_positions) 
+            self.parent.signals_to_menu.signal_str.emit(self._command) # indicate it has finished predicting
+
+        except Exception as e:
+            print("Matlab: Error in running the script")
+            print(e)

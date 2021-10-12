@@ -5,7 +5,7 @@
 % addpath('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept\helperfuncs');
 % addpath('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept\myfuncs');
 % addpath ('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Data\30_9_2021');
-function final_nziz_python = get_nziz_30_9_2021();
+function final_nziz_python = get_nziz_30_9_2021()
 
 addpath('30_9_2021');
 addpath('helperfuncs');
@@ -40,7 +40,6 @@ quaternion_extracted = quaternion_data(:,35:38);
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
 quaternion_extracted = rmmissing(quaternion_extracted);
 
-new_markers_nziz = [];
 % Euler Matrix rotation
 % for i = 1:1:length(stylus_data)
 %     disp(i);
@@ -169,12 +168,7 @@ trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 
 %%% NZIZ 
 final_nziz_python = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
-% final_nziz_python = final_nziz_python *1000; % convert m to mm
-plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd');
-hold on ;
-% plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd', 'MarkerSize', 10);
-predicted_nziz = num2cell(final_nziz_python);
-nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
-final_nziz_label = [nziz_label;  predicted_nziz];
+final_nziz_python = final_nziz_python.';
+final_nziz_python = [final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2)];
 
 end
