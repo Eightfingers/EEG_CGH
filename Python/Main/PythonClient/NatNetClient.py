@@ -226,6 +226,7 @@ class NatNetClient:
 
         # Labeled markers (Version 2.3 and later)
         labeledMarkerCount = 0
+        labeledMarkerPositions = []
         if( ( self.__natNetStreamVersion[0] == 2 and self.__natNetStreamVersion[1] > 3 ) or self.__natNetStreamVersion[0] > 2 ):
             labeledMarkerCount = int.from_bytes( data[offset:offset+4], byteorder='little' )
             offset += 4
@@ -238,6 +239,7 @@ class NatNetClient:
                 size = FloatValue.unpack( data[offset:offset+4] )
                 offset += 4
                 trace( "\t Labeled Marker", i, ":", pos[0],",", pos[1],",", pos[2] )
+                labeledMarkerPositions.append(pos)
 
                 # Version 2.6 and later
                 if( ( self.__natNetStreamVersion[0] == 2 and self.__natNetStreamVersion[1] >= 6 ) or self.__natNetStreamVersion[0] > 2 or major == 0 ):
@@ -335,7 +337,7 @@ class NatNetClient:
         # Send information to any listener.
         if self.newFrameListener is not None:
             self.newFrameListener( frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
-                                  labeledMarkerCount, timecode, timecodeSub, timestamp, isRecording, trackedModelsChanged )
+                                  labeledMarkerCount, timecode, timecodeSub, timestamp, isRecording, trackedModelsChanged, labeledMarkerPositions )
 
     # Unpack a marker set description packet
     def __unpackMarkerSetDescription( self, data ):
