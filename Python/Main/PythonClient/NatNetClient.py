@@ -19,7 +19,7 @@ import struct
 from threading import Thread
 
 def trace( *args ):
-    pass # print( "".join(map(str,args)) )
+    print( "".join(map(str,args)) )
 
 # Create structs for reading various object types to speed up parsing.
 Vector3 = struct.Struct( '<fff' )
