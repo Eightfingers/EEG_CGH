@@ -29,6 +29,7 @@ class MainWindow(QMainWindow):
         self.EarToEarscatter_series = QScatter3DSeries()
         self.Predicted_series = QScatter3DSeries()
         self.specs_series = QScatter3DSeries()
+        self.stylus_position_series = QScatter3DSeries()
 
         self.NZIZ_data = None
         self.NZIZ_specs_data = None
@@ -114,12 +115,14 @@ class MainWindow(QMainWindow):
         self.matlab_main_thread.start()
 
         # Start the Optitrack Thread
-        # self.optitrack_main_thread = OptitrackMainThread(self)
-        # self.optitrack_main_thread.start()  
+        self.optitrack_main_thread = OptitrackMainThread(self)
+        self.optitrack_main_thread.start()  
         
         # Now connect and initialize the Signals in the MenuWidget with the threads
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
-        # self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+        self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+
+        self.scatter.addSeries(self.stylus_position_series)
 
     @Slot(int)
     def save_data (self, message):
@@ -197,10 +200,12 @@ class MainWindow(QMainWindow):
 
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):
+        self.scatter.removeSeries(self.stylus_position_series) # remove the old position
         self.stylus_position_series = QScatter3DSeries() # create a new series at every instance
         self.add_list_to_scatterdata(self.stylus_position_series, message)
         self.scatter.addSeries(self.stylus_position_series)
         self.scatter.show()
+        pass
 
     @Slot(np.ndarray)
     def update_and_add_scatterNZIZ(self, message):
@@ -226,6 +231,7 @@ class MainWindow(QMainWindow):
         else:
             for d in data:
                 scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
+
 
 if __name__ == '__main__':  
     app = QApplication(sys.argv)

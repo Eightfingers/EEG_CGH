@@ -92,7 +92,7 @@ class OptitrackMainThread(QThread):
                     if (self.specs_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Specs","Lost detection"])
 
-        print(self.index_counter)
+        # print("Optitrack: index counter is at", self.index_counter)
         if self.index_counter > self.row:
             print("Optitrack: Overflow of data!") 
             
