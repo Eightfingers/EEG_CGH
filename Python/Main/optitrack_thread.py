@@ -15,11 +15,14 @@ class OptitrackMainThread(QThread):
 
         self.signals_to_status = AppSignals()
         self.signals_to_main = AppSignals()
+        self.signals_to_main_show_markers = AppSignals()
         self.signals_to_main.signal_numpy.connect(parent.show_current_stylus_position)
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label)
+        self.signals_to_main_show_markers.signal_numpy.connect(parent.show_all_markers)
 
         # Control variables 
         self.record = False
+        self.show_all_markers = False
         self.stylus_record = None
         self.specs_record = None
         self.stylus_lose_track_counter = 0
@@ -53,8 +56,11 @@ class OptitrackMainThread(QThread):
 
     # This is a callback function that gets connected to the NatNet client and called once per mocap frame.
     def receiveNewFrame(self, frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
-                        labeledMarkerCount, timecode, timecodeSub, timestamp, isRecording, trackedModelsChanged ):
-        # print( "Received frame", frameNumber )
+                        labeledMarkerCount, timecode, timecodeSub, timestamp, isRecording, trackedModelsChanged, labeledMarkerPositions ):
+        # print( "Optitrack: frame number ", frameNumber )
+        if (self.show_all_markers == True):
+            labeledMarkerPositions = np.round(labeledMarkerPositions, 5)
+            self.signals_to_main_show_markers.emit(labeledMarkerPositions)
         pass 
 
     # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame

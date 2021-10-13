@@ -37,6 +37,7 @@ class MenuWidget(QWidget):
         self.NZIZbutton_text = "Start NZIZ"
         self.Circumbutton_text = "Start Circum"
         self.EartoEarbutton_text = "Start Ear to Ear"
+        self.attach_electrodes_button_text = "Attach electrodes"
 
         # I dont think this is being used yet for now.. 
         self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
@@ -69,6 +70,9 @@ class MenuWidget(QWidget):
         self.EartoearButton = QPushButton(self.EartoEarbutton_text)
         self.EartoearButton.clicked.connect(self.do_ear_to_ear) # start a thread when the button is clicked
 
+        self.attach_electrodes_button = QPushButton(self.attach_electrodes_button_text)
+        self.attach_electrodes_button.clicked.connect(self.show_all_marker_positions) # can only start when there are 3 scatter data
+
         self.predictpz_button = QPushButton("Predict Fpz")
         self.predictpz_button.clicked.connect(self.predict_fpz_position) # can only start when there are 3 scatter data
 
@@ -83,6 +87,7 @@ class MenuWidget(QWidget):
         self.layout.addWidget(self.EartoearButton)
         self.layout.addWidget(self.predictpz_button)
         self.layout.addWidget(self.predict_all_button)
+        self.layout.addWidget(self.attach_electrodes_button)
         self.layout.addWidget(self.clear_button)
         self.layout.addStretch()
 
@@ -110,6 +115,10 @@ class MenuWidget(QWidget):
     @Slot()
     def do_ear_to_ear(self):
         self.change_trace_button_state(self.EartoearButton, self.EartoEarbutton_text)
+
+    @Slot()
+    def show_all_marker_positions(self):
+        print("Show all marker positions")
 
     @Slot(str) # used by the matlab thread to indicate that it has finished predicting
     def change_predict_state(self, message):

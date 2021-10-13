@@ -30,7 +30,9 @@ class MainWindow(QMainWindow):
         self.Predicted_series = QScatter3DSeries()
         self.specs_series = QScatter3DSeries()
         self.stylus_position_series = QScatter3DSeries()
+        self.all_markers_series = QScatter3DSeries()
 
+        # these guys are unused 
         self.NZIZ_data = None
         self.NZIZ_specs_data = None
         self.NZIZ_specs_rotate = None
@@ -200,12 +202,19 @@ class MainWindow(QMainWindow):
 
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):
+        self.scatter.removeSeries(self.all_markers_series) # remove the old position
+        self.all_markers_series = QScatter3DSeries() # create a new series at every instance
+        self.add_list_to_scatterdata(self.all_markers_series, message)
+        self.scatter.addSeries(self.all_markers_series)
+        self.scatter.show()
+
+    @Slot(np.ndarray)
+    def show_all_markers(self, message):
         self.scatter.removeSeries(self.stylus_position_series) # remove the old position
         self.stylus_position_series = QScatter3DSeries() # create a new series at every instance
         self.add_list_to_scatterdata(self.stylus_position_series, message)
         self.scatter.addSeries(self.stylus_position_series)
         self.scatter.show()
-        pass
 
     @Slot(np.ndarray)
     def update_and_add_scatterNZIZ(self, message):
