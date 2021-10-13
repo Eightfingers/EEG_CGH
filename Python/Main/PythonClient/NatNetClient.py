@@ -19,7 +19,8 @@ import struct
 from threading import Thread
 
 def trace( *args ):
-    print( "".join(map(str,args)) )
+    # print( "".join(map(str,args)) )
+    pass
 
 # Create structs for reading various object types to speed up parsing.
 Vector3 = struct.Struct( '<fff' )
@@ -236,6 +237,7 @@ class NatNetClient:
                 offset += 12
                 size = FloatValue.unpack( data[offset:offset+4] )
                 offset += 4
+                trace( "\t Labeled Marker", i, ":", pos[0],",", pos[1],",", pos[2] )
 
                 # Version 2.6 and later
                 if( ( self.__natNetStreamVersion[0] == 2 and self.__natNetStreamVersion[1] >= 6 ) or self.__natNetStreamVersion[0] > 2 or major == 0 ):
