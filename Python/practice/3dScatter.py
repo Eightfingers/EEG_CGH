@@ -50,11 +50,13 @@ class MainWindow(QMainWindow):
 
         if (self.scatter_series.dataProxy().itemCount() != 0 ):
             print("The number of items is.. ", self.scatter_series.dataProxy().itemCount())
+            # kekw = self.scatter_series.dataProxy().array() # this will crash the app
+            # print(kekw)
 
         if (self.scatter_series.dataProxy().itemCount() != 0 ):
-            # kekw = self.scatter_series.dataProxy().array() this will crash the app
-            # print(kekw)
             pass
+
+        self.scatter_series.dataProxy().resetArray(QScatter3DSeries())
 
         # set starting position of camera
         camera = self.scatter.scene().activeCamera()
@@ -62,7 +64,6 @@ class MainWindow(QMainWindow):
 
         self.scatter.show()
         self.NZIZ_specs_rotation = np.array([0,0,0,0])
-        np.savetxt("fuck.csv",self.NZIZ_specs_rotation, delimiter=',')
 
     def add_list_to_scatterdata(self, scatter_series, data):
         for d in data:

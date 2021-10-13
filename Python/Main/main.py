@@ -188,19 +188,24 @@ class MainWindow(QMainWindow):
         self.Predicted_series.setBaseColor(QColor(50, 168, 82)) # Cyan-greenish for predicted
         self.specs_series.setBaseColor(QColor(0, 0, 255)) # Specs position
 
-    # Create the Slots that will receive signals from the worker Thread
+    @Slot(np.ndarray)
+    def show_eeg_positions(self, message):
+        # print(message)
+        self.add_list_to_scatterdata(self.Predicted_series, message)
+        self.scatter.addSeries(self.Predicted_series)
+        self.scatter.show()
+
+    @Slot(np.ndarray)
+    def show_current_stylus_position(self, message):
+        self.stylus_position_series = QScatter3DSeries() # create a new series at every instance
+        self.add_list_to_scatterdata(self.stylus_position_series, message)
+        self.scatter.addSeries(self.stylus_position_series)
+        self.scatter.show()
+
     @Slot(np.ndarray)
     def update_and_add_scatterNZIZ(self, message):
         self.add_list_to_scatterdata(self.NZIZscatter_series, message)
         self.scatter.addSeries(self.NZIZscatter_series)
-        self.scatter.show()
-
-    # Create the Slots that will receive signals from the worker Thread
-    @Slot(np.ndarray)
-    def show_eeg_positions(self, message):
-        print(message)
-        self.add_list_to_scatterdata(self.Predicted_series, message)
-        self.scatter.addSeries(self.Predicted_series)
         self.scatter.show()
 
     @Slot(np.ndarray)
@@ -216,7 +221,7 @@ class MainWindow(QMainWindow):
         self.scatter.show()
 
     def add_list_to_scatterdata(self, scatter_series, data):
-        if data.ndim == 1:
+        if data.ndim == 1: # if its one dimensional
             scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(data[0], data[1], data[2])))
         else:
             for d in data:

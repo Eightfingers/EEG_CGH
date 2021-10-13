@@ -14,6 +14,8 @@ class OptitrackMainThread(QThread):
         self.streamingClient = NatNetClient()
 
         self.signals_to_status = AppSignals()
+        self.signals_to_main = AppSignals()
+        self.signals_to_main.signal_numpy.connect(parent.show_current_stylus_position)
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label)
 
         # Control variables 
@@ -32,6 +34,7 @@ class OptitrackMainThread(QThread):
         self.rot_columns = 4 # quaternions
 
         self.index_counter = 0 # used to loopthrough numpy array and replace the values inside
+        self.stylus_position = np.zeros((0, 0, 0))
         self.stylus_data = np.zeros(shape=[self.row, self.columns])
         self.specs_data = np.zeros(shape=[self.row, self.columns])
         self.specs_rotation_data = np.zeros(shape=[self.row, self.rot_columns])
@@ -57,16 +60,16 @@ class OptitrackMainThread(QThread):
     # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
     def receiveRigidBodyFrame(self, id, position, rotation ):
         # print( "Received frame for rigid body", id )
-        if self.record == True:
-            # Record the positions into numpy array
-            # print(id, position)
-            position = np.round(position, 5)
-            rotation = np.round(rotation, 5)
-            
-            if (id == 1004):
+        # print(id, position)
+        position = np.round(position, 5)
+        rotation = np.round(rotation, 5)
+        if (id == 1004):
+            self.stylus_position = position 
+            self.signals_to_main.signal_numpy.emit(position)
+            if self.record == True: # Record the positions into numpy array
                 self.stylus_data[self.index_counter,:] = position
-                if np.all(self.stylus_previous_position != position):  # if its not the same update to the new position
-                    self.stylus_previous_position = position # update the new position
+                if np.all(self.stylus_previous_position != position):  # if its not the same as the old position update to the new position
+                    self.stylus_previous_position = position 
                     self.signals_to_status.signal_list.emit(["Stylus","Detected"])
                     self.stylus_lose_track_counter = 0
                 else:  # if the new position is the same as the old one, there is a big chance that it has lost detection.
@@ -74,7 +77,8 @@ class OptitrackMainThread(QThread):
                     print("Optitrack: Stylus is not detected!")
                     if (self.stylus_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Stylus","Lost detection"])
-            elif (id == 1005):
+        elif (id == 1005):
+            if self.record == True:
                 self.specs_data[self.index_counter,:] = position
                 self.specs_rotation_data[self.index_counter,:] = rotation
                 self.index_counter += 1 # Increment the index counter everytime the final rigidbody is sent
@@ -88,12 +92,10 @@ class OptitrackMainThread(QThread):
                     if (self.specs_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Specs","Lost detection"])
 
-            print(self.index_counter)
-            if self.index_counter > self.row:
-                print("Optitrack: Overflow of data!") 
-        else:
-            pass
-
+        print(self.index_counter)
+        if self.index_counter > self.row:
+            print("Optitrack: Overflow of data!") 
+            
     @Slot()
     def spawn_thread(self, message):
         print("Optitrack: Spawn matlab thread called!!!")
