@@ -45,6 +45,8 @@ class MenuWidget(QWidget):
         
         self.signals_to_matlab = AppSignals()
 
+        self.signals_to_optitrack = AppSignals()
+
         self.signals_to_main = AppSignals()
         self.signals_to_main.signal_int.connect(parent.save_data)
 
@@ -103,6 +105,7 @@ class MenuWidget(QWidget):
         self._optitrack_thread = optitrack_thread
         self.signals_to_status.signal_bool.connect(self._optitrack_thread.set_recording) 
         self.signals_to_status.signal_bool.connect(self._optitrack_thread.clear_data)
+        self.signals_to_optitrack.signal_bool.connect(self._optitrack_thread.set_show_all_markers)
 
     @Slot()
     def do_nziz(self):
@@ -119,6 +122,18 @@ class MenuWidget(QWidget):
     @Slot()
     def show_all_marker_positions(self):
         print("Show all marker positions")
+        if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat and it is clicked, unflat them
+            self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
+            self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
+            self.attach_electrodes_button.setFlat(False)
+            self.signals_to_optitrack.signal_bool.emit(False)
+        else:
+            self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
+            self.attach_electrodes_button.setText('Stop!')
+            self.attach_electrodes_button.setFlat(True)
+            self.signals_to_optitrack.signal_bool.emit(True)
+
+
 
     @Slot(str) # used by the matlab thread to indicate that it has finished predicting
     def change_predict_state(self, message):

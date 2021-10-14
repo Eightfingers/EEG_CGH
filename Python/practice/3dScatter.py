@@ -56,12 +56,12 @@ class MainWindow(QMainWindow):
         if (self.scatter_series.dataProxy().itemCount() != 0 ):
             pass
 
-        self.scatter_series.dataProxy().resetArray(QScatter3DSeries())
-
+        # self.scatter_series.dataProxy().resetArray(QScatter3DSeries())
+        
         # set starting position of camera
         camera = self.scatter.scene().activeCamera()
         camera.setYRotation(25)
-
+        self.scatter_series.setItemSize(0.15)
         self.scatter.show()
         self.NZIZ_specs_rotation = np.array([0,0,0,0])
 

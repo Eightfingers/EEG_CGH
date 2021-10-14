@@ -10,10 +10,12 @@ import numpy as np
 from matlab_thread import MatlabMainThread
 from menu_widget import MenuWidget
 from status_widget import StatusWidget
-from optitrack_thread import OptitrackMainThread
+# from optitrack_thread import OptitrackMainThread
+from optitrack_thread2 import OptitrackMainThread
 import os
-
 from scipy.spatial.transform import Rotation as R
+
+# https://doc.qt.io/qtforpython/PySide6/QtDataVisualization/QAbstract3DGraph.html#PySide6.QtDataVisualization.PySide6.QtDataVisualization.QAbstract3DGraph.currentFps
 
 class MainWindow(QMainWindow):
 
@@ -24,6 +26,9 @@ class MainWindow(QMainWindow):
 
         # Used to be shown
         self.scatter = Q3DScatter()
+        # self.scatter.setAspectRatio(1)
+        # self.scatter.setHorizontalAspectRatio(1)
+
         self.NZIZscatter_series = QScatter3DSeries()
         self.CIRCUMscatter_series = QScatter3DSeries()
         self.EarToEarscatter_series = QScatter3DSeries()
@@ -49,28 +54,46 @@ class MainWindow(QMainWindow):
 
         self.save_directory = os.getcwd() + "RecordedData"
 
-        self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace 
+        self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace
+        self.NZIZscatter_series.setItemSize(0.15)
         self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
+        self.CIRCUMscatter_series.setItemSize(0.15)
         self.EarToEarscatter_series.setBaseColor(QColor(0, 0, 255)) # Blue for Ear to Ear trace
-        self.Predicted_series.setBaseColor(QColor(50, 168, 82)) # Cyan-greenish for predicted
-        self.specs_series.setBaseColor(QColor(0, 0, 255)) # Specs position
+        self.EarToEarscatter_series.setItemSize(0.15)
+        self.Predicted_series.setBaseColor(QColor(255, 165, 0)) # Orange 
+        self.Predicted_series.setItemSize(0.15)
+        self.specs_series.setBaseColor(QColor(0, 0, 0)) # Black
+        self.specs_series.setItemSize(0.15)
 
         # Set the axis 
         self.x_axis = QValue3DAxis()
         self.x_axis.setTitle('X')
         self.x_axis.setTitleVisible(True)
+        self.x_axis.setSegmentCount(8)
+        # self.x_axis.setAutoAdjustRange(True)
+        # self.x_axis.setMin(-1)
+        # self.x_axis.setMax(1)
 
         self.y_axis = QValue3DAxis()
         self.y_axis.setTitle('Y')
-        self.y_axis.setTitleVisible(True)    
+        self.y_axis.setTitleVisible(True)  
+        self.y_axis.setSegmentCount(8)  
+        # self.y_axis.setAutoAdjustRange(True)
+        # self.y_axis.setMin(-1)
+        # self.y_axis.setMax(1)
 
         self.z_axis = QValue3DAxis()
         self.z_axis.setTitle('Z')
         self.z_axis.setTitleVisible(True)
+        self.z_axis.setSegmentCount(8)  
+        # self.z_axis.setAutoAdjustRange(True)
+        # self.z_axis.setMin(-1)
+        # self.z_axis.setMax(1)
 
         self.scatter.setAxisX(self.x_axis)
         self.scatter.setAxisY(self.y_axis)
         self.scatter.setAxisZ(self.z_axis)
+        # self.scatter.setMargin(0.01)
 
         # Set no Shadow
         self.scatter.setShadowQuality(QAbstract3DGraph.ShadowQualityNone)
@@ -79,7 +102,7 @@ class MainWindow(QMainWindow):
         self.graph = QWidget.createWindowContainer(self.scatter)
         geometry = QGuiApplication.primaryScreen().geometry()
         size = geometry.height() * 3 / 4
-        self.graph.setMinimumSize(size, size)
+        self.graph.setMinimumSize(size, size) # GUI size
         self.graph.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.graph.setFocusPolicy(Qt.StrongFocus)
         self.setCentralWidget(self.graph)
@@ -172,6 +195,7 @@ class MainWindow(QMainWindow):
             self.EartoEar_specs_rotate = self.specs_rotation
             self.update_and_add_scatterEarToEar(self.stylus_data)
 
+    # Clear all data shown in the graph
     @Slot()
     def clear_data(self):
         self.scatter.removeSeries(self.NZIZscatter_series)
@@ -179,6 +203,7 @@ class MainWindow(QMainWindow):
         self.scatter.removeSeries(self.EarToEarscatter_series)
         self.scatter.removeSeries(self.Predicted_series)
         self.scatter.removeSeries(self.specs_series)
+        self.scatter.removeSeries(self.all_markers_series)
 
         # Reset the series. I Couldn't really figure out the method in the python function. Hope this will do for now
         self.NZIZscatter_series = QScatter3DSeries()
@@ -187,11 +212,16 @@ class MainWindow(QMainWindow):
         self.Predicted_series = QScatter3DSeries()
         self.specs_series = QScatter3DSeries()
 
-        self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace 
+        self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace
+        self.NZIZscatter_series.setItemSize(0.15)
         self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
+        self.CIRCUMscatter_series.setItemSize(0.15)
         self.EarToEarscatter_series.setBaseColor(QColor(0, 0, 255)) # Blue for Ear to Ear trace
-        self.Predicted_series.setBaseColor(QColor(50, 168, 82)) # Cyan-greenish for predicted
-        self.specs_series.setBaseColor(QColor(0, 0, 255)) # Specs position
+        self.EarToEarscatter_series.setItemSize(0.15)
+        self.Predicted_series.setBaseColor(QColor(255, 165, 0)) # Orange 
+        self.Predicted_series.setItemSize(0.15)
+        self.specs_series.setBaseColor(QColor(0, 0, 0)) # Black
+        self.specs_series.setItemSize(0.15)
 
     @Slot(np.ndarray)
     def show_eeg_positions(self, message):
@@ -204,6 +234,8 @@ class MainWindow(QMainWindow):
     def show_current_stylus_position(self, message):
         self.scatter.removeSeries(self.all_markers_series) # remove the old position
         self.all_markers_series = QScatter3DSeries() # create a new series at every instance
+        self.all_markers_series.setBaseColor(QColor(255, 255, 0)) # Yellow
+        self.all_markers_series.setItemSize(0.15)
         self.add_list_to_scatterdata(self.all_markers_series, message)
         self.scatter.addSeries(self.all_markers_series)
         self.scatter.show()
@@ -211,7 +243,9 @@ class MainWindow(QMainWindow):
     @Slot(np.ndarray)
     def show_all_markers(self, message):
         self.scatter.removeSeries(self.stylus_position_series) # remove the old position
-        self.stylus_position_series = QScatter3DSeries() # create a new series at every instance
+        self.stylus_position_series = QScatter3DSeries() # create a new series at every 
+        self.stylus_position_series.setItemSize(0.15)
+        self.all_markers_series.setBaseColor(QColor(255, 0, 0)) # Yellow
         self.add_list_to_scatterdata(self.stylus_position_series, message)
         self.scatter.addSeries(self.stylus_position_series)
         self.scatter.show()
