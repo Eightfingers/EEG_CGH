@@ -174,3 +174,4 @@ if __name__ == "__main__":
     sqrtSinModelRB.setChecked(True)
     modeItemRB.setChecked(True)
     themeList.setCurrentIndex(2)
+    app.exec()

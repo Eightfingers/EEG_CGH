@@ -183,7 +183,8 @@ class SurfaceGraph(QObject):
 
     @Slot()
     def changeTheme(self, theme):
-        self.m_graph.activeTheme().setType(Q3DTheme.Theme(theme))
+        # self.m_graph.activeTheme().setType(Q3DTheme.Theme(theme))
+        pass 
 
     def setBlackToYellowGradient(self):
         gr = QLinearGradient()
