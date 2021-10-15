@@ -35,13 +35,13 @@ class UpdateDataThread(QThread):
 
 class MenuWidget(QWidget):
 
-    def __init__(self, layout,scatter, scatter_series, parent=None):
+    def __init__(self, parent=None):
         QWidget.__init__(self, parent)
 
         # store the format of the layout
-        self._layout = layout
-        self._scatter = scatter
-        self._scatter_series = scatter_series
+        self._layout = parent.menu_layout
+        self._scatter = parent.scatter
+        self._scatter_series = parent.scatter_series
 
         # Create Button widget
         self.button = QPushButton("Randomize the graph!")

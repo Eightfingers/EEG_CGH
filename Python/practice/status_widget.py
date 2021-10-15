@@ -12,11 +12,11 @@ import random
 
 class StatusWidget(QWidget):
 
-    def __init__(self, layout, parent=None):
+    def __init__(self, parent=None):
         QWidget.__init__(self, parent)
 
         # store the format of the layout
-        self._layout = layout
+        self._layout = parent.status_layout
         self.matlab_label = "Matlab: "
         self.optitrack_label = "Optitrack: "
         self.wand_label = "Stylus: "

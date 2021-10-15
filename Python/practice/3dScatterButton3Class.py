@@ -45,10 +45,10 @@ class MainWindow(QMainWindow):
         self.menu_layout = QVBoxLayout()
         self.status_layout = QVBoxLayout()
 
-        self.left_dock_menu_widget = MenuWidget(self.menu_layout, self.scatter, self.scatter_series)
+        self.left_dock_menu_widget = MenuWidget(self)
         self.left_dock_layout.addLayout(self.menu_layout)
 
-        self.left_dock_status_widget = StatusWidget(self.status_layout)
+        self.left_dock_status_widget = StatusWidget(self)
         self.left_dock_layout.addLayout(self.status_layout)
 
         self.left_dock_main_widget.setLayout(self.left_dock_layout)

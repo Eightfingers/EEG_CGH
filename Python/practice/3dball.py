@@ -6,7 +6,6 @@ from PySide6.QtGui import (QGuiApplication, QMatrix4x4, QQuaternion, QVector3D)
 from PySide6.Qt3DCore import (Qt3DCore)
 from PySide6.Qt3DExtras import (Qt3DExtras)
 
-
 class OrbitTransformController(QObject):
     def __init__(self, parent):
         super().__init__(parent)

@@ -26,11 +26,14 @@ class OptitrackMainThread(QThread):
         self.streaming_client.set_use_multicast(self.optionsDict["use_multicast"])
 
         self.signals_to_status = AppSignals()
-        self.signals_to_main = AppSignals()
-        self.signals_to_main_show_markers = AppSignals()
-        self.signals_to_main.signal_numpy.connect(parent.show_current_stylus_position)
+        self.signals_to_main_stylus_pos = AppSignals()
+        self.signals_to_main_specs_pos_rotation = AppSignals()
+        self.signals_to_main_show_electrode_placements = AppSignals()
+
+        self.signals_to_main_stylus_pos.signal_numpy.connect(parent.show_current_stylus_position) # rotation is not needed for now
+        self.signals_to_main_specs_pos_rotation.signal_list.connect(parent.show_current_specs_position_rotation)
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label)
-        self.signals_to_main_show_markers.signal_numpy.connect(parent.show_all_markers)
+        self.signals_to_main_show_electrode_placements.signal_numpy.connect(parent.show_electrode_positions)
 
         # Control variables 
         self.record = False
@@ -67,7 +70,6 @@ class OptitrackMainThread(QThread):
                     print("...")
                 finally:
                     print("exiting")
-
             time.sleep(1)
             if self.streaming_client.connected() is False:
                 print("ERROR: Could not connect properly.  Check that Motive streaming is on.")
@@ -77,7 +79,6 @@ class OptitrackMainThread(QThread):
                     print("...")
                 finally:
                     print("exiting")
-
             # Configure the streaming client to call our rigid body handler on the emulator to send data out.
             self.streaming_client.new_frame_listener = self.receiveNewFrame
             self.streaming_client.rigid_body_listener = self.receiveRigidBodyFrame
@@ -85,6 +86,7 @@ class OptitrackMainThread(QThread):
             # This will run perpetually, and operate on a separate thread.
             self.streaming_client.run()
             self.signals_to_status.signal_list.emit(["Optitrack","Okay"])
+
         except ConnectionResetError:
             print("Optitrack: Optitrack thread returned an error")
             self.signals_to_status.signal_list.emit(["Optitrack","Error"])
@@ -105,6 +107,7 @@ class OptitrackMainThread(QThread):
         return args_dict
 
     # This is a callback function that gets connected to the NatNet client and called once per mocap frame.
+    # This callback function is used to get marker positions that are not part of the rigidbody.
     def receiveNewFrame(self, data_dict ):
         # print( "Optitrack: frame number ", frameNumber )
         order_list=[ "frameNumber", "markerSetCount", "unlabeledMarkersCount", "rigidBodyCount", "skeletonCount",
@@ -112,7 +115,7 @@ class OptitrackMainThread(QThread):
         if (self.show_all_markers == True):
             marker_modelID_0_positions = data_dict["marker_modelID_0_positions"]
             labeledMarkerPositions = np.round(marker_modelID_0_positions, 5)
-            self.signals_to_main_show_markers.signal_numpy.emit(labeledMarkerPositions)
+            self.signals_to_main_show_electrode_placements.signal_numpy.emit(labeledMarkerPositions)
         pass 
 
     # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
@@ -123,7 +126,7 @@ class OptitrackMainThread(QThread):
         rotation = np.round(rotation, 5)
         if (id == 1004): # if the id is 1004, it is the stylus data
             self.stylus_position = position 
-            self.signals_to_main.signal_numpy.emit(position)
+            self.signals_to_main_stylus_pos.signal_numpy.emit(position)
             if self.record == True: # Record the positions into numpy array
                 self.stylus_data[self.index_counter,:] = position
                 if np.all(self.stylus_previous_position != position):  # if its not the same as the old position update to the new position
@@ -135,7 +138,9 @@ class OptitrackMainThread(QThread):
                     print("Optitrack: Stylus is not detected!")
                     if (self.stylus_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Stylus","Lost detection"])
-        elif (id == 1005):
+        elif (id == 1005): # specs data
+            specs_pos_rotation = [position, rotation]
+            self.signals_to_main_specs_pos_rotation.signal_list.emit(specs_pos_rotation)
             if self.record == True:
                 self.specs_data[self.index_counter,:] = position
                 self.specs_rotation_data[self.index_counter,:] = rotation
@@ -168,7 +173,7 @@ class OptitrackMainThread(QThread):
     @Slot(bool)
     def set_show_all_markers(self, message):
         self.show_all_markers = message
-        print("Optitrack: Showing all markers")
+        print("Optitrack: Showing all markers ", message)
 
     def clear_data(self):
         self.index_counter = 0
