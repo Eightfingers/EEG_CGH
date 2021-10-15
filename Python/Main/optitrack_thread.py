@@ -3,15 +3,27 @@ import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
 import matlab.engine
-from PythonClient.NatNetClient import NatNetClient
+from PythonClient4_0.NatNetClient import NatNetClient
+# from PythonClient.NatNetClient import NatNetClient
 from app_signals import AppSignals
+import time
 
 # Create the main Thread
 class OptitrackMainThread(QThread):
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
+        # This will create a new NatNet client
 
-        self.streamingClient = NatNetClient()
+        self.streaming_client = NatNetClient()
+        self.optionsDict = {}
+        self.optionsDict["clientAddress"] = "127.0.0.1"
+        self.optionsDict["serverAddress"] = "127.0.0.1"
+        self.optionsDict["use_multicast"] = True
+
+        self.optionsDict = self.my_parse_args(sys.argv, self.optionsDict)
+        self.streaming_client.set_client_address(self.optionsDict["clientAddress"])
+        self.streaming_client.set_server_address(self.optionsDict["serverAddress"])
+        self.streaming_client.set_use_multicast(self.optionsDict["use_multicast"])
 
         self.signals_to_status = AppSignals()
         self.signals_to_main = AppSignals()
@@ -44,24 +56,63 @@ class OptitrackMainThread(QThread):
 
     def run(self):
         try:
-            # Configure the streaming client to call our rigid body handler on the emulator to send data out.
-            self.streamingClient.newFrameListener = self.receiveNewFrame
-            self.streamingClient.rigidBodyListener = self.receiveRigidBodyFrame
             # Start up the streaming client now that the callbacks are set up.
             # This will run perpetually, and operate on a separate thread.
-            self.streamingClient.run()
+            is_running = self.streaming_client.run()
+            if not is_running:
+                print("ERROR: Could not start streaming client.")
+                try:
+                    sys.exit(1)
+                except SystemExit:
+                    print("...")
+                finally:
+                    print("exiting")
+
+            time.sleep(1)
+            if self.streaming_client.connected() is False:
+                print("ERROR: Could not connect properly.  Check that Motive streaming is on.")
+                try:
+                    sys.exit(2)
+                except SystemExit:
+                    print("...")
+                finally:
+                    print("exiting")
+
+            # Configure the streaming client to call our rigid body handler on the emulator to send data out.
+            self.streaming_client.new_frame_listener = self.receiveNewFrame
+            self.streaming_client.rigid_body_listener = self.receiveRigidBodyFrame
+            # Start up the streaming client now that the callbacks are set up.
+            # This will run perpetually, and operate on a separate thread.
+            self.streaming_client.run()
             self.signals_to_status.signal_list.emit(["Optitrack","Okay"])
         except ConnectionResetError:
             print("Optitrack: Optitrack thread returned an error")
+            self.signals_to_status.signal_list.emit(["Optitrack","Error"])
+
+    def my_parse_args(self, arg_list, args_dict):
+        # set up base values
+        arg_list_len=len(arg_list)
+        if arg_list_len>1:
+            args_dict["serverAddress"] = arg_list[1]
+            if arg_list_len>2:
+                args_dict["clientAddress"] = arg_list[2]
+            if arg_list_len>3:
+                if len(arg_list[3]):
+                    args_dict["use_multicast"] = True
+                    if arg_list[3][0].upper() == "U":
+                        args_dict["use_multicast"] = False
+
+        return args_dict
 
     # This is a callback function that gets connected to the NatNet client and called once per mocap frame.
-    def receiveNewFrame(self, frameNumber, markerSetCount, unlabeledMarkersCount, rigidBodyCount, skeletonCount,
-                        labeledMarkerCount, timecode, timecodeSub, timestamp, isRecording, trackedModelsChanged, labeledMarkerPositions ):
+    def receiveNewFrame(self, data_dict ):
         # print( "Optitrack: frame number ", frameNumber )
+        order_list=[ "frameNumber", "markerSetCount", "unlabeledMarkersCount", "rigidBodyCount", "skeletonCount",
+                "labeledMarkerCount", "marker_modelID_0_positions", "timecode", "timecodeSub", "timestamp", "isRecording", "trackedModelsChanged" ]
         if (self.show_all_markers == True):
-            labeledMarkerPositions = np.round(labeledMarkerPositions, 5)
+            marker_modelID_0_positions = data_dict["marker_modelID_0_positions"]
+            labeledMarkerPositions = np.round(marker_modelID_0_positions, 5)
             self.signals_to_main_show_markers.signal_numpy.emit(labeledMarkerPositions)
-            print("Optirack: Labeled Markers Count", labeledMarkerCount)
         pass 
 
     # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
@@ -70,7 +121,7 @@ class OptitrackMainThread(QThread):
         # print(id, position)
         position = np.round(position, 5)
         rotation = np.round(rotation, 5)
-        if (id == 1004):
+        if (id == 1004): # if the id is 1004, it is the stylus data
             self.stylus_position = position 
             self.signals_to_main.signal_numpy.emit(position)
             if self.record == True: # Record the positions into numpy array

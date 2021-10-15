@@ -3,7 +3,8 @@ from PySide6.QtCore import (Signal, QMutex, QElapsedTimer, QMutexLocker,
                             QPoint, QPointF, QSize, Qt, QThread, QObject, 
                             QWaitCondition, Slot)
 from PySide6.QtGui import QGuiApplication, QVector3D
-from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget
+from PySide6.QtWidgets import (QApplication, QSizePolicy, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget,
+                                QSizePolicy, QSlider, QLabel)
 from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBarDataItem,
                                          QCategory3DAxis, QScatter3DSeries, QValue3DAxis, QScatterDataItem)
 import numpy as np
@@ -67,9 +68,119 @@ class MainWindow(QMainWindow):
         self.button3 = QPushButton("Button 3")
 
         # Add the button widget to the docked window
+        self.widget = QWidget()
         self.docked_parent_widget.layout().addWidget(self.button)
         self.docked_parent_widget.layout().addWidget(self.button2)
         self.docked_parent_widget.layout().addWidget(self.button3)
+
+        self.axisMinSliderX = QSlider(Qt.Horizontal, self.widget)
+        self.axisMinSliderX.setMinimum(0)
+        self.axisMinSliderX.setTickInterval(1)
+        self.axisMinSliderX.setEnabled(True)
+        self.axisMaxSliderX = QSlider(Qt.Horizontal, self.widget)
+        self.axisMaxSliderX.setMinimum(1)
+        self.axisMaxSliderX.setTickInterval(1)
+        self.axisMaxSliderX.setEnabled(True)
+
+        self.axisMinSliderZ = QSlider(Qt.Horizontal, self.widget)
+        self.axisMinSliderZ.setMinimum(0)
+        self.axisMinSliderZ.setTickInterval(1)
+        self.axisMinSliderZ.setEnabled(True)
+        self.axisMaxSliderZ = QSlider(Qt.Horizontal, self.widget)
+        self.axisMaxSliderZ.setMinimum(1)
+        self.axisMaxSliderZ.setTickInterval(1)
+        self.axisMaxSliderZ.setEnabled(True)
+
+        # self.docked_parent_widget.layout().addWidget(QLabel("Column range"))
+        # self.docked_parent_widget.layout().addWidget(QLabel("Min range"))
+        # self.docked_parent_widget.layout().addWidget(self.axisMinSliderX)
+        # self.docked_parent_widget.layout().addWidget(QLabel("Max range"))
+        # self.docked_parent_widget.layout().addWidget(self.axisMaxSliderX)
+        # self.docked_parent_widget.layout().addWidget(QLabel("Row range"))
+        # self.docked_parent_widget.layout().addWidget(QLabel("Min range"))
+        # self.docked_parent_widget.layout().addWidget(self.axisMinSliderZ)
+        # self.docked_parent_widget.layout().addWidget(QLabel("Max range"))
+        # self.docked_parent_widget.layout().addWidget(self.axisMaxSliderZ)
+
+        self.axisMinSliderX.valueChanged.connect(self.adjustXMin)
+        self.axisMaxSliderX.valueChanged.connect(self.adjustXMax)
+        self.axisMinSliderZ.valueChanged.connect(self.adjustZMin)
+        self.axisMaxSliderZ.valueChanged.connect(self.adjustZMax)
+
+        minimum = -150
+        maximum = 150
+        self.scatter.axisX().setRange(minimum, maximum)
+        self.scatter.axisX().setSubSegmentCount(2)
+        self.scatter.axisX().setSegmentCount(8)
+        self.scatter.axisX().setTitle('X')
+        self.scatter.axisY().setRange(minimum, maximum)
+        self.scatter.axisY().setSegmentCount(8)
+        self.scatter.axisY().setSubSegmentCount(2)
+        self.scatter.axisY().setTitle('Y')
+        self.scatter.axisZ().setRange(minimum, maximum)
+        self.scatter.axisZ().setSegmentCount(8)
+        self.scatter.axisZ().setSubSegmentCount(2)
+        self.scatter.axisZ().setTitle('Z')
+
+        self.m_stepX = 0.05
+        self.m_stepZ = 0.05
+        self.m_rangeMinX = -8
+        self.m_rangeMinZ = -8
+
+        self.m_axisMinSliderX = QSlider()
+        self.m_axisMaxSliderX = QSlider()
+        self.m_axisMinSliderZ = QSlider()
+        self.m_axisMaxSliderZ = QSlider()
+
+    def adjustXMin(self, minimum):
+        minX = self.m_stepX * float(minimum) + self.m_rangeMinX
+
+        maximum = self.m_axisMaxSliderX.value()
+        if minimum >= maximum:
+            maximum = minimum + 1
+            self.m_axisMaxSliderX.setValue(maximum)
+        maxX = self.m_stepX * maximum + self.m_rangeMinX
+
+        self.setAxisXRange(minX, maxX)
+
+    def adjustXMax(self, maximum):
+        maxX = self.m_stepX * float(maximum) + self.m_rangeMinX
+
+        minimum = self.m_axisMinSliderX.value()
+        if maximum <= minimum:
+            minimum = maximum - 1
+            self.m_axisMinSliderX.setValue(minimum)
+        minX = self.m_stepX * minimum + self.m_rangeMinX
+
+        self.setAxisXRange(minX, maxX)
+
+    def adjustZMin(self, minimum):
+        minZ = self.m_stepZ * float(minimum) + self.m_rangeMinZ
+
+        maximum = self.m_axisMaxSliderZ.value()
+        if minimum >= maximum:
+            maximum = minimum + 1
+            self.m_axisMaxSliderZ.setValue(maximum)
+        maxZ = self.m_stepZ * maximum + self.m_rangeMinZ
+
+        self.setAxisZRange(minZ, maxZ)
+
+    def adjustZMax(self, maximum):
+        maxX = self.m_stepZ * float(maximum) + self.m_rangeMinZ
+
+        minimum = self.m_axisMinSliderZ.value()
+        if maximum <= minimum:
+            minimum = maximum - 1
+            self.m_axisMinSliderZ.setValue(minimum)
+        minX = self.m_stepZ * minimum + self.m_rangeMinZ
+
+        self.setAxisZRange(minX, maxX)
+
+    def setAxisXRange(self, minimum, maximum):
+        self.scatter.axisX().setRange(minimum, maximum)
+
+    def setAxisZRange(self, minimum, maximum):
+        self.scatter.axisZ().setRange(minimum, maximum)
 
     def start_thread(self):
         instanced_thread = UpdateDataThread(self)

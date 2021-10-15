@@ -11,7 +11,7 @@ from matlab_thread import MatlabMainThread
 from menu_widget import MenuWidget
 from status_widget import StatusWidget
 # from optitrack_thread import OptitrackMainThread
-from optitrack_thread2 import OptitrackMainThread
+from optitrack_thread import OptitrackMainThread
 import os
 from scipy.spatial.transform import Rotation as R
 
@@ -66,29 +66,35 @@ class MainWindow(QMainWindow):
         self.specs_series.setItemSize(0.15)
 
         # Set the axis 
+        segment_count = 8
+        sub_segment_count = 2
+        axis_minimum = -2
+        axis_maximum = 2
         self.x_axis = QValue3DAxis()
         self.x_axis.setTitle('X')
         self.x_axis.setTitleVisible(True)
-        self.x_axis.setSegmentCount(8)
+        self.x_axis.setSegmentCount(segment_count)
+        self.x_axis.setRange(axis_minimum, axis_maximum)
+        self.x_axis.setSubSegmentCount(sub_segment_count)
         # self.x_axis.setAutoAdjustRange(True)
-        # self.x_axis.setMin(-1)
-        # self.x_axis.setMax(1)
 
         self.y_axis = QValue3DAxis()
         self.y_axis.setTitle('Y')
         self.y_axis.setTitleVisible(True)  
         self.y_axis.setSegmentCount(8)  
+        self.y_axis.setSegmentCount(segment_count)
+        self.y_axis.setRange(axis_minimum, axis_maximum)
+        self.y_axis.setSubSegmentCount(sub_segment_count)
         # self.y_axis.setAutoAdjustRange(True)
-        # self.y_axis.setMin(-1)
-        # self.y_axis.setMax(1)
 
         self.z_axis = QValue3DAxis()
         self.z_axis.setTitle('Z')
         self.z_axis.setTitleVisible(True)
         self.z_axis.setSegmentCount(8)  
+        self.z_axis.setSegmentCount(segment_count)
+        self.z_axis.setRange(axis_minimum, axis_maximum)
+        self.z_axis.setSubSegmentCount(sub_segment_count)
         # self.z_axis.setAutoAdjustRange(True)
-        # self.z_axis.setMin(-1)
-        # self.z_axis.setMax(1)
 
         self.scatter.setAxisX(self.x_axis)
         self.scatter.setAxisY(self.y_axis)
