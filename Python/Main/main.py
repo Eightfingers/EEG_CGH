@@ -240,6 +240,7 @@ class MainWindow(QMainWindow):
     def show_eeg_positions(self, message):
         # print(message)
         self.predicted_positions = message
+        np.savetxt("21_predicted_positions.csv", message, delimiter=',')
         self.add_list_to_scatterdata(self.Predicted_series, message)
         self.scatter.addSeries(self.Predicted_series)
         self.scatter.show()

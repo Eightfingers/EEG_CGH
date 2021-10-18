@@ -115,7 +115,8 @@ class OptitrackMainThread(QThread):
         if (self.show_all_markers == True):
             marker_modelID_0_positions = data_dict["marker_modelID_0_positions"]
             labeledMarkerPositions = np.round(marker_modelID_0_positions, 5)
-            self.signals_to_main_show_electrode_placements.signal_numpy.emit(labeledMarkerPositions)
+            if labeledMarkerPositions: # Only emit the data when its not empty
+                self.signals_to_main_show_electrode_placements.signal_numpy.emit(labeledMarkerPositions) 
         pass 
 
     # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame

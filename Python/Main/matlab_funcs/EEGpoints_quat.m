@@ -8,10 +8,31 @@ addpath('helperfuncs\')
 addpath('myfuncs\')
 addpath('30_9_2021')
 
-stylus_data = readmatrix('data_CIRCUMstylus.csv');
-quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
+% stylus_data = readmatrix('data_CIRCUMstylus.csv');
+% stylus_data = rmmissing(stylus_data);
+% quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
+% quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
+% quaternion_extracted = rmmissing(quaternion_extracted);
+% dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
+
+stylus_data_before = readmatrix('data_CIRCUMstylus');
+stylus_data = []
+for i = 1:2:length(stylus_data_before)
+    stylus_data = [stylus_data; stylus_data_before(i,:)];
+end
+quaternion_extracted_before = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
+quaternion_extracted_before = [quaternion_extracted_before(:,4), quaternion_extracted_before(:,1), quaternion_extracted_before(:,2), quaternion_extracted_before(:,3)];
+quaternion_extracted = []
+for i = 1:2:length(quaternion_extracted_before)
+    quaternion_extracted = [quaternion_extracted; quaternion_extracted_before(i,:)];
+end
+
+dis_matrix_circum = []
+dis_matrix_nziz_before = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
+for i = 1:2:length(dis_matrix_nziz_before)
+    dis_matrix_circum = [dis_matrix_circum; dis_matrix_nziz_before(i,:)];
+end
+
 
 %% Run Function to give points
 % Quaternion way
@@ -35,11 +56,24 @@ for i = 1:1:length(stylus_data)
 end
 
 %%% Ear to Ear
+stylus_data_before = readmatrix('data_EarToEarstylus');
+stylus_data = []
+for i = 1:4:length(stylus_data_before)
+    stylus_data = [stylus_data; stylus_data_before(i,:)];
+end
+quaternion_extracted_before = readmatrix('rotation_data_EarToEarspecs'); % extract the rotation vector out
+quaternion_extracted_before = [quaternion_extracted_before(:,4), quaternion_extracted_before(:,1), quaternion_extracted_before(:,2), quaternion_extracted_before(:,3)];
+quaternion_extracted = []
+for i = 1:4:length(quaternion_extracted_before)
+    quaternion_extracted = [quaternion_extracted; quaternion_extracted_before(i,:)];
+end
 
-stylus_data = readmatrix('data_EarToEarstylus.csv');
-quaternion_extracted = readmatrix('rotation_data_EarToEarspecs.csv'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_ear2ear = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
+dis_matrix_ear2ear = []
+dis_matrix_nziz_before = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
+for i = 1:4:length(dis_matrix_nziz_before)
+    dis_matrix_ear2ear = [dis_matrix_ear2ear; dis_matrix_nziz_before(i,:)];
+end
+
 
 %% Run Function to give points
 % Quaternion way
@@ -63,10 +97,23 @@ for i = 1:1:length(stylus_data)
 end
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus.csv');
-quaternion_extracted = readmatrix('rotation_data_NZIZspecs.csv'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+stylus_data_before = readmatrix('data_NZIZstylus');
+stylus_data = []
+for i = 1:2:length(stylus_data_before)
+    stylus_data = [stylus_data; stylus_data_before(i,:)];
+end
+quaternion_extracted_before = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
+quaternion_extracted_before = [quaternion_extracted_before(:,4), quaternion_extracted_before(:,1), quaternion_extracted_before(:,2), quaternion_extracted_before(:,3)];
+quaternion_extracted = []
+for i = 1:2:length(quaternion_extracted_before)
+    quaternion_extracted = [quaternion_extracted; quaternion_extracted_before(i,:)];
+end
+
+dis_matrix_nziz = []
+dis_matrix_nziz_before = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+for i = 1:2:length(dis_matrix_nziz_before)
+    dis_matrix_nziz = [dis_matrix_nziz; dis_matrix_nziz_before(i,:)];
+end
 
 %% Run Function to give points
 % Quaternion way
@@ -534,8 +581,8 @@ predicted = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; 
 predicted = [predicted(:,1), predicted(:,3), predicted(:,2)];
 four_points = [F4; F3; P3; P4];
 
-% plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
-% hold on;
+plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
+hold on;
 % plot(F3_YZ(1), F3_YZ(2), 'o');
 figure;
 title('Predicted Electrode Locations');

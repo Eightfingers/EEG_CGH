@@ -1,4 +1,4 @@
-% function final_nziz_label = get_nziz( nziz ,nziz_spec)
+function final_nziz_python = get_nziz( nziz ,nziz_spec)
 %%% This code would be the final code that is used to determine the 17 EEG
 %%% locations. 
 %% Add to path different folders containing data and code
@@ -6,8 +6,8 @@
 % addpath('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept\helperfuncs');
 % addpath('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Code\MatlabSept\myfuncs');
 % addpath ('C:\Users\Souganttika\OneDrive\Documents\MATLAB\Data\30_9_2021');
-function final_nziz_python = get_nziz()
-% addpath('6_10_2021');
+% function final_nziz_python = get_nziz()
+% addpath('6_10_2021'); 
 addpath('helperfuncs');
 addpath('myfuncs');
 % addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\RecordedData');
@@ -15,13 +15,26 @@ addpath('C:\Users\65859\Desktop\eeg_cgh_main\Python\Main\RecordedData');
 % addpath('Main/RecordedData');
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus');
-quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+stylus_data_before = readmatrix('data_NZIZstylus');
+stylus_data = []
+for i = 1:2:length(stylus_data_before)
+    stylus_data = [stylus_data; stylus_data_before(i,:)];
+end
+quaternion_extracted_before = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
+quaternion_extracted_before = [quaternion_extracted_before(:,4), quaternion_extracted_before(:,1), quaternion_extracted_before(:,2), quaternion_extracted_before(:,3)];
+quaternion_extracted = []
+for i = 1:2:length(quaternion_extracted_before)
+    quaternion_extracted = [quaternion_extracted; quaternion_extracted_before(i,:)];
+end
+
+dis_matrix_nziz = []
+dis_matrix_nziz_before = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+for i = 1:2:length(dis_matrix_nziz_before)
+    dis_matrix_nziz = [dis_matrix_nziz; dis_matrix_nziz_before(i,:)];
+end
 
 % plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), '*');
-hold on ;
+% hold on ;
 
 % Quaternion way
 new_markers_nziz = [];
@@ -138,7 +151,7 @@ final_nziz_python = [final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_
 
 
 % final_nziz_python = final_nziz_python *1000; % convert m to mm
-% plot3(final_nziz_python(1,:), final_nziz_python(2,:), final_nziz_python(3,:), 'd');
+plot3(final_nziz_python(:,1), final_nziz_python(:,2), final_nziz_python(:,3), 'd');
 % hold on ;
 % 
 % predicted_nziz = num2cell(final_nziz_python);
