@@ -421,7 +421,7 @@ class NatNetClient:
 
         return offset, skeleton
 
-#Unpack Mocap Data Functions
+    #Unpack Mocap Data Functions
     def __unpack_frame_prefix_data( self, data):
         offset = 0
         # Frame number (4 bytes)
