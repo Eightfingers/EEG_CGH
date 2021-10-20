@@ -1,44 +1,30 @@
-function [predicted] = EEGpoints_quat()
+% function [predicted] = EEGpoints_quat()
 
 %   Detailed explanation goes here
 %% Load the different wanded data
 %%% Circumference
 
-addpath('helperfuncs\')
-addpath('myfuncs\')
-addpath('30_9_2021')
+addpath('helperfuncs\');
+addpath('myfuncs');
+addpath('NotWorking\');
 
-% stylus_data = readmatrix('data_CIRCUMstylus.csv');
-% stylus_data = rmmissing(stylus_data);
-% quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
-% quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-% quaternion_extracted = rmmissing(quaternion_extracted);
-% dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
+step = 2; % used to take only every 2nd data
 
-stylus_data_before = readmatrix('data_CIRCUMstylus');
-stylus_data = []
-for i = 1:2:length(stylus_data_before)
-    stylus_data = [stylus_data; stylus_data_before(i,:)];
-end
-quaternion_extracted_before = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
-quaternion_extracted_before = [quaternion_extracted_before(:,4), quaternion_extracted_before(:,1), quaternion_extracted_before(:,2), quaternion_extracted_before(:,3)];
-quaternion_extracted = []
-for i = 1:2:length(quaternion_extracted_before)
-    quaternion_extracted = [quaternion_extracted; quaternion_extracted_before(i,:)];
-end
+stylus_data = readmatrix('data_CIRCUMstylus');
+stylus_data = stylus_data(1:step:end,:); 
 
-dis_matrix_circum = []
-dis_matrix_nziz_before = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
-for i = 1:2:length(dis_matrix_nziz_before)
-    dis_matrix_circum = [dis_matrix_circum; dis_matrix_nziz_before(i,:)];
-end
+quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
+quaternion_extracted = quaternion_extracted(1:step:end,:);
 
+dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
+dis_matrix_circum = dis_matrix_circum(1:step:end,:); 
 
 %% Run Function to give points
 % Quaternion way
 new_markers_circum = [];
 % disp("Doing quaternion");
-for i = 1:1:length(stylus_data)
+for i = 1:step:length(stylus_data)
     
 %     disp(i);
     quat_vector = quaternion(quaternion_extracted(i,:));
@@ -56,24 +42,15 @@ for i = 1:1:length(stylus_data)
 end
 
 %%% Ear to Ear
-stylus_data_before = readmatrix('data_EarToEarstylus');
-stylus_data = []
-for i = 1:4:length(stylus_data_before)
-    stylus_data = [stylus_data; stylus_data_before(i,:)];
-end
-quaternion_extracted_before = readmatrix('rotation_data_EarToEarspecs'); % extract the rotation vector out
-quaternion_extracted_before = [quaternion_extracted_before(:,4), quaternion_extracted_before(:,1), quaternion_extracted_before(:,2), quaternion_extracted_before(:,3)];
-quaternion_extracted = []
-for i = 1:4:length(quaternion_extracted_before)
-    quaternion_extracted = [quaternion_extracted; quaternion_extracted_before(i,:)];
-end
+stylus_data = readmatrix('data_EarToEarstylus');
+stylus_data = stylus_data(1:step:end,:); 
 
-dis_matrix_ear2ear = []
-dis_matrix_nziz_before = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
-for i = 1:4:length(dis_matrix_nziz_before)
-    dis_matrix_ear2ear = [dis_matrix_ear2ear; dis_matrix_nziz_before(i,:)];
-end
+quaternion_extracted = readmatrix('rotation_data_EarToEarspecs'); % extract the rotation vector out
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
+quaternion_extracted = quaternion_extracted(1:step:end,:);
 
+dis_matrix_ear2ear = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
+dis_matrix_ear2ear = dis_matrix_ear2ear(1:step:end,:);
 
 %% Run Function to give points
 % Quaternion way
@@ -97,23 +74,15 @@ for i = 1:1:length(stylus_data)
 end
 
 %%% NZIZ
-stylus_data_before = readmatrix('data_NZIZstylus');
-stylus_data = []
-for i = 1:2:length(stylus_data_before)
-    stylus_data = [stylus_data; stylus_data_before(i,:)];
-end
-quaternion_extracted_before = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
-quaternion_extracted_before = [quaternion_extracted_before(:,4), quaternion_extracted_before(:,1), quaternion_extracted_before(:,2), quaternion_extracted_before(:,3)];
-quaternion_extracted = []
-for i = 1:2:length(quaternion_extracted_before)
-    quaternion_extracted = [quaternion_extracted; quaternion_extracted_before(i,:)];
-end
+stylus_data = readmatrix('data_NZIZstylus');
+stylus_data = stylus_data(1:step:end,:);
 
-dis_matrix_nziz = []
-dis_matrix_nziz_before = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
-for i = 1:2:length(dis_matrix_nziz_before)
-    dis_matrix_nziz = [dis_matrix_nziz; dis_matrix_nziz_before(i,:)];
-end
+quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
+quaternion_extracted = quaternion_extracted(1:step:end,:);
+
+dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+dis_matrix_nziz = dis_matrix_nziz(1:step:end,:); 
 
 %% Run Function to give points
 % Quaternion way
@@ -313,36 +282,42 @@ nziz = [pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
 %%% Circumference
 
 A1= [circumference_x circumference_y];
-closest_array_circum = find_closest_from_predicted_to_wanded(circum, A1);
+[closest_array_circum] = find_closest_from_predicted_to_wanded(circum, A1);
 
 %%% Ear to Ear
 A2 = [e2e_x e2e_z];
-closest_array_e2e = find_closest_from_predicted_to_wanded(ear2ear, A2);
+[closest_array_e2e] = find_closest_from_predicted_to_wanded(ear2ear, A2);
 
 %%%NZ-IZ
 A3 = [nziz_y nziz_z];
-closest_array_nziz = find_closest_from_predicted_to_wanded(nziz, A3);
+[closest_array_nziz] = find_closest_from_predicted_to_wanded(nziz, A3);
 
 %% Find left out axis values 
 %%% Circumference - The circumference is orthogonally projected in the XZ
 %%% plane and the Y values need to be found. 
 %%% If A(:,1)==closest(:,1) and A(:3)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its Y value (2nd column).
-interpolate_closest_circum = find_left_out_axis_values(closest_array_circum, A1, circumference_dataset,1 , 1, 3);
+% unique_circumference_dataset = unique(circumference_dataset, 'rows');
+% closest_array_circum = unique(closest_array_circum, 'rows');
+interpolate_closest_circum = find_left_out_axis_values(closest_array_circum, circumference_dataset,3 , 1, 2);
 trans_intrapolate_closest_circum = interpolate_closest_circum.';
 
 %%% Ear to Ear - The ear to ear is orthogonally projected in the XY
 %%% plane and the Z values need to be found. 
 %%% If A(:,1)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its Z value (3rd column)
-interpolate_closest_e2e = find_left_out_axis_values(closest_array_e2e, A2, e2e_dataset, 2, 3, 2);
+% unique_e2e_dataset = unique(e2e_dataset, 'rows');
+% closest_array_e2e = unique(closest_array_e2e , 'rows');
+interpolate_closest_e2e = find_left_out_axis_values(closest_array_e2e, e2e_dataset, 2, 1, 1);
 trans_intrapolate_closest_e2e = interpolate_closest_e2e.';
 
 %%% NZIZ - The  NZIZ is orthogonally projected in the
 %%% ZY plane and the X values need to be found. 
 %%% If A(:,3)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its X value (1st column).
-interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, A3, nziz_dataset, 1, 2, 1);
+% unique_nziz_dataset = unique(nziz_dataset, 'rows');
+% closest_array_nziz = unique(closest_array_nziz, 'rows');
+interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, nziz_dataset,1, 2, 1);
 trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 
 %% Reorganize the data
@@ -591,5 +566,5 @@ xlabel('x');
 ylabel('y');
 zlabel('z');
 
-end
+% end
 
