@@ -150,13 +150,18 @@ class MenuWidget(QWidget):
     
     def predict_eeg_positions(self):
         print("Menu: Predict eeg positions")
-        if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0 ):
-            QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
-        else:
-            message =[1,2,"21 positions"] # 1,2 is a dummy message
-            self.signals_to_matlab.signal_list.emit(message)
-            self.predict_all_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
-            self.predict_all_button.setText("Predicting ..")
+        # if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0 ):
+        #     QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
+        # else:
+        #     message =[1,2,"21 positions"] # 1,2 is a dummy message
+        #     self.signals_to_matlab.signal_list.emit(message)
+        #     self.predict_all_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
+        #     self.predict_all_button.setText("Predicting ..")
+        message =[1,2,"21 positions"] # 1,2 is a dummy message
+        self.signals_to_matlab.signal_list.emit(message)
+        self.predict_all_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
+        self.predict_all_button.setText("Predicting ..")
+
 
     def predict_fpz_position(self):
         if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 ):

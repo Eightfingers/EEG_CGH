@@ -139,7 +139,7 @@ closest_array_nziz = find_closest_from_predicted_to_wanded(nziz, A3);
 %%% ZY plane and the X values need to be found. 
 %%% If A(:,3)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its X value (1st column).
-interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, A3, nziz_dataset, 1, 2, 1);
+interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, nziz_dataset, 1, 2, 1);
 trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 
 %% Reorganize the data

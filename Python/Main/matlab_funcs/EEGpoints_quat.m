@@ -1,4 +1,4 @@
-% function [predicted] = EEGpoints_quat()
+function [predicted] = EEGpoints_quat()
 
 %   Detailed explanation goes here
 %% Load the different wanded data
@@ -8,7 +8,7 @@ addpath('helperfuncs\');
 addpath('myfuncs');
 addpath('NotWorking\');
 
-step = 2; % used to take only every 2nd data
+step = 4; % used to take only every 2nd data
 
 stylus_data = readmatrix('data_CIRCUMstylus');
 stylus_data = stylus_data(1:step:end,:); 
@@ -566,5 +566,5 @@ xlabel('x');
 ylabel('y');
 zlabel('z');
 
-% end
+end
 

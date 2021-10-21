@@ -115,7 +115,7 @@ class OptitrackMainThread(QThread):
         if (self.show_all_markers == True):
             marker_modelID_0_positions = data_dict["marker_modelID_0_positions"]
             labeledMarkerPositions = np.round(marker_modelID_0_positions, 5)
-            if labeledMarkerPositions: # Only emit the data when its not empty
+            if labeledMarkerPositions.size > 0: # Only emit the data when its not empty
                 self.signals_to_main_show_electrode_placements.signal_numpy.emit(labeledMarkerPositions) 
         pass 
 
