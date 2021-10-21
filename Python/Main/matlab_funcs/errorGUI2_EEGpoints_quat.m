@@ -1,4 +1,4 @@
-function [predicted] = EEGpoints_quat()
+% function [predicted] = EEGpoints_quat()
 
 %   Detailed explanation goes here
 %% Load the different wanded data
@@ -6,7 +6,7 @@ function [predicted] = EEGpoints_quat()
 
 addpath('helperfuncs\');
 addpath('myfuncs');
-addpath('NotWorking\');
+addpath('21_10_2021\data_gui_2');
 
 step = 4; % used to take only every 2nd data
 
@@ -83,6 +83,53 @@ quaternion_extracted = quaternion_extracted(1:step:end,:);
 
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
 dis_matrix_nziz = dis_matrix_nziz(1:step:end,:); 
+
+
+%%% Static
+static = readmatrix('specs_static_21_10_2021');
+static = static./1000;
+static_specs = static(:,3:8); % specs pose
+static_specs = rmmissing(static_specs);
+
+first_row_markers = static(9,34:108);
+first_row_rot = static_specs(8,1:3);
+first_row_displacement = static_specs(8,4:6);
+first_row_displacement = [first_row_displacement(:,1), first_row_displacement(:,3), first_row_displacement(:,2)];
+
+static_markers = [];
+% The for loop starts at 3 as the first 2 columns of the csv files are
+% not marker points. It steps up by 3 as each marker points has 3
+% coordinates (x,y,z) so i is always 3,6,9 ...
+for i = 1:3:length(first_row_markers)
+    disp(i)
+    static_markers = [static_markers; first_row_markers(i),first_row_markers(i+2),first_row_markers(i+1)];
+end
+Xrot = first_row_rot(1);
+Yrot = first_row_rot(3);
+Zrot = first_row_rot(2);
+
+new_markers_static = [];
+
+for i = 1:1:length(static_markers)
+    d = first_row_displacement; % displacement vector
+    v = [ 0, 0 ,0 1];
+    rot_vector_static = [-Xrot, -Yrot, -Zrot];
+    transform_matrix_static = construct_matrix_transform_xyz(d, rot_vector_static);    
+    marker_static = [static_markers(i,1); ... % X,Y,Z 
+              static_markers(i,2); ...
+              static_markers(i,3); ...
+               1];
+           
+    new_vector_static = inv(transform_matrix_static) * marker_static;
+    new_markers_static = [new_markers_static; new_vector_static.';];
+
+end
+
+%%% Static
+static_dataset = new_markers_static(:,1:3);
+static_x = static_dataset(:,1);
+static_y = static_dataset(:,3);
+static_z = static_dataset(:,2);
 
 %% Run Function to give points
 % Quaternion way
@@ -542,5 +589,81 @@ xlabel('x');
 ylabel('y');
 zlabel('z');
 
-end
+
+%%% Labelling of points - Predicted
+Fpz = final_points(1,:);
+Fp2 = final_points(12,:);
+F8 = final_points(11,:);
+T4 = final_points(10,:);
+T6 = final_points(9,:);
+O2 = final_points(8,:);
+Oz = final_points(7,:);
+O1 = final_points(6,:);
+T5 = final_points(5,:);
+T3 = final_points(4,:);
+F7 = final_points(3,:);
+Fp1 = final_points(2,:);
+Fz = final_points(16,:);
+Cz = final_points(14,:);
+Pz = final_points(17,:);
+C4 = final_points(15,:);
+C3 = final_points(13,:);
+
+predicted = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; C3; F4; F3; P3; P4 ];
+four_points = [F4; F3; P3; P4];
+
+%%% Labelling of points - Static
+Fpz_static = static_dataset(13,:);
+Fp2_static = static_dataset(11,:);
+F8_static = static_dataset(6,:);
+T4_static = static_dataset(5,:);
+T6_static = static_dataset(7,:);
+O2_static = static_dataset(12,:);
+Oz_static = static_dataset(16,:);
+O1_static = static_dataset(19,:);
+T5_static = static_dataset(24,:);
+T3_static = static_dataset(25,:);
+F7_static = static_dataset(23,:);
+Fp1_static = static_dataset(18,:);
+Fz_static = static_dataset(14,:);
+Cz_static = static_dataset(15,:);
+Pz_static = static_dataset(17,:);
+C4_static = static_dataset(9,:);
+C3_static = static_dataset(21,:);
+F4_static = static_dataset(8,:);
+F3_static = static_dataset(20,:);
+P3_static = static_dataset(22,:);
+P4_static = static_dataset(10,:);
+
+%% Euclidean Error
+
+Fpz_diff = norm(Fpz -Fpz_static);
+Fp2_diff = norm(Fp2 -Fp2_static);
+F8_diff = norm(F8 - F8_static); 
+T4_diff = norm(T4 -T4_static);
+T6_diff = norm(T6 -T6_static);
+O2_diff = norm(O2 -O2_static);
+Oz_diff =norm(Oz -Oz_static);
+O1_diff = norm(O1 -O1_static);
+T5_diff = norm(T5 -T5_static);
+T3_diff = norm(T3 -T3_static);
+F7_diff = norm(F7 -F7_static);
+Fp1_diff = norm(Fp1 -Fp1_static);
+Fz_diff = norm(Fz -Fz_static);
+Cz_diff = norm(Cz -Cz_static);
+Pz_diff = norm(Pz -Pz_static);
+C4_diff = norm(C4 -C4_static);
+C3_diff = norm(C3 -C3_static);
+F4_diff = norm(F4 - F4_static);
+F3_diff = norm(F3 - F3_static);
+P3_diff = norm(P3 - P3_static);
+P4_diff = norm(P4 - P4_static);
+all_diff = [Fpz_diff; Fp2_diff; F8_diff; T4_diff; T6_diff; O2_diff; Oz_diff; O1_diff; ...
+    T5_diff; T3_diff; F7_diff; Fp1_diff; Fz_diff; Cz_diff; Pz_diff; C4_diff; C3_diff;
+    F4_diff; F3_diff; P3_diff; P4_diff]
+
+return;
+
+all_diff = all_diff.* 1000; % convert back to mm
+% end
 

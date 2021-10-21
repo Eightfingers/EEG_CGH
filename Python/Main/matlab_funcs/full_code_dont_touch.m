@@ -9,12 +9,13 @@
 addpath('helperfuncs\')
 addpath('myfuncs\')
 addpath('30_9_2021')
+addpath('21_10_2021')
 
 
 %% Load the different wanded data
 %% Load the different wanded data
 %%% Circumference
-circumference = readmatrix('circum_shake_30_9_2023.csv'); 
+circumference = readmatrix('specs_21_10_2021_circum_003.csv'); 
 circum_wand = circumference(:,3:8); 
 circum_wand = rmmissing(circum_wand);
 hold on
@@ -52,7 +53,7 @@ for i = 1:1:length(circum_wand)
 end
 
 %%% Ear to Ear
-ear2ear = readmatrix('ear2ear_shake_30_9_2024.csv');
+ear2ear = readmatrix('specs_21_10_2021_ear2ear_002.csv');
 e2e_wand = ear2ear(:,3:8); 
 e2e_wand = rmmissing(e2e_wand);
 hold on
@@ -89,7 +90,7 @@ for i = 1:1:length(e2e_wand)
 end
 
 %%% NZIZ
-nziz = readmatrix ('NZIZ_shake_30_9_2021.csv');
+nziz = readmatrix ('specs_nziz_21_10_2021.csv');
 nziz_wand = nziz(:,3:8); 
 nziz_wand = rmmissing(nziz_wand);
 hold on
@@ -127,12 +128,11 @@ end
 scatter3(new_markers_nziz(:,1),new_markers_nziz(:,2),new_markers_nziz(:,3),'d');
 
 %%% Static
- static_specs = static(:,34:39); 
+static = readmatrix('specs_static_21_10_2021');
+static_specs = static(:,3:8); % specs pose
 static_specs = rmmissing(static_specs);
 
-
-static_markers = static(:,113:end); % suppose to be 113?
-first_row_markers = static_markers(8,:);
+first_row_markers = static(9,34:108);
 first_row_rot = static_specs(8,1:3);
 first_row_displacement = static_specs(8,4:6);
 first_row_displacement = [first_row_displacement(:,1), first_row_displacement(:,3), first_row_displacement(:,2)];
@@ -150,6 +150,7 @@ Yrot = first_row_rot(3);
 Zrot = first_row_rot(2);
 
 new_markers_static = [];
+
 for i = 1:1:length(static_markers)
     d = first_row_displacement; % displacement vector
     v = [ 0, 0 ,0 1];
@@ -164,6 +165,7 @@ for i = 1:1:length(static_markers)
     new_markers_static = [new_markers_static; new_vector_static.';];
 
 end
+
 %%
 %%% Circumferene
 circumference_dataset= new_markers_circum;
@@ -195,10 +197,11 @@ scatter3(nziz_x,nziz_y,nziz_z);
 %%% Static
 static_dataset = new_markers_static(:,1:3);
 static_x = static_dataset(:,1);
-static_y = static_dataset(:,2);
-static_z = static_dataset(:,3);
+static_y = static_dataset(:,3);
+static_z = static_dataset(:,2);
 hold on
-scatter3(static_x,static_z,static_y);
+plot3(static_x,static_z,static_y,'d');
+
 % hold on;
 % plot3(nziz_x, nziz_y, nziz_z, 'd');
 %% Perform Geometerical Fitting and Extract the datatips from the plots.
@@ -394,21 +397,21 @@ closest_array_nziz = find_closest_from_predicted_to_wanded(nziz, A3);
 %%% plane and the Y values need to be found. 
 %%% If A(:,1)==closest(:,1) and A(:3)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its Y value (2nd column).
-interpolate_closest_circum = find_left_out_axis_values(closest_array_circum, A1, circumference_dataset,1 , 1, 3);
+interpolate_closest_circum = find_left_out_axis_values(closest_array_circum, circumference_dataset,3 , 1, 2);
 trans_intrapolate_closest_circum = interpolate_closest_circum.';
 
 %%% Ear to Ear - The ear to ear is orthogonally projected in the XY
 %%% plane and the Z values need to be found. 
 %%% If A(:,1)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its Z value (3rd column)
-interpolate_closest_e2e = find_left_out_axis_values(closest_array_e2e, A2, e2e_dataset, 2, 3, 2);
+interpolate_closest_e2e = find_left_out_axis_values(closest_array_e2e, e2e_dataset, 2, 1, 1);
 trans_intrapolate_closest_e2e = interpolate_closest_e2e.';
 
 %%% NZIZ - The  NZIZ is orthogonally projected in the
 %%% ZY plane and the X values need to be found. 
 %%% If A(:,3)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its X value (1st column).
-interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, A3, nziz_dataset, 1, 2, 1);
+interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, nziz_dataset, 1, 2, 1);
 trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 
 %% Reorganize the data
@@ -438,12 +441,12 @@ convert_final_nziz = num2cell(final_nziz);
 nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
 final_nziz_label = [nziz_label;  convert_final_nziz];
 
-% figure;
-% scatter3(final_circumference(1:1,:),final_circumference(2:2,:),final_circumference(3:3,:)); 
-% hold on
-% scatter3(final_e2e(1:1,:),final_e2e(2:2,:),final_e2e(3:3,:)); 
-% hold on
-% scatter3(final_nziz(1:1,:),final_nziz(2:2,:),final_nziz(3:3,:)); 
+figure;
+scatter3(final_circumference(1:1,:),final_circumference(2:2,:),final_circumference(3:3,:)); 
+hold on
+scatter3(final_e2e(1:1,:),final_e2e(2:2,:),final_e2e(3:3,:)); 
+hold on
+scatter3(final_nziz(1:1,:),final_nziz(2:2,:),final_nziz(3:3,:)); 
 
 %% Append all together. 
 %%% Create a new variable and append final_circumference, final_e2e and
@@ -457,6 +460,8 @@ final_points_mat = [final_points_converted_x; final_points_converted_y; final_po
 %%%Extract Common Points
 %%%Fpz
 common_Fpz = [final_points_mat(:,1) final_points_mat(:,18)];
+% plot3(-5.8823, 33.3660, 30.8926, 'bd','MarkerSize', 20);
+% plot3(-3.6253, 28.1272, 46.1749, 'd','MarkerSize', 20);
 midpoint_Fpz = mean(common_Fpz,2);
 %%% Oz
 common_Oz = [final_points_mat(:,7) final_points_mat(:,22)];
@@ -485,7 +490,6 @@ scatter3(new_markers_static(:,1), new_markers_static(:,2),new_markers_static(:,3
 % hold on
 % scatter3(final_points_converted_x, final_points_converted_y, final_points_converted_z);
 legend('Final points','Initial 22 electrodes');
-return;
 
 % hold on
 % scatter3(D1_x,D1_y,D1_z,'p');
@@ -581,7 +585,7 @@ z_spline = spline_pts3(:,3);
 [yy_fit3, zz_fit3] = splineplot(y_spline, z_spline);
 [P4_YZ,~,~] = interparc(0.25, yy_fit3, zz_fit3,'spline');
 P4 = [P4_XZ(1) , P4_YZ(1), P4_YZ(2)];
-plot3(P4(1), P4(2), P4(3), 'ko');
+% plot3(P4(1), P4(2), P4(3), 'ko');
 
 % % Visual YZ spline plot
 % figure;
@@ -596,7 +600,7 @@ spline_pts4 = [F7; Fz; F8];
 x_spline = spline_pts4(:,1);
 z_spline = spline_pts4(:,3);
 [xxdata4, zzdata4] = splineplot(x_spline, z_spline);
-[F4_XZ,~,~] = interparc(0.80, xxdata4,zzdata4,'spline'); % F4 is located from the right 
+[F4_XZ,~,~] = interparc(0.75, xxdata4,zzdata4,'spline'); % F4 is located from the right 
 
 % % Visual XZ spline plot
 % figure;
@@ -610,9 +614,9 @@ z_spline = spline_pts4(:,3);
 y_spline = spline_pts3(:,2);
 z_spline = spline_pts3(:,3);
 [yy_fit3, zz_fit3] = splineplot(y_spline, z_spline);
-[F4_YZ,~,~] = interparc(0.80, yy_fit3, zz_fit3,'spline');
+[F4_YZ,~,~] = interparc(0.75, yy_fit3, zz_fit3,'spline');
 F4 = [F4_XZ(1) , F4_YZ(1), F4_YZ(2)];
-plot3(F4(1), F4(2), F4(3), 'ko');
+% plot3(F4(1), F4(2), F4(3), 'ko');
 
 % % Visual YZ spline plot
 % figure;
@@ -628,7 +632,7 @@ spline_pts4 = [F7; Fz; F8];
 x_spline = spline_pts4(:,1);
 z_spline = spline_pts4(:,3);
 [xxdata4, zzdata4] = splineplot(x_spline, z_spline);
-[F3_XZ,~,~] = interparc(0.20, xxdata4,zzdata4,'spline'); % F3 is located from the right 
+[F3_XZ,~,~] = interparc(0.25, xxdata4,zzdata4,'spline'); % F3 is located from the right 
 
 % % Visual XZ spline plot
 % figure;
@@ -642,7 +646,7 @@ spline_pts2 = [O1; C3; Fp1];
 y_spline = spline_pts2(:,2);
 z_spline = spline_pts2(:,3);
 [yy_fit2, zz_fit2] = splineplot(y_spline, z_spline);
-[F3_YZ,~,~] = interparc(0.80, yy_fit2, zz_fit2,'spline');
+[F3_YZ,~,~] = interparc(0.75, yy_fit2, zz_fit2,'spline');
 F3 = [F3_XZ(1) , F3_YZ(1), F3_YZ(2)];
 plot3(F3(1), F3(2), F3(3), 'ko');
 hold on;
@@ -658,7 +662,11 @@ hold on;
 plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
 hold on
 scatter3(static_dataset(:,1), static_dataset(:,2),static_dataset(:,3));
+for i = 1:1:length(static_dataset)
+    text(static_dataset(i,1), static_dataset(i,2), static_dataset(i,3),string(i));
+end
 hold on;
+
 xlabel('x');
 ylabel('y');
 zlabel('z')
@@ -666,33 +674,33 @@ zlabel('z')
 %% Euclidean Distance Error
 
 %%% Labelling of points - Static
-Fpz_static = static_dataset(2,:);
-Fp2_static = static_dataset(13,:);
-F8_static = static_dataset(17,:);
-T4_static = static_dataset(21,:);
-T6_static = static_dataset(20,:);
-O2_static = static_dataset(1,:);
-Oz_static = static_dataset(7,:);
-O1_static = static_dataset(5,:);
-T5_static = static_dataset(19,:);
-T3_static = static_dataset(18,:);
-F7_static = static_dataset(6,:);
-Fp1_static = static_dataset(10,:);
-Fz_static = static_dataset(8,:);
-Cz_static = static_dataset(9,:);
-Pz_static = static_dataset(3,:);
-C4_static = static_dataset(16,:);
-C3_static = static_dataset(11,:);
-F4_static = static_dataset(15,:);
-F3_static = static_dataset(4,:);
-P3_static = static_dataset(12,:);
-P4_static = static_dataset(14,:);
+Fpz_static = static_dataset(13,:);
+Fp2_static = static_dataset(11,:);
+F8_static = static_dataset(6,:);
+T4_static = static_dataset(5,:);
+T6_static = static_dataset(7,:);
+O2_static = static_dataset(12,:);
+Oz_static = static_dataset(16,:);
+O1_static = static_dataset(19,:);
+T5_static = static_dataset(24,:);
+T3_static = static_dataset(25,:);
+F7_static = static_dataset(23,:);
+Fp1_static = static_dataset(18,:);
+Fz_static = static_dataset(14,:);
+Cz_static = static_dataset(15,:);
+Pz_static = static_dataset(17,:);
+C4_static = static_dataset(9,:);
+C3_static = static_dataset(21,:);
+F4_static = static_dataset(8,:);
+F3_static = static_dataset(20,:);
+P3_static = static_dataset(22,:);
+P4_static = static_dataset(10,:);
 
 %% Euclidean Error
 
 Fpz_diff = norm(Fpz -Fpz_static);
 Fp2_diff = norm(Fp2 -Fp2_static);
-F8_diff = norm(F8 - F8_static);
+F8_diff = norm(F8 - F8_static); 
 T4_diff = norm(T4 -T4_static);
 T6_diff = norm(T6 -T6_static);
 O2_diff = norm(O2 -O2_static);
@@ -711,3 +719,6 @@ F4_diff = norm(F4 - F4_static);
 F3_diff = norm(F3 - F3_static);
 P3_diff = norm(P3 - P3_static);
 P4_diff = norm(P4 - P4_static);
+all_diff = [Fpz_diff; Fp2_diff; F8_diff; T4_diff; T6_diff; O2_diff; Oz_diff; O1_diff; ...
+    T5_diff; T3_diff; F7_diff; Fp1_diff; Fz_diff; Cz_diff; Pz_diff; C4_diff; C3_diff;
+    F4_diff; F3_diff; P3_diff; P4_diff]
