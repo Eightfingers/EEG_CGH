@@ -7,6 +7,7 @@
 addpath('helperfuncs\');
 addpath('myfuncs');
 addpath('21_10_2021\data_gui_2');
+addpath('21_10_2021');
 
 step = 4; % used to take only every 2nd data
 

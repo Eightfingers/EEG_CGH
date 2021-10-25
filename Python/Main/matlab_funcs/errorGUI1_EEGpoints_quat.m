@@ -7,6 +7,7 @@
 addpath('helperfuncs\');
 addpath('myfuncs');
 addpath('21_10_2021\data_gui_1');
+addpath('21_10_2021');
 
 step = 4; % used to take only every 2nd data
 
@@ -613,10 +614,11 @@ predicted = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; 
 four_points = [F4; F3; P3; P4];
 
 % hold on
-% new_markers_static = new_markers_static.' * 1000;
-% hold on;
-% plot3(new_markers_static(:,1), new_markers_static(:,2),new_markers_static(:,3),'d');
-% plot3(predicted(:,1), predicted(:,2), predicted(:,3) ,'d');
+% new_markers_static = new_markers_static.' * 1000; 
+hold on;
+plot3(new_markers_static(:,1), new_markers_static(:,2),new_markers_static(:,3),'*');
+plot3(predicted(:,1), predicted(:,2), predicted(:,3) ,'d');
+legend('static', 'predicted');
 %%% Labelling of points - Static
 Fpz_static = static_dataset(13,:);
 Fp2_static = static_dataset(11,:);
