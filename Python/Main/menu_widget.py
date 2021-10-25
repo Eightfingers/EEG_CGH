@@ -51,7 +51,7 @@ class MenuWidget(QWidget):
         self.signals_to_main = AppSignals()
         self.signals_to_main.signal_int.connect(parent.save_data) 
         self.signals_to_main.signal_bool.connect(parent.set_live_predicted_eeg_positions)
-
+        
         self.NZIZdata_to_main_signals = AppSignals()
         self.NZIZdata_to_main_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
 
@@ -187,6 +187,7 @@ class MenuWidget(QWidget):
                 QMessageBox.warning(self, "Warning", "Please complete NZIZ trace!!")
             else:
                 print("Menu: Predicting FPZ position")
+                self.signals_to_main2.signal_bool.emit(True)
                 # message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
                 message =[1,2,"NZIZ positions"] # 1,2 is a dummy message
                 self.signals_to_matlab.signal_list.emit(message)

@@ -15,11 +15,14 @@ class MatlabMainThread(QThread):
         QThread.__init__(self, parent)
 
         # Instantiate signals and connect signals to the Slots at the StatusWidget (parent)
-        self.signals_to_main = AppSignals()
+        self.signals_to_main = AppSignals() # used for all 21 positions
+        self.signals_to_main2 = AppSignals() # used for fpz positions
         self.signals_to_status = AppSignals()
         self.signals_to_menu = AppSignals()
-        
+
         self.signals_to_main.signal_numpy.connect(parent.show_eeg_positions)
+        self.signals_to_main2.signal_numpy.connect(parent.show_fpz_position)
+        self.signals_to_main2.signal_bool.connect(parent.set_live_fpz_positions)
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label) # change label function is found in status_widget.py
         self.signals_to_menu.signal_str.connect(parent.left_dock_menu_widget.change_predict_state) # change button text on the menu widget
 
@@ -75,7 +78,8 @@ class MatlabWorkerThread(QThread):
                 # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
                 nziz_positions = np.array(nziz_positions)
                 print("Matlab: The NZIZ positions are:", nziz_positions)
-                self.parent.signals_to_main.signal_numpy.emit(nziz_positions) 
+                self.parent.signals_to_main2.signal_numpy.emit(nziz_positions)
+                self.parent.signals_to_main2.signal_bool.emit(True)
 
             elif self._command == "21 positions":
                 all_positions = self.matlab_engine.EEGpoints_quat()

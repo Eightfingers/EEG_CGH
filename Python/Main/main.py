@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
 
         # majority is unused
         self.predicted_positions = None
+        self.fpz_positon = None
         self.NZIZ_data = None
         self.NZIZ_specs_data = None
         self.NZIZ_specs_rotate = None
@@ -56,6 +57,7 @@ class MainWindow(QMainWindow):
         self.CIRCUM_BUTTON = 2
         self.EARTOEAR_BUTTON = 3
         self.live_predicted_eeg_positions = False
+        self.live_predicted_nziz_positions = False
 
         self.save_directory = os.getcwd() + "RecordedData"
 
@@ -245,6 +247,12 @@ class MainWindow(QMainWindow):
         self.scatter.addSeries(self.Predicted_series)
         self.scatter.show()
 
+    # Show predicted positions
+    @Slot(np.ndarray)
+    def show_fpz_position(self, message):
+        # print(message)
+        self.fpz_positon = message
+
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):
         self.scatter.removeSeries(self.all_markers_series) # remove the old position
@@ -256,7 +264,7 @@ class MainWindow(QMainWindow):
         self.scatter.show()
 
     @Slot(list)
-    def show_current_specs_position_rotation(self, message):
+    def update_current_specs_position_rotation(self, message):
         self.specs_position = message[0]
         self.specs_rotation = message[1]
         self.scatter.removeSeries(self.specs_series) # remove the old position
@@ -269,25 +277,46 @@ class MainWindow(QMainWindow):
         self.scatter.show()
 
         if (self.live_predicted_eeg_positions == True):
-            # self.predicted_positions
-            # print("Gotta update predicted eeg positions")
-            r = R.from_quat(self.specs_rotation) # rotate the orientation
-            new_predicted_positions = r.apply(self.predicted_positions)
-            new_predicted_positions = new_predicted_positions + self.specs_position # now add the displaced amount
-
+            # Convert predicted eeg_position from spec frame to global frame 
+            self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
             # Rough fix
             self.scatter.removeSeries(self.Predicted_series) # remove the old series
             self.Predicted_series = QScatter3DSeries()
-            self.Predicted_series.setBaseColor(QColor(255, 165, 0)) # Black
-            self.add_list_to_scatterdata(self.Predicted_series, new_predicted_positions)
+            self.Predicted_series.setBaseColor(QColor(255, 165, 0)) # Orange
+            self.add_list_to_scatterdata(self.Predicted_series, self.global_predicted_eeg_positions)
             self.Predicted_series.setItemSize(self.itemsize)
             self.scatter.addSeries(self.Predicted_series)
             self.scatter.show()
+
+        if (self.live_predicted_nziz_positions == True):
+            # Convert predicted nziz from spec frame to global frame 
+            print(self.fpz_positon, "FPZ position iss")
+            self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
+            self.scatter.removeSeries(self.NZIZscatter_series) # remove the old series
+            self.NZIZscatter_series = QScatter3DSeries()
+            self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red
+            self.add_list_to_scatterdata(self.NZIZscatter_series, self.global_predicted_nziz_positions)
+            self.NZIZscatter_series.setItemSize(self.itemsize)
+            self.scatter.addSeries(self.NZIZscatter_series)
+            self.scatter.show()
+
+    def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
+        r = R.from_quat(specs_rotation) # rotate the orientation
+        new_predicted_positions = r.apply(series)
+        new_predicted_positions = new_predicted_positions + specs_position # now add the displaced amount
+
+        return new_predicted_positions
+
 
 
     @Slot(bool)
     def set_live_predicted_eeg_positions(self, message):
         self.live_predicted_eeg_positions = message
+
+    @Slot(bool)
+    def set_live_fpz_positions(self, message):
+        print("DID I SWITCH THIS ON?", message)
+        self.live_predicted_nziz_positions = message
 
     # This is not the predicted position, rather it will show positions of
     # electrode with optitrack markers

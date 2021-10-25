@@ -292,7 +292,7 @@ A2 = [e2e_x e2e_z];
 A3 = [nziz_y nziz_z];
 [closest_array_nziz] = find_closest_from_predicted_to_wanded(nziz, A3);
 
-%% Find left out axis values 
+%% Find left out axis values
 %%% Circumference - The circumference is orthogonally projected in the XZ
 %%% plane and the Y values need to be found. 
 %%% If A(:,1)==closest(:,1) and A(:3)==closest(:,2). Then we need to extract

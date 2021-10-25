@@ -1,4 +1,4 @@
-function final_nziz_python = get_nziz( nziz ,nziz_spec)
+function Fpz = get_nziz( nziz ,nziz_spec)
 %%% This code would be the final code that is used to determine the 17 EEG
 %%% locations. 
 %% Add to path different folders containing data and code
@@ -148,10 +148,9 @@ trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 final_nziz_python = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
 final_nziz_python = final_nziz_python.';
 final_nziz_python = [final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2)];
-
-
+Fpz = final_nziz_python(1,:);
 % final_nziz_python = final_nziz_python *1000; % convert m to mm
-plot3(final_nziz_python(:,1), final_nziz_python(:,2), final_nziz_python(:,3), 'd');
+% plot3(final_nziz_python(:,1), final_nziz_python(:,2), final_nziz_python(:,3), 'd');
 % hold on ;
 % 
 % predicted_nziz = num2cell(final_nziz_python);
