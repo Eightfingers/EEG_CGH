@@ -9,17 +9,20 @@ addpath('myfuncs');
 addpath('21_10_2021\data_gui_2');
 addpath('21_10_2021');
 
-step = 4; % used to take only every 2nd data
+step = 2; % used to take only every 2nd data
 
 stylus_data = readmatrix('data_CIRCUMstylus');
 stylus_data = stylus_data(1:step:end,:); 
+% stylus_data = round(stylus_data, 5, 'significant');
 
 quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
 quaternion_extracted = quaternion_extracted(1:step:end,:);
+% quaternion_extracted = round(quaternion_extracted, 5, 'significant');
 
 dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
 dis_matrix_circum = dis_matrix_circum(1:step:end,:); 
+% dis_matrix_circum = round(dis_matrix_circum, 5, 'significant');
 
 %% Run Function to give points
 % Quaternion way
@@ -39,6 +42,7 @@ for i = 1:step:length(stylus_data)
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
     new_markers_circum = [new_markers_circum; new_vector_nziz.';];
+%     new_markers_circum = round(new_markers_circum, 5, 'significant');
 
 end
 
@@ -71,6 +75,7 @@ for i = 1:1:length(stylus_data)
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_ear2ear, rot_vector_ear2ear);    
     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_ear2ear;
     new_markers_e2e = [new_markers_e2e; new_vector_nziz.';];
+%     new_markers_e2e = round(new_markers_e2e, 5, 'significant');
 
 end
 
@@ -85,6 +90,26 @@ quaternion_extracted = quaternion_extracted(1:step:end,:);
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
 dis_matrix_nziz = dis_matrix_nziz(1:step:end,:); 
 
+%% Run Function to give points
+% Quaternion way
+new_markers_nziz = [];
+% disp("Doing quaternion");
+for i = 1:1:length(stylus_data)
+%     disp(i);
+    quat_vector = quaternion(quaternion_extracted(i,:));
+    RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
+    rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
+    dis_vector_nziz = dis_matrix_nziz(i,:);
+    wand_vector_nziz = [stylus_data(i,1); ... % X,Y,Z 
+              stylus_data(i,3); ...
+              stylus_data(i,2); ...
+               1];
+    transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_nziz, rot_vector_nziz);    
+    new_vector_nziz = inv(transform_matrix_circum) * wand_vector_nziz;
+    new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
+%     new_markers_nziz = round(new_markers_nziz, 5, 'significant');
+
+end
 
 %%% Static
 static = readmatrix('specs_static_21_10_2021');
@@ -123,6 +148,7 @@ for i = 1:1:length(static_markers)
            
     new_vector_static = inv(transform_matrix_static) * marker_static;
     new_markers_static = [new_markers_static; new_vector_static.';];
+%     new_markers_static = round(new_markers_static, 5, 'significant');
 
 end
 
@@ -131,27 +157,6 @@ static_dataset = new_markers_static(:,1:3);
 static_x = static_dataset(:,1);
 static_y = static_dataset(:,3);
 static_z = static_dataset(:,2);
-
-%% Run Function to give points
-% Quaternion way
-new_markers_nziz = [];
-% disp("Doing quaternion");
-for i = 1:1:length(stylus_data)
-%     disp(i);
-    quat_vector = quaternion(quaternion_extracted(i,:));
-    RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
-    rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
-    dis_vector_nziz = dis_matrix_nziz(i,:);
-    wand_vector_nziz = [stylus_data(i,1); ... % X,Y,Z 
-              stylus_data(i,3); ...
-              stylus_data(i,2); ...
-               1];
-    transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_nziz, rot_vector_nziz);    
-    new_vector_nziz = inv(transform_matrix_circum) * wand_vector_nziz;
-    new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
-
-end
-
 %%% Circumferene
 circumference_dataset= new_markers_circum;
 circumference_dataset = rmmissing(circumference_dataset);
@@ -170,6 +175,7 @@ nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
+
 %% Perform Geometerical Fitting and Extract the datatips from the plots.
 
 %%% Circumferene - The circumference is considered as and ellipse in 2D
@@ -340,13 +346,13 @@ A2 = [e2e_x e2e_z];
 A3 = [nziz_y nziz_z];
 [closest_array_nziz] = find_closest_from_predicted_to_wanded(nziz, A3);
 
+
 %% Find left out axis values 
 %%% Circumference - The circumference is orthogonally projected in the XZ
 %%% plane and the Y values need to be found. 
-%%% If A(:,1)==closest(:,1) and A(:3)==closest(:,2). Then we need to extract
+%%% If A(:,1)==closest(:,1) and A(:3)==closest(:,2). Then we need  to extract
 %%% that particular entire row and specifically its Y value (2nd column).
 % unique_circumference_dataset = unique(circumference_dataset, 'rows');
-% closest_array_circum = unique(closest_array_circum, 'rows');
 interpolate_closest_circum = find_left_out_axis_values(closest_array_circum, circumference_dataset,3 , 1, 2);
 trans_intrapolate_closest_circum = interpolate_closest_circum.';
 
