@@ -84,7 +84,6 @@ class OptitrackMainThread(QThread):
             self.streaming_client.rigid_body_listener = self.receiveRigidBodyFrame
             # Start up the streaming client now that the callbacks are set up.
             # This will run perpetually, and operate on a separate thread.
-            self.streaming_client.run()
             self.signals_to_status.signal_list.emit(["Optitrack","Okay"])
 
         except ConnectionResetError:
@@ -123,14 +122,17 @@ class OptitrackMainThread(QThread):
     def receiveRigidBodyFrame(self, id, position, rotation ):
         # print( "Received frame for rigid body", id )
         # print(id, position)
-        position = np.round(position, 5)
-        rotation = np.round(rotation, 5)
+        position = np.array(position)
+        rotation = np.array(rotation)
+        # print( "Received frame for rigid body", id," ",position," ",rotation )
+
         if (id == 1004): # if the id is 1004, it is the stylus data
+            # print("1004 is recorded")
             self.stylus_position = position 
             self.signals_to_main_stylus_pos.signal_numpy.emit(position)
             if self.record == True: # Record the positions into numpy array
                 self.stylus_data[self.index_counter,:] = position
-                if np.all(self.stylus_previous_position != position):  # if its not the same as the old position update to the new position
+                if np.all(self.stylus_previous_position != position):    # if its not the same as the old position update to the new position
                     self.stylus_previous_position = position 
                     self.signals_to_status.signal_list.emit(["Stylus","Detected"])
                     self.stylus_lose_track_counter = 0
@@ -140,6 +142,7 @@ class OptitrackMainThread(QThread):
                     if (self.stylus_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Stylus","Lost detection"])
         elif (id == 1005): # specs data
+            # print("1005 is recorded")
             specs_pos_rotation = [position, rotation]
             self.signals_to_main_specs_pos_rotation.signal_list.emit(specs_pos_rotation)
             if self.record == True:

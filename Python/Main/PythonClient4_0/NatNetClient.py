@@ -21,6 +21,8 @@ import copy
 import time
 from PythonClient4_0 import DataDescriptions
 from PythonClient4_0 import MoCapData
+# import DataDescriptions
+# import MoCapData
 
 def trace( *args ):
     # uncomment the one you want to use

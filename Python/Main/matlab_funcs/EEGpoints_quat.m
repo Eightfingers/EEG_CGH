@@ -6,9 +6,9 @@ function [predicted] = EEGpoints_quat()
 
 addpath('helperfuncs\');
 addpath('myfuncs');
-addpath('NotWorking\');
+% addpath('NotWorking\');
 
-step = 4; % used to take only every 2nd data
+step = 1; % used to take only every 2nd data
 
 stylus_data = readmatrix('data_CIRCUMstylus');
 stylus_data = stylus_data(1:step:end,:); 

@@ -118,7 +118,7 @@ zdata_nziz = [zdata_nziz_back zdata_nziz_front];
 [pt22_nziz,~,~] = interparc(0.30,ydata_nziz,zdata_nziz,'spline');
 [pt23_nziz,~,~] = interparc(0.50,ydata_nziz,zdata_nziz,'spline');
 [pt24_nziz,~,~] = interparc(0.70,ydata_nziz,zdata_nziz,'spline');
-[pt25_nziz,~,~] = interparc(0.95,ydata_nziz,zdata_nziz,'spline');
+[pt25_nziz,~,~] = interparc(0.90,ydata_nziz,zdata_nziz,'spline');
 [pt26_nziz,~,~] = interparc(1,ydata_nziz,zdata_nziz,'spline');
 
 %% Collate Data Points
