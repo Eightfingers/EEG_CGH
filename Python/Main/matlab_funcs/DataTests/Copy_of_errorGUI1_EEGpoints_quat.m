@@ -1,25 +1,34 @@
-function [predicted] = EEGpoints_quat()
+% function [predicted] = EEGpoints_quat()
 
+%   Detailed explanation goes here
+%% Load the different wanded data
 %%% Circumference
+
 addpath('helperfuncs\');
 addpath('myfuncs');
-% addpath('NotWorking\');
-step = 1; % used to take only every 2nd data
+addpath('21_10_2021\data_gui_1');
+addpath('21_10_2021');
+
+step = 4; % used to take only every 2nd data
 
 stylus_data = readmatrix('data_CIRCUMstylus');
-% stylus_data = stylus_data(1:step:end,:); 
+stylus_data = stylus_data(1:step:end,:);
+
+circum_data = stylus_data;
+plot3(circum_data(:,1), circum_data(:,3), circum_data(:,2), 'ko');
+hold on;
 
 quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-% quaternion_extracted = quaternion_extracted(1:step:end,:);
+quaternion_extracted = quaternion_extracted(1:step:end,:);
 
 dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
-% dis_matrix_circum = dis_matrix_circum(1:step:end,:); 
+dis_matrix_circum = dis_matrix_circum(1:step:end,:); 
 
 %% Run Function to give points
-% Quaternion way
+% Quaternion wayater
 new_markers_circum = [];
-% disp("Doing quaternion");
+% disp("Doing qunion");
 for i = 1:step:length(stylus_data)
     
 %     disp(i);
@@ -34,19 +43,24 @@ for i = 1:step:length(stylus_data)
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
     new_markers_circum = [new_markers_circum; new_vector_nziz.';];
+    new_markers_circum = round(new_markers_circum, 5, 'significant');
 
 end
 
 %%% Ear to Ear
 stylus_data = readmatrix('data_EarToEarstylus');
-% stylus_data = stylus_data(1:step:end,:); 
+stylus_data = stylus_data(1:step:end,:); 
 
 quaternion_extracted = readmatrix('rotation_data_EarToEarspecs'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-% quaternion_extracted = quaternion_extracted(1:step:end,:);
+quaternion_extracted = quaternion_extracted(1:step:end,:);
 
 dis_matrix_ear2ear = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
-% dis_matrix_ear2ear = dis_matrix_ear2ear(1:step:end,:);
+dis_matrix_ear2ear = dis_matrix_ear2ear(1:step:end,:);
+
+ear2ear_data = stylus_data;
+plot3(ear2ear_data(:,1), ear2ear_data(:,3), ear2ear_data(:,2), 'ko');
+
 
 %% Run Function to give points
 % Quaternion way
@@ -66,19 +80,24 @@ for i = 1:1:length(stylus_data)
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_ear2ear, rot_vector_ear2ear);    
     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_ear2ear;
     new_markers_e2e = [new_markers_e2e; new_vector_nziz.';];
+    new_markers_e2e = round(new_markers_e2e, 5, 'significant');
 
 end
 
 %%% NZIZ
 stylus_data = readmatrix('data_NZIZstylus');
-% stylus_data = stylus_data(1:step:end,:);
+stylus_data = stylus_data(1:step:end,:);
 
 quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-% quaternion_extracted = quaternion_extracted(1:step:end,:);
+quaternion_extracted = quaternion_extracted(1:step:end,:);
 
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
-% dis_matrix_nziz = dis_matrix_nziz(1:step:end,:); 
+dis_matrix_nziz = dis_matrix_nziz(1:step:end,:); 
+
+nziz_data = stylus_data;
+plot3(nziz_data(:,1), nziz_data(:,3), nziz_data(:,2), 'ko');
+
 
 %% Run Function to give points
 % Quaternion way
@@ -97,8 +116,56 @@ for i = 1:1:length(stylus_data)
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_nziz, rot_vector_nziz);    
     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_nziz;
     new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
-
 end
+
+%%% Static
+static = readmatrix('specs_static_21_10_2021_quat');
+static = static./1000;
+
+first_row_markers = static(9,35:109);
+first_row_rot = static(9,1:4);
+first_row_displacement = static(9,7:9);
+first_row_displacement = [first_row_displacement(:,1), first_row_displacement(:,3), first_row_displacement(:,2)];
+
+static_markers = [];
+% The for loop starts at 3 as the first 2 columns of the csv files are
+% not marker points. It steps up by 3 as each marker points has 3
+% coordinates (x,y,z) so i is always 3,6,9 ...
+for i = 1:3:length(first_row_markers)
+    disp(i)
+    static_markers = [static_markers; first_row_markers(i),first_row_markers(i+2),first_row_markers(i+1)];
+end
+
+plot3(static_markers(:,1), static_markers(:,2), static_markers(:,3),'d');
+title('Static vs trace');
+figure
+
+% Quaternion way
+new_markers_static = [];
+% disp("Doing quaternion");
+for i = 1:1:length(static_markers)
+%     disp(i);
+    quat_vector = quaternion(first_row_rot);
+    RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
+    rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
+    dis_vector = first_row_displacement;
+    static_vector = [static_markers(i,1); ... % X,Y,Z 
+              static_markers(i,3); ...
+              static_markers(i,2); ...
+               1];
+    transform_matrix_circum = construct_matrix_transform_xyz(dis_vector, rot_vector_nziz);    
+    new_vector_nziz = inv(transform_matrix_circum) * static_vector;
+    new_markers_static = [new_markers_static; new_vector_nziz.';];
+end
+
+%%% Static
+static_dataset = new_markers_static(:,1:3);
+static_x = static_dataset(:,1);
+static_y = static_dataset(:,3);
+static_z = static_dataset(:,2);
+
+plot3(static_dataset(:,1), static_dataset(:,3), static_dataset(:,2),'o');
+hold on;
 
 %%% Circumferene
 circumference_dataset= new_markers_circum;
@@ -106,18 +173,28 @@ circumference_dataset = rmmissing(circumference_dataset);
 circumference_x = circumference_dataset(:,1);
 circumference_y = circumference_dataset(:,2);
 circumference_z = circumference_dataset(:,3);
+
+plot3(circumference_dataset(:,1), circumference_dataset(:,2), circumference_dataset(:,3),'d');
+
 %%% Ear to Ear
 e2e_dataset= new_markers_e2e;
 e2e_dataset = rmmissing(e2e_dataset);
 e2e_x = e2e_dataset(:,1);
 e2e_y = e2e_dataset(:,2);
 e2e_z = e2e_dataset(:,3);
+
+plot3(e2e_dataset(:,1), e2e_dataset(:,2), e2e_dataset(:,3),'d');
+
 %%% NZ-IZ
 nziz_dataset =  new_markers_nziz;
 nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
+
+plot3(nziz_dataset(:,1), nziz_dataset(:,2), nziz_dataset(:,3),'d');
+title('Specs frame traced and static');
+
 %% Perform Geometerical Fitting and Extract the datatips from the plots.
 
 %%% Circumferene - The circumference is considered as and ellipse in 2D
@@ -288,7 +365,9 @@ A2 = [e2e_x e2e_z];
 A3 = [nziz_y nziz_z];
 [closest_array_nziz] = find_closest_from_predicted_to_wanded(nziz, A3);
 
-%% Find left out axis values
+return;
+
+%% Find left out axis values 
 %%% Circumference - The circumference is orthogonally projected in the XZ
 %%% plane and the Y values need to be found. 
 %%% If A(:,1)==closest(:,1) and A(:3)==closest(:,2). Then we need to extract
@@ -528,15 +607,95 @@ predicted = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; 
 predicted = [predicted(:,1), predicted(:,3), predicted(:,2)];
 four_points = [F4; F3; P3; P4];
 
-% plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
-% hold on;
+plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
+hold on;
 % plot(F3_YZ(1), F3_YZ(2), 'o');
-% figure;
-% title('Predicted Electrode Locations');
-% plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
-% xlabel('x');
-% ylabel('y');
-% zlabel('z');
+figure;
+title('Predicted Electrode Locations');
+plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
+xlabel('x');
+ylabel('y');
+zlabel('z');
 
-end
+
+%%% Labelling of points - Predicted
+Fpz = final_points(1,:);
+Fp2 = final_points(12,:);
+F8 = final_points(11,:);
+T4 = final_points(10,:);
+T6 = final_points(9,:);
+O2 = final_points(8,:);
+Oz = final_points(7,:);
+O1 = final_points(6,:);
+T5 = final_points(5,:);
+T3 = final_points(4,:);
+F7 = final_points(3,:);
+Fp1 = final_points(2,:);
+Fz = final_points(16,:);
+Cz = final_points(14,:);
+Pz = final_points(17,:);
+C4 = final_points(15,:);
+C3 = final_points(13,:);
+
+predicted = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; C3; F4; F3; P3; P4 ];
+four_points = [F4; F3; P3; P4];
+
+% hold on
+% new_markers_static = new_markers_static.' * 1000; 
+hold on;
+plot3(new_markers_static(:,1), new_markers_static(:,2),new_markers_static(:,3),'*');
+plot3(predicted(:,1), predicted(:,2), predicted(:,3) ,'d');
+legend('static', 'predicted');
+%%% Labelling of points - Static
+Fpz_static = static_dataset(13,:);
+Fp2_static = static_dataset(11,:);
+F8_static = static_dataset(6,:);
+T4_static = static_dataset(5,:);
+T6_static = static_dataset(7,:);
+O2_static = static_dataset(12,:);
+Oz_static = static_dataset(16,:);
+O1_static = static_dataset(19,:);
+T5_static = static_dataset(24,:);
+T3_static = static_dataset(25,:);
+F7_static = static_dataset(23,:);
+Fp1_static = static_dataset(18,:);
+Fz_static = static_dataset(14,:);
+Cz_static = static_dataset(15,:);
+Pz_static = static_dataset(17,:);
+C4_static = static_dataset(9,:);
+C3_static = static_dataset(21,:);
+F4_static = static_dataset(8,:);
+F3_static = static_dataset(20,:);
+P3_static = static_dataset(22,:);
+P4_static = static_dataset(10,:);
+
+%% Euclidean Error
+
+Fpz_diff = norm(Fpz -Fpz_static);
+Fp2_diff = norm(Fp2 -Fp2_static);
+F8_diff = norm(F8 - F8_static); 
+T4_diff = norm(T4 -T4_static);
+T6_diff = norm(T6 -T6_static);
+O2_diff = norm(O2 -O2_static);
+Oz_diff =norm(Oz -Oz_static);
+O1_diff = norm(O1 -O1_static);
+T5_diff = norm(T5 -T5_static);
+T3_diff = norm(T3 -T3_static);
+F7_diff = norm(F7 -F7_static);
+Fp1_diff = norm(Fp1 -Fp1_static);
+Fz_diff = norm(Fz -Fz_static);
+Cz_diff = norm(Cz -Cz_static);
+Pz_diff = norm(Pz -Pz_static);
+C4_diff = norm(C4 -C4_static);
+C3_diff = norm(C3 -C3_static);
+F4_diff = norm(F4 - F4_static);
+F3_diff = norm(F3 - F3_static);
+P3_diff = norm(P3 - P3_static);
+P4_diff = norm(P4 - P4_static);
+all_diff = [Fpz_diff; Fp2_diff; F8_diff; T4_diff; T6_diff; O2_diff; Oz_diff; O1_diff; ...
+    T5_diff; T3_diff; F7_diff; Fp1_diff; Fz_diff; Cz_diff; Pz_diff; C4_diff; C3_diff;
+    F4_diff; F3_diff; P3_diff; P4_diff];
+
+all_diff = all_diff.* 1000; % convert back to mm
+% end
 

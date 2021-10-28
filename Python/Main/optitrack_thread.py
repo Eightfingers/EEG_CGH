@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
-from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QMessageBox
 import matlab.engine
 from PythonClient4_0.NatNetClient import NatNetClient
 # from PythonClient.NatNetClient import NatNetClient
@@ -58,37 +58,34 @@ class OptitrackMainThread(QThread):
         self.specs_rotation_data = np.zeros(shape=[self.row, self.rot_columns])
 
     def run(self):
-        try:
-            # Start up the streaming client now that the callbacks are set up.
-            # This will run perpetually, and operate on a separate thread.
-            is_running = self.streaming_client.run()
-            if not is_running:
-                print("ERROR: Could not start streaming client.")
-                try:
-                    sys.exit(1)
-                except SystemExit:
-                    print("...")
-                finally:
-                    print("exiting")
-            time.sleep(1)
-            if self.streaming_client.connected() is False:
-                print("ERROR: Could not connect properly.  Check that Motive streaming is on.")
-                try:
-                    sys.exit(2)
-                except SystemExit:
-                    print("...")
-                finally:
-                    print("exiting")
-            # Configure the streaming client to call our rigid body handler on the emulator to send data out.
-            self.streaming_client.new_frame_listener = self.receiveNewFrame
-            self.streaming_client.rigid_body_listener = self.receiveRigidBodyFrame
-            # Start up the streaming client now that the callbacks are set up.
-            # This will run perpetually, and operate on a separate thread.
-            self.signals_to_status.signal_list.emit(["Optitrack","Okay"])
-
-        except ConnectionResetError:
-            print("Optitrack: Optitrack thread returned an error")
+        # Configure the streaming client to call our rigid body handler on the emulator to send data out.
+        self.streaming_client.new_frame_listener = self.receiveNewFrame
+        self.streaming_client.rigid_body_listener = self.receiveRigidBodyFrame
+        # Start up the streaming client now that the callbacks are set up.
+        # This will run perpetually, and operate on a separate thread.
+        is_running = self.streaming_client.run()
+        
+        if not is_running:
+            print("ERROR: Could not start streaming client.")
             self.signals_to_status.signal_list.emit(["Optitrack","Error"])
+            try:
+                sys.exit(1)
+            except SystemExit:
+                print("...")
+            finally:
+                print("exiting")
+        time.sleep(1)
+        if self.streaming_client.connected() is False:
+            print("ERROR: Could not connect properly.  Check that Motive streaming is on.")
+            self.signals_to_status.signal_list.emit(["Optitrack","Error"])
+            try:
+                sys.exit(2)
+            except SystemExit:
+                print("...")
+            finally:
+                print("exiting")
+        else:
+            self.signals_to_status.signal_list.emit(["Optitrack","Okay"])
 
     def my_parse_args(self, arg_list, args_dict):
         # set up base values
@@ -120,14 +117,11 @@ class OptitrackMainThread(QThread):
 
     # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
     def receiveRigidBodyFrame(self, id, position, rotation ):
-        # print( "Received frame for rigid body", id )
-        # print(id, position)
         position = np.array(position)
         rotation = np.array(rotation)
         # print( "Received frame for rigid body", id," ",position," ",rotation )
 
         if (id == 1004): # if the id is 1004, it is the stylus data
-            # print("1004 is recorded")
             self.stylus_position = position 
             self.signals_to_main_stylus_pos.signal_numpy.emit(position)
             if self.record == True: # Record the positions into numpy array
@@ -142,7 +136,6 @@ class OptitrackMainThread(QThread):
                     if (self.stylus_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Stylus","Lost detection"])
         elif (id == 1005): # specs data
-            # print("1005 is recorded")
             specs_pos_rotation = [position, rotation]
             self.signals_to_main_specs_pos_rotation.signal_list.emit(specs_pos_rotation)
             if self.record == True:

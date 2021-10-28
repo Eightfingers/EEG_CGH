@@ -96,7 +96,7 @@ class MenuWidget(QWidget):
         self.layout.addStretch()
 
     # I am not sure if this is the best way or so but
-    # These functions are called from the main.py and these signals are only initialized after 
+    # These functions are called from the main.py and these signals are only initialized and connected after 
     # matlab engine is fullying running and stuff
 
     def connect_matlab_signals(self, matlab_thread): 

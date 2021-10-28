@@ -9,10 +9,14 @@ addpath('myfuncs');
 addpath('21_10_2021\data_gui_1');
 addpath('21_10_2021');
 
-step = 1; % used to take only every 2nd data
+step = 10; % used to take only every 2nd data
 
 stylus_data = readmatrix('data_CIRCUMstylus');
-stylus_data = stylus_data(1:step:end,:); 
+stylus_data = stylus_data(1:step:end,:);
+
+circum_data = stylus_data;
+plot3(circum_data(:,1), circum_data(:,3), circum_data(:,2), 'ko');
+hold on;
 
 quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
@@ -22,9 +26,9 @@ dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displaceme
 dis_matrix_circum = dis_matrix_circum(1:step:end,:); 
 
 %% Run Function to give points
-% Quaternion way
+% Quaternion wayater
 new_markers_circum = [];
-% disp("Doing quaternion");
+% disp("Doing qunion");
 for i = 1:step:length(stylus_data)
     
 %     disp(i);
@@ -53,6 +57,10 @@ quaternion_extracted = quaternion_extracted(1:step:end,:);
 
 dis_matrix_ear2ear = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
 dis_matrix_ear2ear = dis_matrix_ear2ear(1:step:end,:);
+
+ear2ear_data = stylus_data;
+plot3(ear2ear_data(:,1), ear2ear_data(:,3), ear2ear_data(:,2), 'ko');
+
 
 %% Run Function to give points
 % Quaternion way
@@ -87,6 +95,10 @@ quaternion_extracted = quaternion_extracted(1:step:end,:);
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
 dis_matrix_nziz = dis_matrix_nziz(1:step:end,:); 
 
+nziz_data = stylus_data;
+plot3(nziz_data(:,1), nziz_data(:,3), nziz_data(:,2), 'ko');
+
+
 %% Run Function to give points
 % Quaternion way
 new_markers_nziz = [];
@@ -104,19 +116,15 @@ for i = 1:1:length(stylus_data)
     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_nziz, rot_vector_nziz);    
     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_nziz;
     new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
-    new_markers_nziz = round(new_markers_nziz, 5, 'significant');
-
 end
 
 %%% Static
-static = readmatrix('specs_static_21_10_2021');
+static = readmatrix('specs_static_21_10_2021_quat');
 static = static./1000;
-static_specs = static(:,3:8); % specs pose
-static_specs = rmmissing(static_specs);
 
-first_row_markers = static(9,34:108);
-first_row_rot = static_specs(8,1:3);
-first_row_displacement = static_specs(8,4:6);
+first_row_markers = static(9,35:109);
+first_row_rot = static(9,1:4);
+first_row_displacement = static(9,7:9);
 first_row_displacement = [first_row_displacement(:,1), first_row_displacement(:,3), first_row_displacement(:,2)];
 
 static_markers = [];
@@ -127,26 +135,27 @@ for i = 1:3:length(first_row_markers)
     disp(i)
     static_markers = [static_markers; first_row_markers(i),first_row_markers(i+2),first_row_markers(i+1)];
 end
-Xrot = first_row_rot(1);
-Yrot = first_row_rot(3);
-Zrot = first_row_rot(2);
 
+plot3(static_markers(:,1), static_markers(:,2), static_markers(:,3),'d');
+title('Static vs trace');
+figure
+
+% Quaternion way
 new_markers_static = [];
-
+% disp("Doing quaternion");
 for i = 1:1:length(static_markers)
-    d = first_row_displacement; % displacement vector
-    v = [ 0, 0 ,0 1];
-    rot_vector_static = [-Xrot, -Yrot, -Zrot];
-    transform_matrix_static = construct_matrix_transform_xyz(d, rot_vector_static);    
-    marker_static = [static_markers(i,1); ... % X,Y,Z 
-              static_markers(i,2); ...
+%     disp(i);
+    quat_vector = quaternion(first_row_rot);
+    RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
+    rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
+    dis_vector = first_row_displacement;
+    static_vector = [static_markers(i,1); ... % X,Y,Z 
               static_markers(i,3); ...
+              static_markers(i,2); ...
                1];
-           
-    new_vector_static = inv(transform_matrix_static) * marker_static;
-    new_markers_static = [new_markers_static; new_vector_static.';];
-    new_markers_static = round(new_markers_static, 5, 'significant');
-
+    transform_matrix_circum = construct_matrix_transform_xyz(dis_vector, rot_vector_nziz);    
+    new_vector_nziz = inv(transform_matrix_circum) * static_vector;
+    new_markers_static = [new_markers_static; new_vector_nziz.';];
 end
 
 %%% Static
@@ -154,7 +163,10 @@ static_dataset = new_markers_static(:,1:3);
 static_x = static_dataset(:,1);
 static_y = static_dataset(:,3);
 static_z = static_dataset(:,2);
+static_dataset = [static_x, static_y, static_z];
 
+plot3(static_dataset(:,1), static_dataset(:,2), static_dataset(:,3),'o');
+hold on;
 
 %%% Circumferene
 circumference_dataset= new_markers_circum;
@@ -162,18 +174,29 @@ circumference_dataset = rmmissing(circumference_dataset);
 circumference_x = circumference_dataset(:,1);
 circumference_y = circumference_dataset(:,2);
 circumference_z = circumference_dataset(:,3);
+
+plot3(circumference_dataset(:,1), circumference_dataset(:,2), circumference_dataset(:,3),'d');
+
 %%% Ear to Ear
 e2e_dataset= new_markers_e2e;
 e2e_dataset = rmmissing(e2e_dataset);
 e2e_x = e2e_dataset(:,1);
 e2e_y = e2e_dataset(:,2);
 e2e_z = e2e_dataset(:,3);
+
+plot3(e2e_dataset(:,1), e2e_dataset(:,2), e2e_dataset(:,3),'d');
+
 %%% NZ-IZ
 nziz_dataset =  new_markers_nziz;
 nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
+
+plot3(nziz_dataset(:,1), nziz_dataset(:,2), nziz_dataset(:,3),'d');
+title('Specs frame traced and static');
+hold off;
+
 %% Perform Geometerical Fitting and Extract the datatips from the plots.
 
 %%% Circumferene - The circumference is considered as and ellipse in 2D
@@ -343,8 +366,6 @@ A2 = [e2e_x e2e_z];
 %%%NZ-IZ
 A3 = [nziz_y nziz_z];
 [closest_array_nziz] = find_closest_from_predicted_to_wanded(nziz, A3);
-
-return;
 
 %% Find left out axis values 
 %%% Circumference - The circumference is orthogonally projected in the XZ
@@ -622,8 +643,9 @@ four_points = [F4; F3; P3; P4];
 % hold on
 % new_markers_static = new_markers_static.' * 1000; 
 hold on;
-plot3(new_markers_static(:,1), new_markers_static(:,2),new_markers_static(:,3),'*');
+plot3(static_dataset(:,1), static_dataset(:,2),static_dataset(:,3),'*');
 plot3(predicted(:,1), predicted(:,2), predicted(:,3) ,'d');
+
 legend('static', 'predicted');
 %%% Labelling of points - Static
 Fpz_static = static_dataset(13,:);
@@ -647,6 +669,10 @@ F4_static = static_dataset(8,:);
 F3_static = static_dataset(20,:);
 P3_static = static_dataset(22,:);
 P4_static = static_dataset(10,:);
+
+plot3(Fpz(1), Fpz(2), Fpz(3) ,'d', 'markersize', 20);
+plot3(Fpz_static(1), Fpz_static(2), Fpz_static(3) ,'d', 'markersize', 20);
+
 
 %% Euclidean Error
 

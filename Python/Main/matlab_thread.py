@@ -21,7 +21,7 @@ class MatlabMainThread(QThread):
         self.signals_to_menu = AppSignals()
 
         self.signals_to_main.signal_numpy.connect(parent.show_eeg_positions)
-        self.signals_to_main2.signal_numpy.connect(parent.show_fpz_position)
+        self.signals_to_main2.signal_numpy.connect(parent.update_fpz_position)
         self.signals_to_main2.signal_bool.connect(parent.set_live_fpz_positions)
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label) # change label function is found in status_widget.py
         self.signals_to_menu.signal_str.connect(parent.left_dock_menu_widget.change_predict_state) # change button text on the menu widget
@@ -55,8 +55,6 @@ class MatlabMainThread(QThread):
 
         self.worker_thread = MatlabWorkerThread(stylus_data, specs_data, command, self)
         self.worker_thread.start()
-        # print("Spawn matlab thread called!!!")
-        # print(message)
         
 # Create a worker thread that is responsible for executing of scripts inside the matlab engine
 class MatlabWorkerThread(QThread):
@@ -67,9 +65,6 @@ class MatlabWorkerThread(QThread):
         self._stylus_data = stylus_data 
         self._specs_data = specs_data
         self._command = command
-        # print("specs_Data iss")
-        # print(self._specs_data)
-        # print("Tryna do some stuff")
 
     def run(self):
         try:

@@ -37,6 +37,7 @@ class MainWindow(QMainWindow):
         self.specs_series = QScatter3DSeries()
         self.stylus_position_series = QScatter3DSeries()
         self.all_markers_series = QScatter3DSeries()
+        self.fpz_position_series = QScatter3DSeries()
 
         # majority is unused
         self.predicted_positions = None
@@ -163,10 +164,9 @@ class MainWindow(QMainWindow):
 
         self.scatter.addSeries(self.stylus_position_series)
 
+    # Function that is called from the menu widget to save trace data into csv files
     @Slot(int)
     def save_data (self, message):
-        print(message)
-
         # Get the data from the optitrack thread
         self.stylus_data = self.optitrack_main_thread.stylus_data 
         self.specs = self.optitrack_main_thread.specs_data 
@@ -237,7 +237,7 @@ class MainWindow(QMainWindow):
         self.specs_series.setBaseColor(QColor(0, 0, 0)) # Black
         self.specs_series.setItemSize(self.itemsize)
 
-    # Show predicted positions
+    # Debug Show predicted positions in specs frame
     @Slot(np.ndarray)
     def show_eeg_positions(self, message):
         # print(message)
@@ -247,10 +247,8 @@ class MainWindow(QMainWindow):
         self.scatter.addSeries(self.Predicted_series)
         self.scatter.show()
 
-    # Show predicted positions
     @Slot(np.ndarray)
-    def show_fpz_position(self, message):
-        # print(message)
+    def update_fpz_position(self, message):
         self.fpz_positon = message
 
     @Slot(np.ndarray)
@@ -290,7 +288,6 @@ class MainWindow(QMainWindow):
 
         if (self.live_predicted_nziz_positions == True):
             # Convert predicted nziz from spec frame to global frame 
-            print(self.fpz_positon, "FPZ position iss")
             self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
             self.scatter.removeSeries(self.NZIZscatter_series) # remove the old series
             self.NZIZscatter_series = QScatter3DSeries()
@@ -306,8 +303,6 @@ class MainWindow(QMainWindow):
         new_predicted_positions = new_predicted_positions + specs_position # now add the displaced amount
 
         return new_predicted_positions
-
-
 
     @Slot(bool)
     def set_live_predicted_eeg_positions(self, message):
