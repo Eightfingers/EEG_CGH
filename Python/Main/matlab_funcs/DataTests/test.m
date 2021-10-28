@@ -1,7 +1,8 @@
-function Fpz = get_nziz( nziz ,nziz_spec)
+% function Fpz = get_nziz( nziz ,nziz_spec)
 
 addpath('helperfuncs');
 addpath('myfuncs');
+addpath('28_10_2021/take2');
 
 %%% NZIZ
 stylus_data_before = readmatrix('data_NZIZstylus');
@@ -9,8 +10,8 @@ quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rota
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
 
-% plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), '*');
-% hold on ;
+plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), '*');
+hold on ;
 
 % Quaternion way
 new_markers_nziz = [];
@@ -33,7 +34,7 @@ for i = 1:1:length(stylus_data)
 
 end
 
-% plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'o', 'MarkerSize',10);
+plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'o', 'MarkerSize',10);
 
 %%% NZ-IZ
 nziz_dataset =  new_markers_nziz;
@@ -121,17 +122,17 @@ trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 %%% NZIZ 
 final_nziz_python = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
 final_nziz_python = final_nziz_python.';
-
-% Y upwards convention for the GUI
-final_nziz_python = [final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2)]; 
 Fpz = final_nziz_python(1,:);
 % final_nziz_python = final_nziz_python *1000; % convert m to mm
-% plot3(final_nziz_python(:,1), final_nziz_python(:,2), final_nziz_python(:,3), 'd');
-% hold on ;
+
+figure;
+plot3(final_nziz_python(:,1), final_nziz_python(:,2), final_nziz_python(:,3), 'd');
+hold on ;
+
 % 
 % predicted_nziz = num2cell(final_nziz_python);
 % nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
 % final_nziz_label = [nziz_label;  predicted_nziz];
 
-end
+% end
 

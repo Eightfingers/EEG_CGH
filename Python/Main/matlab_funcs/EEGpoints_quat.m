@@ -336,7 +336,6 @@ convert_final_nziz = num2cell(final_nziz);
 nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
 final_nziz_label = [nziz_label;  convert_final_nziz];
  
-
 %% Append all together. 
 %%% Create a new variable and append final_circumference, final_e2e and
 %%% final_nziz together.

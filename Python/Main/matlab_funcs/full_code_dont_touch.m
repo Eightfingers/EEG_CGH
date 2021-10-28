@@ -8,8 +8,8 @@
 
 addpath('helperfuncs\')
 addpath('myfuncs\')
-addpath('30_9_2021')
-addpath('21_10_2021')
+addpath('DataTests\30_9_2021')
+addpath('DataTests\21_10_2021')
 
 
 %% Load the different wanded data
@@ -126,6 +126,7 @@ for i = 1:1:length(nziz_wand)
     new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
 end
 scatter3(new_markers_nziz(:,1),new_markers_nziz(:,2),new_markers_nziz(:,3),'d');
+hold on;
 
 %%% Static
 static = readmatrix('specs_static_21_10_2021');
@@ -430,8 +431,8 @@ final_e2e_label = [e2e_label;  convert_final_e2e];
 
 %%% NZIZ 
 final_nziz = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
-% scatter3(final_nziz(1,:),final_nziz(2,:),final_nziz(3,:), 'ro'); 
-% hold on
+plot3(final_nziz(1,:),final_nziz(2,:),final_nziz(3,:), 'ro', 'MarkerSize', 20); 
+hold on
 % plot3(final_nziz(1,1),final_nziz(2,1),final_nziz(3,1), 'rs','MarkerSize', 20); 
 % plot3(final_nziz(1,2),final_nziz(2,2),final_nziz(3,2), 'bs','MarkerSize', 20); 
 % plot3(final_nziz(1,3),final_nziz(2,3),final_nziz(3,3), 'gs','MarkerSize', 20); 

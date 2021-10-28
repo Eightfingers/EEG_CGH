@@ -123,7 +123,8 @@ static = readmatrix('specs_static_21_10_2021_quat');
 static = static./1000;
 
 first_row_markers = static(9,35:109);
-first_row_rot = static(9,1:4);
+first_row_rot = static(9,3:6);
+first_row_rot = [first_row_rot(:,4), first_row_rot(:,1), first_row_rot(:,2), first_row_rot(:,3)]
 first_row_displacement = static(9,7:9);
 first_row_displacement = [first_row_displacement(:,1), first_row_displacement(:,3), first_row_displacement(:,2)];
 
