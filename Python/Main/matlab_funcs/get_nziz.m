@@ -4,7 +4,7 @@ addpath('helperfuncs');
 addpath('myfuncs');
 
 %%% NZIZ
-stylus_data_before = readmatrix('data_NZIZstylus');
+stylus_data = readmatrix('data_NZIZstylus');
 quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
