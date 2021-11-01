@@ -1,4 +1,4 @@
-function Fpz = get_nziz( nziz ,nziz_spec)
+function final_nziz_python = get_nziz( nziz ,nziz_spec)
 
 addpath('helperfuncs');
 addpath('myfuncs');

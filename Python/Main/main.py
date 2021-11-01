@@ -31,6 +31,7 @@ class MainWindow(QMainWindow):
 
         # Each of this series is used to represent data on the graph
         self.NZIZscatter_series = QScatter3DSeries()
+
         self.CIRCUMscatter_series = QScatter3DSeries()
         self.EarToEarscatter_series = QScatter3DSeries()
         self.Predicted_series = QScatter3DSeries()
@@ -65,6 +66,11 @@ class MainWindow(QMainWindow):
         self.itemsize = 0.1
         self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace
         self.NZIZscatter_series.setItemSize(self.itemsize)
+
+        self.NZIZscatter_series_trace = QScatter3DSeries()
+        self.NZIZscatter_series_trace.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace
+        self.NZIZscatter_series_trace.setItemSize(self.itemsize)
+
         self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
         self.CIRCUMscatter_series.setItemSize(self.itemsize)
         self.EarToEarscatter_series.setBaseColor(QColor(0, 0, 255)) # Blue for Ear to Ear trace
@@ -289,19 +295,30 @@ class MainWindow(QMainWindow):
         if (self.live_predicted_nziz_positions == True):
             # Convert predicted nziz from spec frame to global frame 
             self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
+
+            self.NZIZscatter_series_trace = self.NZIZscatter_series 
+
             self.scatter.removeSeries(self.NZIZscatter_series) # remove the old series
             self.NZIZscatter_series = QScatter3DSeries()
+
             self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red
             self.add_list_to_scatterdata(self.NZIZscatter_series, self.global_predicted_nziz_positions)
             self.NZIZscatter_series.setItemSize(self.itemsize)
             self.scatter.addSeries(self.NZIZscatter_series)
+
+            # self.NZIZscatter_series_trace.setBaseColor(QColor(255, 100, 10)) # Red
+            # self.add_list_to_scatterdata(self.NZIZscatter_series_trace, self.global_predicted_nziz_positions)
+            # self.NZIZscatter_series_trace.setItemSize(self.itemsize)
+            # self.scatter.addSeries(self.NZIZscatter_series_trace)
+
+
             self.scatter.show()
 
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
         r = R.from_quat(specs_rotation) # rotate the orientation
         new_predicted_positions = r.apply(series)
         new_predicted_positions = new_predicted_positions + specs_position # now add the displaced amount
-
+        print("The specs position is",specs_position)
         return new_predicted_positions
 
     @Slot(bool)
