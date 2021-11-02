@@ -2,7 +2,7 @@ import sys
 from PySide6.QtCore import (Signal, QMutex, QElapsedTimer, QMutexLocker,
                             QPoint, QPointF, QSize, Qt, QThread, QObject, 
                             QWaitCondition, Slot, QSize)
-from PySide6.QtGui import QGuiApplication, QVector3D
+from PySide6.QtGui import QGuiApplication, QVector3D, QColor
 from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget, QLabel, QBoxLayout 
 from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBarDataItem,
                                          QCategory3DAxis, QScatter3DSeries, QValue3DAxis, QScatterDataItem)
@@ -87,6 +87,11 @@ class MainWindow(QMainWindow):
 
         # self.docked_parent_widget.setLayout(QBoxLayout(QBoxLayout.TopToBottom)) # This layout arranges the widget position from top to bottom
 
+        self.random_coordinates = np.random.randint(0, 100, size=(10, 3)) 
+        self.add_list_to_scatterdata(self.scatter_series, self.random_coordinates)
+        self.scatter.addSeries(self.scatter_series)
+        self.scatter.show()
+
     def start_thread(self):
         instanced_thread = UpdateDataThread(self)
         instanced_thread.start()
@@ -95,6 +100,14 @@ class MainWindow(QMainWindow):
     @Slot(np.ndarray)
     def update_and_add_scatter(self, message):
         print("signal recieved")
+
+        self.scatter.removeSeries(self.scatter_series) # remove the old position
+        self.scatter_series = self.reset_scatter_series(QColor(0, 0, 0))
+
+        # self.scatter_series = QScatter3DSeries() # create a new series at every instance
+        # self.scatter_series.setBaseColor(QColor(0, 0, 0)) # Black
+        # self.scatter_series.setItemSize(0.5)
+
         self.add_list_to_scatterdata(self.scatter_series, message)
         self.scatter.addSeries(self.scatter_series)
         self.scatter.show()
@@ -107,6 +120,14 @@ class MainWindow(QMainWindow):
     def add_list_to_scatterdata(self, scatter_series, data):
         for d in data:
             scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
+
+    def reset_scatter_series(self, colour):
+        self.scatter_series_new_series = QScatter3DSeries()
+        self.scatter_series_new_series.setBaseColor(colour)
+        self.scatter_series_new_series.setItemSize(0.5)
+
+        return self.scatter_series_new_series
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -25,22 +25,34 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle('CGH EEG Optitrack Assisted EEG localization')
 
+        # The graph
         self.scatter = Q3DScatter()
         # self.scatter.setAspectRatio(1)
         # self.scatter.setHorizontalAspectRatio(1)
 
+        # Colours used for the graphs
+        self.red_qcolor = QColor(255, 0, 0)
+        self.green_qcolor = QColor(0, 255, 0)
+        self.blue_qcolor = QColor(0, 0, 255)
+        self.yellow_qcolor = QColor(255, 255, 0)
+        self.orange_qcolor = QColor(255, 165, 0)
+        self.black_qcolor = QColor(0, 0 ,0)
+
+        # Used to control scatter size on the graph
+        self.itemsize = 0.1
+
         # Each of this series is used to represent data on the graph
-        self.NZIZscatter_series = QScatter3DSeries()
+        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor)
+        self.fpz_position_series = self.create_new_scatter_series(self.red_qcolor)
+        self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor)
+        self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor)
+        self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor)
+        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor)
+        self.specs_series = self.create_new_scatter_series(self.black_qcolor)
+        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor)
+        self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor)
 
-        self.CIRCUMscatter_series = QScatter3DSeries()
-        self.EarToEarscatter_series = QScatter3DSeries()
-        self.Predicted_series = QScatter3DSeries()
-        self.specs_series = QScatter3DSeries()
-        self.stylus_position_series = QScatter3DSeries()
-        self.all_markers_series = QScatter3DSeries()
-        self.fpz_position_series = QScatter3DSeries()
-
-        # majority is unused
+        # Variables to store positional and predicted data, some are unused
         self.predicted_positions = None
         self.fpz_positon = None
         self.NZIZ_data = None
@@ -63,24 +75,7 @@ class MainWindow(QMainWindow):
 
         self.save_directory = os.getcwd() + "RecordedData"
 
-        self.itemsize = 0.1
-        self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace
-        self.NZIZscatter_series.setItemSize(self.itemsize)
-
-        self.NZIZscatter_series_trace = QScatter3DSeries()
-        self.NZIZscatter_series_trace.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace
-        self.NZIZscatter_series_trace.setItemSize(self.itemsize)
-
-        self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
-        self.CIRCUMscatter_series.setItemSize(self.itemsize)
-        self.EarToEarscatter_series.setBaseColor(QColor(0, 0, 255)) # Blue for Ear to Ear trace
-        self.EarToEarscatter_series.setItemSize(self.itemsize)
-        self.Predicted_series.setBaseColor(QColor(255, 165, 0)) # Orange 
-        self.Predicted_series.setItemSize(self.itemsize)
-        self.specs_series.setBaseColor(QColor(0, 0, 0)) # Black
-        self.specs_series.setItemSize(self.itemsize)
-
-        # Set the axis 
+        # Set the axis properties
         segment_count = 8
         sub_segment_count = 2
         axis_minimum = -0.8
@@ -218,30 +213,27 @@ class MainWindow(QMainWindow):
     # Clear all data shown in the graph
     @Slot()
     def clear_data(self):
+        
+        # set it to false
+        self.live_predicted_eeg_positions = False
+        self.live_predicted_nziz_positions = False
+
         self.scatter.removeSeries(self.NZIZscatter_series)
         self.scatter.removeSeries(self.CIRCUMscatter_series)
         self.scatter.removeSeries(self.EarToEarscatter_series)
-        self.scatter.removeSeries(self.Predicted_series)
+        self.scatter.removeSeries(self.Predicted21_series)
         self.scatter.removeSeries(self.specs_series)
         self.scatter.removeSeries(self.all_markers_series)
 
-        # Reset the series. I Couldn't really figure out the method in the python function. Hope this will do for now
-        self.NZIZscatter_series = QScatter3DSeries()
-        self.CIRCUMscatter_series = QScatter3DSeries()
-        self.EarToEarscatter_series = QScatter3DSeries()
-        self.Predicted_series = QScatter3DSeries()
-        self.specs_series = QScatter3DSeries()
-
-        self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red for NZIZ trace
-        self.NZIZscatter_series.setItemSize(self.itemsize)
-        self.CIRCUMscatter_series.setBaseColor(QColor(0, 255, 0)) # Green for Circumference trace
-        self.CIRCUMscatter_series.setItemSize(self.itemsize)
-        self.EarToEarscatter_series.setBaseColor(QColor(0, 0, 255)) # Blue for Ear to Ear trace
-        self.EarToEarscatter_series.setItemSize(self.itemsize)
-        self.Predicted_series.setBaseColor(QColor(255, 165, 0)) # Orange 
-        self.Predicted_series.setItemSize(self.itemsize)
-        self.specs_series.setBaseColor(QColor(0, 0, 0)) # Black
-        self.specs_series.setItemSize(self.itemsize)
+        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor)
+        self.fpz_position_series = self.create_new_scatter_series(self.red_qcolor)
+        self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor)
+        self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor)
+        self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor)
+        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor)
+        self.specs_series = self.create_new_scatter_series(self.black_qcolor)
+        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor)
+        self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor)
 
     # Debug Show predicted positions in specs frame
     @Slot(np.ndarray)
@@ -249,8 +241,8 @@ class MainWindow(QMainWindow):
         # print(message)
         self.predicted_positions = message
         np.savetxt("21_predicted_positions.csv", message, delimiter=',')
-        self.add_list_to_scatterdata(self.Predicted_series, message)
-        self.scatter.addSeries(self.Predicted_series)
+        self.add_list_to_scatterdata(self.Predicted21_series, message)
+        self.scatter.addSeries(self.Predicted21_series)
         self.scatter.show()
 
     @Slot(np.ndarray)
@@ -259,12 +251,10 @@ class MainWindow(QMainWindow):
 
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):
-        self.scatter.removeSeries(self.all_markers_series) # remove the old position
-        self.all_markers_series = QScatter3DSeries() # create a new series at every instance
-        self.all_markers_series.setBaseColor(QColor(255, 255, 0)) # Yellow
-        self.all_markers_series.setItemSize(self.itemsize)
-        self.add_list_to_scatterdata(self.all_markers_series, message)
-        self.scatter.addSeries(self.all_markers_series)
+        self.scatter.removeSeries(self.stylus_position_series) # remove the old position
+        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor)
+        self.add_list_to_scatterdata(self.stylus_position_series, message)
+        self.scatter.addSeries(self.stylus_position_series)
         self.scatter.show()
 
     @Slot(list)
@@ -273,7 +263,7 @@ class MainWindow(QMainWindow):
         self.specs_rotation = message[1]
         self.scatter.removeSeries(self.specs_series) # remove the old position
         self.specs_series = QScatter3DSeries() # create a new series at every instance
-        self.specs_series.setBaseColor(QColor(0, 0, 0)) # Black
+        self.specs_series.setBaseColor(self.black_qcolor) # Black
         self.specs_series.setItemSize(self.itemsize)
             
         self.add_list_to_scatterdata(self.specs_series, self.specs_position)
@@ -283,34 +273,20 @@ class MainWindow(QMainWindow):
         if (self.live_predicted_eeg_positions == True):
             # Convert predicted eeg_position from spec frame to global frame 
             self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
-            # Rough fix
-            self.scatter.removeSeries(self.Predicted_series) # remove the old series
-            self.Predicted_series = QScatter3DSeries()
-            self.Predicted_series.setBaseColor(QColor(255, 165, 0)) # Orange
-            self.add_list_to_scatterdata(self.Predicted_series, self.global_predicted_eeg_positions)
-            self.Predicted_series.setItemSize(self.itemsize)
-            self.scatter.addSeries(self.Predicted_series)
+            self.scatter.removeSeries(self.Predicted21_series) # remove the old series
+            self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor) # reset the seties
+            self.add_list_to_scatterdata(self.Predicted21_series, self.global_predicted_eeg_positions)
+            self.scatter.addSeries(self.Predicted21_series)
             self.scatter.show()
 
         if (self.live_predicted_nziz_positions == True):
             # Convert predicted nziz from spec frame to global frame 
             self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
-
             self.NZIZscatter_series_trace = self.NZIZscatter_series 
-
             self.scatter.removeSeries(self.NZIZscatter_series) # remove the old series
-            self.NZIZscatter_series = QScatter3DSeries()
-
-            self.NZIZscatter_series.setBaseColor(QColor(255, 0, 0)) # Red
+            self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor)
             self.add_list_to_scatterdata(self.NZIZscatter_series, self.global_predicted_nziz_positions)
-            self.NZIZscatter_series.setItemSize(self.itemsize)
             self.scatter.addSeries(self.NZIZscatter_series)
-
-            # self.NZIZscatter_series_trace.setBaseColor(QColor(255, 100, 10)) # Red
-            # self.add_list_to_scatterdata(self.NZIZscatter_series_trace, self.global_predicted_nziz_positions)
-            # self.NZIZscatter_series_trace.setItemSize(self.itemsize)
-            # self.scatter.addSeries(self.NZIZscatter_series_trace)
-
 
             self.scatter.show()
 
@@ -327,19 +303,16 @@ class MainWindow(QMainWindow):
 
     @Slot(bool)
     def set_live_fpz_positions(self, message):
-        print("DID I SWITCH THIS ON?", message)
         self.live_predicted_nziz_positions = message
 
     # This is not the predicted position, rather it will show positions of
     # electrode with optitrack markers
     @Slot(np.ndarray)
     def show_electrode_positions(self, message):
-        self.scatter.removeSeries(self.stylus_position_series) # remove the old position
-        self.stylus_position_series = QScatter3DSeries() # create a new series at every 
-        self.stylus_position_series.setItemSize(self.itemsize)
-        self.all_markers_series.setBaseColor(QColor(255, 0, 0)) # Yellow
-        self.add_list_to_scatterdata(self.stylus_position_series, message)
-        self.scatter.addSeries(self.stylus_position_series)
+        self.scatter.removeSeries(self.all_markers_series) # remove the old position
+        self.all_markers_series.setBaseColor(self.yellow_qcolor) # Yellow
+        self.add_list_to_scatterdata(self.all_markers_series, message)
+        self.scatter.addSeries(self.all_markers_series)
         self.scatter.show()
 
     @Slot(np.ndarray)
@@ -366,6 +339,13 @@ class MainWindow(QMainWindow):
         else:
             for d in data:
                 scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
+
+    def create_new_scatter_series(self, colour):
+        self.scatter_series_new_series = QScatter3DSeries()
+        self.scatter_series_new_series.setBaseColor(colour)
+        self.scatter_series_new_series.setItemSize(self.itemsize)
+
+        return self.scatter_series_new_series
 
 
 if __name__ == '__main__':  
