@@ -20,7 +20,8 @@ class MatlabMainThread(QThread):
         self.signals_to_status = AppSignals()
         self.signals_to_menu = AppSignals()
 
-        self.signals_to_main.signal_numpy.connect(parent.show_eeg_positions)
+        self.signals_to_main.signal_numpy.connect(parent.save_predicted_eeg_positions)
+        self.signals_to_main.signal_bool.connect(parent.set_live_predicted_eeg_positions)
         self.signals_to_main2.signal_numpy.connect(parent.update_fpz_position)
         self.signals_to_main2.signal_bool.connect(parent.set_live_fpz_positions)
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label) # change label function is found in status_widget.py
@@ -73,8 +74,8 @@ class MatlabWorkerThread(QThread):
                 # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
                 nziz_positions = np.array(nziz_positions)
                 print("Matlab: The NZIZ positions are:", nziz_positions)
-                self.parent.signals_to_main2.signal_numpy.emit(nziz_positions)
-                self.parent.signals_to_main2.signal_bool.emit(True)
+                self.parent.signals_to_main2.signal_numpy.emit(nziz_positions) # Update positions in main.py
+                self.parent.signals_to_main2.signal_bool.emit(True) # Start global transformation
 
             elif self._command == "21 positions":
                 all_positions = self.matlab_engine.EEGpoints_quat()
@@ -82,6 +83,7 @@ class MatlabWorkerThread(QThread):
                 print(all_positions)
                 print("Matlab: The All positions are:", all_positions)
                 self.parent.signals_to_main.signal_numpy.emit(all_positions) 
+                self.parent.signals_to_main.signal_bool.emit(True)
             self.parent.signals_to_menu.signal_str.emit(self._command) # indicate it has finished predicting
 
         except Exception as e:

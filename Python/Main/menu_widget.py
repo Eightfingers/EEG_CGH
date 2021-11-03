@@ -15,14 +15,13 @@ from app_signals import AppSignals
 
 class MenuWidget(QWidget):
 
-    # Button number convention
-
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
 
         # store the format of the layout
         self.layout = parent.menu_layout
 
+        # Button number convention
         self.NZIZ_BUTTON = 1
         self.CIRCUM_BUTTON = 2
         self.EARTOEAR_BUTTON = 3
@@ -49,8 +48,7 @@ class MenuWidget(QWidget):
         self.signals_to_optitrack = AppSignals()
 
         self.signals_to_main = AppSignals()
-        self.signals_to_main.signal_int.connect(parent.save_data) 
-        self.signals_to_main.signal_bool.connect(parent.set_live_predicted_eeg_positions)
+        self.signals_to_main.signal_int.connect(parent.save_trace_data) 
         
         self.NZIZdata_to_main_signals = AppSignals()
         self.NZIZdata_to_main_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
@@ -123,31 +121,19 @@ class MenuWidget(QWidget):
 
     @Slot()
     def do_eeg_placements(self):
-        if self.lock:
-            if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0 ):
-                QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
-            else:
-                if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat -> it is clicked, unflat them
-                    self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
-                    self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
-                    self.attach_electrodes_button.setFlat(False)
-                    self.signals_to_optitrack.signal_bool.emit(False)
-                else:
-                    self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
-                    self.attach_electrodes_button.setText('Stop!')
-                    self.attach_electrodes_button.setFlat(True)
-                    self.signals_to_optitrack.signal_bool.emit(True)
+        if ((self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0) or self.lock ):
+            QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
         else:
-                if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat -> it is clicked, unflat them
-                    self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
-                    self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
-                    self.attach_electrodes_button.setFlat(False)
-                    self.signals_to_optitrack.signal_bool.emit(False)
-                else:
-                    self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
-                    self.attach_electrodes_button.setText('Stop!')
-                    self.attach_electrodes_button.setFlat(True)
-                    self.signals_to_optitrack.signal_bool.emit(True)
+            if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat -> it is clicked, unflat them
+                self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
+                self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
+                self.attach_electrodes_button.setFlat(False)
+                self.signals_to_optitrack.signal_bool.emit(False)
+            else:
+                self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
+                self.attach_electrodes_button.setText('Stop!')
+                self.attach_electrodes_button.setFlat(True)
+                self.signals_to_optitrack.signal_bool.emit(True)
 
     @Slot(str) # used by the matlab thread to indicate that it has finished predicting
     def change_predict_state(self, message):
@@ -159,43 +145,28 @@ class MenuWidget(QWidget):
             self.predictpz_button.setText("Predict Fpz")
     
     def predict_eeg_positions(self):
-        print("Menu: Predict eeg positions")
         if self.lock:
-            if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0 ):
+            if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0):
                 QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
-            else:
-                message =[1,2,"21 positions"] # 1,2 is a dummy message
-                self.signals_to_matlab.signal_list.emit(message) 
-                self.signals_to_main.signal_bool.emit(True)
-                self.predict_all_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
-                self.predict_all_button.setText("Predicting ..")
         else:
+            print("Menu: Predicting eeg positions")
             message =[1,2,"21 positions"] # 1,2 is a dummy message
             self.signals_to_matlab.signal_list.emit(message)
             self.predict_all_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
             self.predict_all_button.setText("Predicting ..")
 
-
     def predict_fpz_position(self):
         if self.lock:
             if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 ):
                 QMessageBox.warning(self, "Warning", "Please complete NZIZ trace!!")
-            else:
-                print("Menu: Predicting FPZ position")
-                # message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
-                message =[1,2,"NZIZ positions"] # 1,2 is a dummy message
-                self.signals_to_matlab.signal_list.emit(message)
-                self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
-                self.predictpz_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
-                self.predictpz_button.setText("Predicting ..")
         else:
-                print("Menu: Predicting FPZ position")
-                # message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
-                message =[1,2,"NZIZ positions"] # 1,2 is a dummy message
-                self.signals_to_matlab.signal_list.emit(message)
-                self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
-                self.predictpz_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
-                self.predictpz_button.setText("Predicting ..")
+            print("Menu: Predicting FPZ position")
+            # message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
+            message =[1,2,"NZIZ positions"] # 1,2 is a dummy message
+            self.signals_to_matlab.signal_list.emit(message)
+            self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
+            self.predictpz_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
+            self.predictpz_button.setText("Predicting ..")
 
     @Slot()
     def change_trace_button_state(self, button, button_label):
@@ -225,7 +196,7 @@ class MenuWidget(QWidget):
             button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
             button.setText('Stop!')
             button.setFlat(True)
-            self.signals_to_status.signal_bool.emit(True)
+            self.signals_to_status.signal_bool.emit(True) # Start recording
 
         else:
             QMessageBox.warning(self, "Warning", "Finish other recordings first!")

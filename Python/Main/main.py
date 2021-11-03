@@ -37,20 +37,20 @@ class MainWindow(QMainWindow):
         self.yellow_qcolor = QColor(255, 255, 0)
         self.orange_qcolor = QColor(255, 165, 0)
         self.black_qcolor = QColor(0, 0 ,0)
+        self.grey_qcolor = QColor(128,128,128)
 
         # Used to control scatter size on the graph
         self.itemsize = 0.1
 
         # Each of this series is used to represent data on the graph
         self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor)
-        self.fpz_position_series = self.create_new_scatter_series(self.red_qcolor)
         self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor)
         self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor)
         self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor)
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor)
         self.specs_series = self.create_new_scatter_series(self.black_qcolor)
         self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor)
-        self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor)
+        self.all_markers_series = self.create_new_scatter_series(self.grey_qcolor)
 
         # Variables to store positional and predicted data, some are unused
         self.predicted_positions = None
@@ -72,8 +72,6 @@ class MainWindow(QMainWindow):
         self.EARTOEAR_BUTTON = 3
         self.live_predicted_eeg_positions = False
         self.live_predicted_nziz_positions = False
-
-        self.save_directory = os.getcwd() + "RecordedData"
 
         # Set the axis properties
         segment_count = 8
@@ -167,7 +165,7 @@ class MainWindow(QMainWindow):
 
     # Function that is called from the menu widget to save trace data into csv files
     @Slot(int)
-    def save_data (self, message):
+    def save_trace_data (self, message):
         # Get the data from the optitrack thread
         self.stylus_data = self.optitrack_main_thread.stylus_data 
         self.specs = self.optitrack_main_thread.specs_data 
@@ -188,7 +186,6 @@ class MainWindow(QMainWindow):
             self.NZIZ_specs_rotate = self.specs_rotation
             self.update_and_add_scatterNZIZ(self.stylus_data)
 
-            # self.NZIZdata_to_main_signals.signal_numpy.emit(self.NZIZstylus_data)
         elif (message == self.CIRCUM_BUTTON): # Circum
             print("Main: Saving Circum data")
             np.savetxt("data_CIRCUMstylus.csv", self.stylus_data, delimiter=',')
@@ -197,7 +194,6 @@ class MainWindow(QMainWindow):
             self.CIRCUM_data = self.stylus_data
             self.CIRCUM_specs_data = self.specs
             self.CIRCUM_specs_rotate = self.specs_rotation
-
             self.update_and_add_scatterCIRCUM(self.stylus_data)
 
         elif (message == self.EARTOEAR_BUTTON): # Ear to Ear
@@ -209,6 +205,11 @@ class MainWindow(QMainWindow):
             self.EartoEar_specs_data = self.specs
             self.EartoEar_specs_rotate = self.specs_rotation
             self.update_and_add_scatterEarToEar(self.stylus_data)
+
+    @Slot(np.ndarray)
+    def save_predicted_eeg_positions(self, message):
+        self.predicted_positions = message
+        np.savetxt("21_predicted_positions_specs_frame.csv", message, delimiter=',')
 
     # Clear all data shown in the graph
     @Slot()
@@ -222,28 +223,14 @@ class MainWindow(QMainWindow):
         self.scatter.removeSeries(self.CIRCUMscatter_series)
         self.scatter.removeSeries(self.EarToEarscatter_series)
         self.scatter.removeSeries(self.Predicted21_series)
-        self.scatter.removeSeries(self.specs_series)
         self.scatter.removeSeries(self.all_markers_series)
 
-        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor)
-        self.fpz_position_series = self.create_new_scatter_series(self.red_qcolor)
-        self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor)
-        self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor)
-        self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor)
-        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor)
-        self.specs_series = self.create_new_scatter_series(self.black_qcolor)
-        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor)
-        self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor)
-
-    # Debug Show predicted positions in specs frame
-    @Slot(np.ndarray)
-    def show_eeg_positions(self, message):
-        # print(message)
-        self.predicted_positions = message
-        np.savetxt("21_predicted_positions.csv", message, delimiter=',')
-        self.add_list_to_scatterdata(self.Predicted21_series, message)
-        self.scatter.addSeries(self.Predicted21_series)
-        self.scatter.show()
+        # self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor)
+        # self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor)
+        # self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor)
+        # self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor)
+        # self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor)
+        # self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor)
 
     @Slot(np.ndarray)
     def update_fpz_position(self, message):
@@ -282,8 +269,9 @@ class MainWindow(QMainWindow):
         if (self.live_predicted_nziz_positions == True):
             # Convert predicted nziz from spec frame to global frame 
             self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
-            self.NZIZscatter_series_trace = self.NZIZscatter_series 
-            self.scatter.removeSeries(self.NZIZscatter_series) # remove the old series
+            if self.NZIZscatter_series_trace in self.scatter.seriesList():
+                self.scatter.removeSeries(self.NZIZscatter_series_trace) # remove the trace if its still there
+            self.scatter.removeSeries(self.NZIZscatter_series)
             self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor)
             self.add_list_to_scatterdata(self.NZIZscatter_series, self.global_predicted_nziz_positions)
             self.scatter.addSeries(self.NZIZscatter_series)
@@ -294,7 +282,7 @@ class MainWindow(QMainWindow):
         r = R.from_quat(specs_rotation) # rotate the orientation
         new_predicted_positions = r.apply(series)
         new_predicted_positions = new_predicted_positions + specs_position # now add the displaced amount
-        print("The specs position is",specs_position)
+        # print("Main: The specs position is",specs_position)
         return new_predicted_positions
 
     @Slot(bool)
@@ -310,15 +298,15 @@ class MainWindow(QMainWindow):
     @Slot(np.ndarray)
     def show_electrode_positions(self, message):
         self.scatter.removeSeries(self.all_markers_series) # remove the old position
-        self.all_markers_series.setBaseColor(self.yellow_qcolor) # Yellow
+        self.all_markers_series = self.create_new_scatter_series(self.grey_qcolor)
         self.add_list_to_scatterdata(self.all_markers_series, message)
         self.scatter.addSeries(self.all_markers_series)
         self.scatter.show()
 
     @Slot(np.ndarray)
     def update_and_add_scatterNZIZ(self, message):
-        self.add_list_to_scatterdata(self.NZIZscatter_series, message)
-        self.scatter.addSeries(self.NZIZscatter_series)
+        self.add_list_to_scatterdata(self.NZIZscatter_series_trace, message)
+        self.scatter.addSeries(self.NZIZscatter_series_trace)
         self.scatter.show()
 
     @Slot(np.ndarray)
