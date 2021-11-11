@@ -83,7 +83,7 @@ class MatlabWorkerThread(QThread):
                 print(all_positions)
                 print("Matlab: The All positions are:", all_positions)
                 self.parent.signals_to_main.signal_numpy.emit(all_positions) 
-                self.parent.signals_to_main.signal_bool.emit(True)
+                self.parent.signals_to_main.signal_bool.emit(True) # After finish predicting, make it live 
             self.parent.signals_to_menu.signal_str.emit(self._command) # indicate it has finished predicting
 
         except Exception as e:

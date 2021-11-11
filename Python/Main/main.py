@@ -18,6 +18,8 @@ from scipy.spatial.transform import Rotation as R
 # https://doc.qt.io/qtforpython/PySide6/QtDataVisualization/QAbstract3DGraph.html#PySide6.QtDataVisualization.PySide6.QtDataVisualization.QAbstract3DGraph.currentFps
 # Numpy data is processed in Nx3 format
 
+# line 86 of matlab_thread can be removed? Setting it to live can be done in the main.py
+
 class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
@@ -50,7 +52,7 @@ class MainWindow(QMainWindow):
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor)
         self.specs_series = self.create_new_scatter_series(self.black_qcolor)
         self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor)
-        self.all_markers_series = self.create_new_scatter_series(self.grey_qcolor)
+        self.eeg_markers_series = self.create_new_scatter_series(self.grey_qcolor)
 
         # Variables to store positional and predicted data, some are unused
         self.predicted_positions = None
@@ -223,7 +225,14 @@ class MainWindow(QMainWindow):
         self.scatter.removeSeries(self.CIRCUMscatter_series)
         self.scatter.removeSeries(self.EarToEarscatter_series)
         self.scatter.removeSeries(self.Predicted21_series)
-        self.scatter.removeSeries(self.all_markers_series)
+        self.scatter.removeSeries(self.eeg_markers_series)
+
+        # Each of this series is used to represent data on the graph
+        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor)
+        self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor)
+        self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor)
+        self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor)
+        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor)
 
         # self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor)
         # self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor)
@@ -287,6 +296,9 @@ class MainWindow(QMainWindow):
 
     @Slot(bool)
     def set_live_predicted_eeg_positions(self, message):
+        self.scatter.removeSeries(self.NZIZscatter_series)
+        self.scatter.removeSeries(self.CIRCUMscatter_series)
+        self.scatter.removeSeries(self.EarToEarscatter_series)
         self.live_predicted_eeg_positions = message
 
     @Slot(bool)
@@ -297,10 +309,10 @@ class MainWindow(QMainWindow):
     # electrode with optitrack markers
     @Slot(np.ndarray)
     def show_electrode_positions(self, message):
-        self.scatter.removeSeries(self.all_markers_series) # remove the old position
-        self.all_markers_series = self.create_new_scatter_series(self.grey_qcolor)
-        self.add_list_to_scatterdata(self.all_markers_series, message)
-        self.scatter.addSeries(self.all_markers_series)
+        self.scatter.removeSeries(self.eeg_markers_series) # remove the old position
+        self.eeg_markers_series = self.create_new_scatter_series(self.grey_qcolor)
+        self.add_list_to_scatterdata(self.eeg_markers_series, message)
+        self.scatter.addSeries(self.eeg_markers_series)
         self.scatter.show()
 
     @Slot(np.ndarray)
