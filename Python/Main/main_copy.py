@@ -18,6 +18,7 @@ from scipy.spatial.transform import Rotation as R
 # https://doc.qt.io/qtforpython/PySide6/QtDataVisualization/QAbstract3DGraph.html#PySide6.QtDataVisualization.PySide6.QtDataVisualization.QAbstract3DGraph.currentFps
 # Numpy data is processed in Nx3 format
 
+
 class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
@@ -208,6 +209,12 @@ class MainWindow(QMainWindow):
     @Slot(np.ndarray)
     def save_predicted_eeg_positions(self, message):
         self.predicted_positions = message
+
+        self.scatter.removeSeries(self.Predicted21_series) # remove the old series
+        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize) # reset the seties
+        self.add_list_to_scatterdata(self.Predicted21_series, self.predicted_positions)
+        self.scatter.addSeries(self.Predicted21_series)
+
         np.savetxt("21_predicted_positions_specs_frame.csv", message, delimiter=',')
 
     # Clear all data shown in the graph
@@ -231,9 +238,13 @@ class MainWindow(QMainWindow):
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize)
         self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor, self.itemsize)
 
+
     @Slot(np.ndarray)
     def update_fpz_position(self, message):
         self.fpz_positon = message
+        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
+        self.add_list_to_scatterdata(self.NZIZscatter_series, self.fpz_positon)
+        self.scatter.addSeries(self.NZIZscatter_series)
 
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):
@@ -254,26 +265,26 @@ class MainWindow(QMainWindow):
         self.scatter.addSeries(self.specs_series)
         self.scatter.show()
 
-        if (self.live_predicted_eeg_positions == True):
-            # Convert predicted eeg_position from spec frame to global frame 
-            self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
-            self.scatter.removeSeries(self.Predicted21_series) # remove the old series
-            self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize) # reset the seties
-            self.add_list_to_scatterdata(self.Predicted21_series, self.global_predicted_eeg_positions)
-            self.scatter.addSeries(self.Predicted21_series)
-            self.scatter.show()
+        # if (self.live_predicted_eeg_positions == True):
+        #     # Convert predicted eeg_position from spec frame to global frame 
+        #     self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
+        #     self.scatter.removeSeries(self.Predicted21_series) # remove the old series
+        #     self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize) # reset the seties
+        #     self.add_list_to_scatterdata(self.Predicted21_series, self.global_predicted_eeg_positions)
+        #     self.scatter.addSeries(self.Predicted21_series)
+        #     self.scatter.show()
 
-        if (self.live_predicted_nziz_positions == True):
-            # Convert predicted nziz from spec frame to global frame 
-            self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
-            if self.NZIZscatter_series_trace in self.scatter.seriesList():
-                self.scatter.removeSeries(self.NZIZscatter_series_trace) # remove the trace if its still there
-            self.scatter.removeSeries(self.NZIZscatter_series)
-            self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
-            self.add_list_to_scatterdata(self.NZIZscatter_series, self.global_predicted_nziz_positions)
-            self.scatter.addSeries(self.NZIZscatter_series)
+        # if (self.live_predicted_nziz_positions == True):
+        #     # Convert predicted nziz from spec frame to global frame 
+        #     self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
+        #     if self.NZIZscatter_series_trace in self.scatter.seriesList():
+        #         self.scatter.removeSeries(self.NZIZscatter_series_trace) # remove the trace if its still there
+        #     self.scatter.removeSeries(self.NZIZscatter_series)
+        #     self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
+        #     self.add_list_to_scatterdata(self.NZIZscatter_series, self.global_predicted_nziz_positions)
+        #     self.scatter.addSeries(self.NZIZscatter_series)
 
-            self.scatter.show()
+        #     self.scatter.show()
 
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
         r = R.from_quat(specs_rotation) # rotate the orientation
@@ -289,6 +300,7 @@ class MainWindow(QMainWindow):
     @Slot(bool)
     def set_live_fpz_positions(self, message):
         self.live_predicted_nziz_positions = message
+
 
     # This is not the predicted position, rather it will show positions of
     # electrode with optitrack markers

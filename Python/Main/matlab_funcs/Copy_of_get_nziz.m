@@ -1,3 +1,5 @@
+function final_nziz_python = Copy_get_nziz(nziz ,nziz_spec)
+
 addpath('helperfuncs');
 addpath('myfuncs');
 
@@ -6,14 +8,14 @@ stylus_data = readmatrix('data_NZIZstylus');
 stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
 stylus_data = rmmissing(stylus_data);
 quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,3), quaternion_extracted(:,2)];
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
 
 plot3(stylus_data(:,1), stylus_data(:,2), stylus_data(:,3), '*');
 hold on ;
 
 % Quaternion way
-new_markers_nziz = [];
+% new_markers_nziz = [];
 % rotation_matrix = [];
 % for i = 1:1:length(stylus_data)
 % %     disp(i);
@@ -32,30 +34,12 @@ new_markers_nziz = [];
 %     new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
 % 
 % end
-
-for i = 1:1:length(stylus_data)
-% disp(i);
-    quat_vector = quaternion(quaternion_extracted(i,:)); % find how much it has rotated
-    quat_vector_conj = quatconj(quaternion_extracted(i,:)); % quaternion to rotate it back to origin
-    quat_vector_conj = -quaternion(quat_vector_conj);
-
-    dis_vector = dis_matrix_nziz(i,:);
-    nziz_vector = [stylus_data(i,1); ... % X,Y,Z
-              stylus_data(i,2); ...
-              stylus_data(i,3);];
-           
-    rotatedPoint = rotatepoint(quat_vector_conj,nziz_vector.');
-    new_vector_nziz = rotatedPoint - dis_vector;
-    new_markers_nziz = [new_markers_nziz; new_vector_nziz;];
-end
-
-% 
-plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'o', 'MarkerSize',10);
-hold on;
+% plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'o', 'MarkerSize',10);
+% hold on;
 
 %%% NZ-IZ
-nziz_dataset =  new_markers_nziz;
-nziz_dataset = rmmissing(new_markers_nziz);
+nziz_dataset =  stylus_data;
+nziz_dataset = rmmissing(stylus_data);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
@@ -162,4 +146,5 @@ hold on ;
 % nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
 % final_nziz_label = [nziz_label;  predicted_nziz];
 
+end
 

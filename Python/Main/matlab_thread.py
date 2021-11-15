@@ -6,10 +6,9 @@ from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, Q
 import matlab.engine
 from app_signals import AppSignals
 
-
-# https://www.geeksforgeeks.org/python-call-parent-class-method/
-
+# In optitrack, the quaternion follows q=x*i+y*j+z*k+w; However, In matlab, the quaternion follows q=w+x*i+y*j+z*k
 # Create the main Thread
+
 class MatlabMainThread(QThread):
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
@@ -70,15 +69,17 @@ class MatlabWorkerThread(QThread):
     def run(self):
         try:
             if self._command == "NZIZ positions":
-                nziz_positions = self.matlab_engine.get_nziz()
+                # nziz_positions = self.matlab_engine.get_nziz()
                 # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
+                nziz_positions = self.matlab_engine.Copy_of_get_nziz() # no spec transfofrm
                 nziz_positions = np.array(nziz_positions)
                 print("Matlab: The NZIZ positions are:", nziz_positions)
                 self.parent.signals_to_main2.signal_numpy.emit(nziz_positions) # Update positions in main.py
                 self.parent.signals_to_main2.signal_bool.emit(True) # Start global transformation
 
             elif self._command == "21 positions":
-                all_positions = self.matlab_engine.EEGpoints_quat()
+                # all_positions = self.matlab_engine.EEGpoints_quat() # no spec transform at all
+                all_positions = self.matlab_engine.Copy_of_EEGpoints_quat() # no spec transform at all
                 all_positions = np.array(all_positions)
                 print(all_positions)
                 print("Matlab: The All positions are:", all_positions)
