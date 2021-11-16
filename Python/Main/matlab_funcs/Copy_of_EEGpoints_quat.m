@@ -1,15 +1,15 @@
-% function [predicted] = EEGpoints_quat()
+function [predicted] = Copy_of_EEGpoints_quat()
 
 %%% Circumference
 addpath('helperfuncs\');
 addpath('myfuncs');
 % addpath('NotWorking\');
-step = 1; % used to take only every 2nd data
+step = 5; % used to take only every 2nd data
 
 stylus_data = readmatrix('data_CIRCUMstylus');
 stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
 stylus_data = rmmissing(stylus_data);
-% stylus_data = stylus_data(1:step:end,:); 
+stylus_data = stylus_data(1:step:end,:); 
 
 quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
@@ -49,7 +49,7 @@ circumference_z = circumference_dataset(:,3);
 stylus_data = readmatrix('data_EarToEarstylus');
 stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
 stylus_data = rmmissing(stylus_data);
-% stylus_data = stylus_data(1:step:end,:); 
+stylus_data = stylus_data(1:step:end,:); 
 
 quaternion_extracted = readmatrix('rotation_data_EarToEarspecs'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
@@ -89,7 +89,7 @@ e2e_z = e2e_dataset(:,3);
 stylus_data = readmatrix('data_NZIZstylus');
 stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
 
-% stylus_data = stylus_data(1:step:end,:);
+stylus_data = stylus_data(1:step:end,:);
 
 quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
@@ -543,5 +543,5 @@ four_points = [F4; F3; P3; P4];
 % ylabel('y');
 % zlabel('z');
 
-% end
+end
 

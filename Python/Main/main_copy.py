@@ -231,17 +231,17 @@ class MainWindow(QMainWindow):
         self.scatter.removeSeries(self.Predicted21_series)
         self.scatter.removeSeries(self.all_markers_series)
 
-        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
-        self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
-        self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
-        self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor, self.itemsize)
-        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize)
-        self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor, self.itemsize)
-
+        # self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
+        # self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
+        # self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
+        # self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor, self.itemsize)
+        # self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize)
+        # self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor, self.itemsize)
 
     @Slot(np.ndarray)
     def update_fpz_position(self, message):
         self.fpz_positon = message
+        self.scatter.removeSeries(self.NZIZscatter_series_trace) # remove the old position
         self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
         self.add_list_to_scatterdata(self.NZIZscatter_series, self.fpz_positon)
         self.scatter.addSeries(self.NZIZscatter_series)
@@ -264,6 +264,8 @@ class MainWindow(QMainWindow):
         self.add_list_to_scatterdata(self.specs_series, self.specs_position)
         self.scatter.addSeries(self.specs_series)
         self.scatter.show()
+        print("The SPECS rotation is ..", self.specs_rotation)
+        print("The Specs position is ..", self.specs_position)
 
         # if (self.live_predicted_eeg_positions == True):
         #     # Convert predicted eeg_position from spec frame to global frame 
@@ -296,6 +298,9 @@ class MainWindow(QMainWindow):
     @Slot(bool)
     def set_live_predicted_eeg_positions(self, message):
         self.live_predicted_eeg_positions = message
+        self.scatter.removeSeries(self.CIRCUMscatter_series)
+        self.scatter.removeSeries(self.EarToEarscatter_series)
+
 
     @Slot(bool)
     def set_live_fpz_positions(self, message):

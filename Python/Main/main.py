@@ -277,6 +277,8 @@ class MainWindow(QMainWindow):
 
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
         r = R.from_quat(specs_rotation) # rotate the orientation
+        #print("The SPECS rotation is ..", specs_rotation)
+        # print("The Specs position is ..", specs_position)
         new_predicted_positions = r.apply(series)
         new_predicted_positions = new_predicted_positions + specs_position # now add the displaced amount
         # print("Main: The specs position is",specs_position)

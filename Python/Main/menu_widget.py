@@ -110,6 +110,7 @@ class MenuWidget(QWidget):
     @Slot()
     def do_nziz(self):
         self.change_trace_button_state(self.NZIZbutton, self.NZIZbutton_text)
+        np.savetxt("spec_position_before_trace.csv", self.parent.specs_position, delimiter=',')
 
     @Slot()
     def do_circum(self):

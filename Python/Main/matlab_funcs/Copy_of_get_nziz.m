@@ -4,9 +4,11 @@ addpath('helperfuncs');
 addpath('myfuncs');
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus');
+stylus_data = readmatrix('data_NZIZstylus')
+step = 5; % used to take only every 2nd data
+stylus_data = stylus_data(1:step:end,:); 
 stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-stylus_data = rmmissing(stylus_data);
+% stylus_data = rmmissing(stylus_data);
 quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
@@ -39,7 +41,6 @@ hold on ;
 
 %%% NZ-IZ
 nziz_dataset =  stylus_data;
-nziz_dataset = rmmissing(stylus_data);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
