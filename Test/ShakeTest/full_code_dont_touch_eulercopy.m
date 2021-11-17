@@ -8,84 +8,11 @@
 
 addpath('helperfuncs\')
 addpath('myfuncs\')
-addpath('28_9_2021_eulerXYZ')
+addpath('euler')
 
-
-%% Load the different wanded data
-%% Load the different wanded data
-%%% Circumference
-circumference = readmatrix('shakeCircum_wand_28_9_2027.csv'); 
-circum_wand = circumference(:,3:8); 
-circum_wand = rmmissing(circum_wand);
-hold on
-scatter3(circum_wand(:,4), circum_wand(:,6),circum_wand(:,5));
-
-circum_specs= circumference(:,34:39); 
-circum_specs = rmmissing(circum_specs);
-
-rot_matrix_circum = circum_specs(:,1:3); % extract the rotation vector out
-dis_matrix_circum = circum_specs(:,4:6); % extract the displacement vector out
-dis_matrix_circum = [dis_matrix_circum(:,1), dis_matrix_circum(:,3), dis_matrix_circum(:,2)];
-x_rot_circum = rot_matrix_circum(:,1);
-y_rot_circum = rot_matrix_circum(:,3);
-z_rot_circum = rot_matrix_circum(:,2);
-
-new_markers_circum = [];
-rot_matrix2_circum = rotx(-x_rot_circum(1)) * roty(-y_rot_circum(1)) * rotz(-z_rot_circum(1));
-for i = 1:1:length(circum_wand)
-    disp(i);
-    rot_vector_circum = [-x_rot_circum(i), -y_rot_circum(i), -z_rot_circum(i)];
-%     rot_vector = [-z_rot(i), -y_rot(i), -x_rot(i)];
-
-    dis_vector_circum = dis_matrix_circum(i,:);
-    transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_circum);    
-    
-    wand_vector_circum = [circum_wand(i,4); ... % X,Y,Z 
-              circum_wand(i,6); ...
-              circum_wand(i,5); ...
-               1];
-
-    new_vector_circum = inv(transform_matrix_circum) * wand_vector_circum;
-    new_markers_circum = [new_markers_circum; new_vector_circum.';];
-end
-
-%%% Ear to Ear
-ear2ear = readmatrix('shakeEar2Ear_wand_28_9_2025.csv');
-e2e_wand = ear2ear(:,3:8); 
-e2e_wand = rmmissing(e2e_wand);
-hold on
-plot3(e2e_wand(:,4), e2e_wand(:,6),e2e_wand(:,5), 'o');
-
-e2e_specs= ear2ear(:,34:39); 
-e2e_specs = rmmissing(e2e_specs);
-rot_matrix_e2e = e2e_specs(:,1:3); % extract the rotation vector out
-dis_matrix_e2e = e2e_specs(:,4:6); % extract the displacement vector out
-dis_matrix_e2e = [dis_matrix_e2e(:,1), dis_matrix_e2e(:,3), dis_matrix_e2e(:,2)];
-x_rot_e2e = rot_matrix_e2e(:,1);
-y_rot_e2e = rot_matrix_e2e(:,3);
-z_rot_e2e = rot_matrix_e2e(:,2);
-new_markers_e2e = [];
-rot_matrix2_e2e = rotx(-x_rot_e2e(1)) * roty(-y_rot_e2e(1)) * rotz(-z_rot_e2e(1));
-
-for i = 1:1:length(e2e_wand)
-    disp(i);
-    rot_vector_e2e = [-x_rot_e2e(i), -y_rot_e2e(i), -z_rot_e2e(i)];
-%     rot_vector = [-z_rot(i), -y_rot(i), -x_rot(i)];
-
-    dis_vector_e2e = dis_matrix_e2e(i,:);
-    transform_matrix_e2e = construct_matrix_transform_xyz(dis_vector_e2e, rot_vector_e2e);    
-    
-    wand_vector_e2e = [e2e_wand(i,4); ... % X,Y,Z 
-              e2e_wand(i,6); ...
-              e2e_wand(i,5); ...
-               1];
-
-    new_vector_e2e = inv(transform_matrix_e2e) * wand_vector_e2e;
-    new_markers_e2e = [new_markers_e2e; new_vector_e2e.';];
-end
 
 %%% NZIZ
-nziz = readmatrix ('shakeNZIZ_wand_28_9_2024.csv');
+nziz = readmatrix ('shake_nziz_16_11_2023.csv');
 nziz_wand = nziz(:,3:8); 
 nziz_wand = rmmissing(nziz_wand);
 scatter3(nziz_wand(:,4),nziz_wand(:,6),nziz_wand(:,5));
@@ -120,65 +47,6 @@ end
 plot3(new_markers_nziz(:,1),new_markers_nziz(:,2),new_markers_nziz(:,3),'d');
 hold on;
 
-%%% Static
-static = readmatrix('static_all_28_9');
-static_specs = static(:,3:8); % specs pose
-static_specs = rmmissing(static_specs);
-
-first_row_markers = static(9,34:108);
-first_row_rot = static_specs(8,1:3);
-first_row_displacement = static_specs(8,4:6);
-first_row_displacement = [first_row_displacement(:,1), first_row_displacement(:,3), first_row_displacement(:,2)];
-
-static_markers = [];
-% The for loop starts at 3 as the first 2 columns of the csv files are
-% not marker points. It steps up by 3 as each marker points has 3
-% coordinates (x,y,z) so i is always 3,6,9 ...
-for i = 1:3:length(first_row_markers)
-    disp(i)
-    static_markers = [static_markers; first_row_markers(i),first_row_markers(i+2),first_row_markers(i+1)];
-end
-Xrot = first_row_rot(1);
-Yrot = first_row_rot(3);
-Zrot = first_row_rot(2);
-
-new_markers_static = [];
-
-for i = 1:1:length(static_markers)
-    d = first_row_displacement; % displacement vector
-    v = [ 0, 0 ,0 1];
-    rot_vector_static = [-Xrot, -Yrot, -Zrot];
-    transform_matrix_static = construct_matrix_transform_xyz(d, rot_vector_static);    
-    marker_static = [static_markers(i,1); ... % X,Y,Z 
-              static_markers(i,2); ...
-              static_markers(i,3); ...
-               1];
-           
-    new_vector_static = inv(transform_matrix_static) * marker_static;
-    new_markers_static = [new_markers_static; new_vector_static.';];
-
-end
-
-%%
-%%% Circumferene
-circumference_dataset= new_markers_circum;
-circumference_dataset = rmmissing(circumference_dataset);
-circumference_x = circumference_dataset(:,1);
-circumference_y = circumference_dataset(:,2);
-circumference_z = circumference_dataset(:,3);
-hold on
-scatter3(circumference_x,circumference_y,circumference_z);
-
-%%% Ear to Ear
-e2e_dataset= new_markers_e2e;
-e2e_dataset = rmmissing(e2e_dataset);
-e2e_x = e2e_dataset(:,1);
-e2e_y = e2e_dataset(:,2);
-e2e_z = e2e_dataset(:,3);
-
-plot3(e2e_x,e2e_y,e2e_z, 'd');
-hold on;
-
 %%% NZ-IZ
 nziz_dataset =  new_markers_nziz;
 nziz_dataset = rmmissing(nziz_dataset);
@@ -187,86 +55,6 @@ nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
 hold on
 scatter3(nziz_x,nziz_y,nziz_z);
-
-return;
-
-%%% Static
-static_dataset = new_markers_static(:,1:3);
-static_x = static_dataset(:,1);
-static_y = static_dataset(:,3);
-static_z = static_dataset(:,2);
-hold on
-plot3(static_x,static_z,static_y,'d');
-
-% hold on;
-% plot3(nziz_x, nziz_y, nziz_z, 'd');
-%% Perform Geometerical Fitting and Extract the datatips from the plots.
-
-%%% Circumferene - The circumference is considered as and ellipse in 2D
-%%% space. The points are orthogonally projected on the XZ plane and
-%%% linear least squares ellipse fitting is performed usin fitellipse() &
-%%% plotellipse()function
-f1= figure('Name',' Circumference');
-Ellipse=([circumference_x,circumference_y]);
-[centre, a, b, alpha] = fitellipse(Ellipse,'linear');
-
-plotellipse(centre, a, b, alpha, 'b-');
-f1 = gcf; %current figure handle
-axesObjs = get(f1, 'Children');  %axes handles
-dataObjs = get(axesObjs, 'Children'); %handles t
-xdata_circum = get(dataObjs, 'XData'); 
-ydata_circum = get(dataObjs, 'YData');
-start_A = circumference_dataset(1:1,:);
-
-startpoint_2d_circum = [start_A(:,1) start_A(:,2)];
-newmat_xy = [xdata_circum; ydata_circum];
-trans_newmat_xy = newmat_xy.';
-dist_startpoint_circum = sqrt(sum(bsxfun(@minus, trans_newmat_xy, startpoint_2d_circum).^2,2));
-closest_startpoint_circum = trans_newmat_xy(find(dist_startpoint_circum==min(dist_startpoint_circum)),:);
-[row_circum,~] = find(trans_newmat_xy==closest_startpoint_circum);
-new_matrix_x_circum = [trans_newmat_xy(row_circum:2000,1); trans_newmat_xy(1:row_circum-1,1)].';
-new_matrix_y_circum = [trans_newmat_xy(row_circum:2000,2); trans_newmat_xy(1:row_circum-1,2)].';
-
-%%% Ear to Ear - The ear to ear tracking data is considered as a spline in
-%%% 2D space. The data points are orthogonally projected on the 2D XY plane
-%%% and smoothing spline fitting is performed. The smoothing spline with is
-%%% from the MATLAB curve fitting toolbox. Createfit2() is used here. The
-%%% smoothing parameter used here is 0.999999481874551. 
-
-% Spline fit & extracting out the numerical X, Z data. 
-spline_e2e = splinetest_e2e(e2e_x,e2e_z);
-points = fnplt(spline_e2e);
-xdata_e2e = points(1,:);
-zdata_e2e = points(2,:);
-%% The least square fit of the plot has excess length that exceed the starting 
-%% and ending position of the e2e dataset. Uncomment the code below to see it.
-% fnplt(spline_e2e);
-% hold on;
-% plot(e2e_x, e2e_z, 'o');
-
-%% We fix this by finding the point on the fitted line that is closest to the actual e2e dataset.
-%% And making the fitted line start and end nearest to the e2e starting and ending dataset.
-% Get the starting and ending position of e2e dataset
-start_B = e2e_dataset(1:1,:);
-startpoint_2d_e2e = [start_B(:,1) start_B(:,3)];
-
-end_B = e2e_dataset(end,:);
-endpoint_2d_e2e = [end_B(:,1) end_B(:,3)];
-
-newmat_xz = [xdata_e2e; zdata_e2e];
-trans_newmat_xz = newmat_xz.';
-
-dist_startpoint_e2e = sqrt(sum(bsxfun(@minus, trans_newmat_xz, startpoint_2d_e2e).^2,2));
-closest_startpoint_e2e = trans_newmat_xz(find(dist_startpoint_e2e==min(dist_startpoint_e2e)),:);
-
-dist_endpoint_e2e = sqrt(sum(bsxfun(@minus, trans_newmat_xz, endpoint_2d_e2e).^2,2));
-closest_endpoint_e2e = trans_newmat_xz(find(dist_endpoint_e2e==min(dist_endpoint_e2e)),:);
-
-[row_startpoint_e2e,~] = find(trans_newmat_xz==closest_startpoint_e2e);
-[row_endpoint_e2e,~] = find(trans_newmat_xz==closest_endpoint_e2e);
-
-new_matrix_x_e2e = [trans_newmat_xz(row_startpoint_e2e:row_endpoint_e2e,1)].';
-new_matrix_z_e2e = [trans_newmat_xz(row_startpoint_e2e:row_endpoint_e2e,2)].';
 
 %%% NZ-IZ - The NZIZ tracking data is considered as a spline in
 %%% 2D space. The data points are orthogonally projected on the 2D ZY plane
@@ -315,6 +103,8 @@ hold on
 plot(ydata_nziz(end),zdata_nziz(end),'ms','MarkerSize',20);
 % hold on 
 % plot(ydata_nziz(end-100),zdata_nziz(end-100),'ms','MarkerSize',20);
+
+return;
 
 % % hold on
 % scatter(nziz_y,nziz_z,'gd');

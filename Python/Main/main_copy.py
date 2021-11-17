@@ -264,8 +264,8 @@ class MainWindow(QMainWindow):
         self.add_list_to_scatterdata(self.specs_series, self.specs_position)
         self.scatter.addSeries(self.specs_series)
         self.scatter.show()
-        print("The SPECS rotation is ..", self.specs_rotation)
-        print("The Specs position is ..", self.specs_position)
+        # print("The SPECS rotation is ..", self.specs_rotation)
+        # print("The Specs position is ..", self.specs_position)
 
         # if (self.live_predicted_eeg_positions == True):
         #     # Convert predicted eeg_position from spec frame to global frame 
