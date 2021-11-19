@@ -206,7 +206,7 @@ class MainWindow(QMainWindow):
             self.update_and_add_scatterEarToEar(self.stylus_data)
 
     @Slot(np.ndarray)
-    def save_predicted_eeg_positions(self, message):
+    def update_save_predicted_eeg_positions(self, message):
         self.predicted_positions = message
         np.savetxt("21_predicted_positions_specs_frame.csv", message, delimiter=',')
 
@@ -232,8 +232,10 @@ class MainWindow(QMainWindow):
         self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor, self.itemsize)
 
     @Slot(np.ndarray)
-    def update_fpz_position(self, message):
+    def update_save_fpz_position(self, message):
         self.fpz_positon = message
+        np.savetxt("nziz_5_positions.csv", message, delimiter=',')
+
 
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):

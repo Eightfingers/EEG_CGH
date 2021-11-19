@@ -23,6 +23,7 @@ class MatlabMainThread(QThread):
         self.signals_to_main.signal_bool.connect(parent.set_live_predicted_eeg_positions)
         self.signals_to_main2.signal_numpy.connect(parent.update_fpz_position)
         self.signals_to_main2.signal_bool.connect(parent.set_live_fpz_positions)
+
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label) # change label function is found in status_widget.py
         self.signals_to_menu.signal_str.connect(parent.left_dock_menu_widget.change_predict_state) # change button text on the menu widget
 

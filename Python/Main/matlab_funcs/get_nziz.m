@@ -1,52 +1,36 @@
-function final_nziz = get_nziz(nziz ,nziz_spec)
+% function final_nziz_python = get_nziz(nziz ,nziz_spec)
 
-addpath('helperfuncs\')
-addpath('myfuncs\')
+addpath('helperfuncs');
+addpath('myfuncs');
+addpath('GUi_wrong\');
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus')
-step = 5; % used to take only every 2nd data
-stylus_data = stylus_data(1:step:end,:); 
+stylus_data = readmatrix('data_NZIZstylus');
 stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-% stylus_data = rmmissing(stylus_data);
+stylus_data = rmmissing(stylus_data);
 quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,3), quaternion_extracted(:,2)];
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
 
 plot3(stylus_data(:,1), stylus_data(:,2), stylus_data(:,3), '*');
 hold on ;
 
+% Quaternion way
 new_markers_nziz = [];
 rotation_matrix = [];
-for i = 1:1:length(stylus_data)
-%     disp(i);
-    quat_vector = quaternion(quaternion_extracted(i,:));
-    RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
-    rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
-    rotation_matrix = [rotation_matrix; rot_vector_nziz ];
-    
-    dis_vector_circum = dis_matrix_nziz(i,:);
-    wand_vector_circum = [stylus_data(i,1); ... % X,Y,Z 
-              stylus_data(i,2); ...
-              stylus_data(i,3); ...
-               1];
-    transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
-    new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
-    new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
-end
-
-plot3(new_markers_nziz(:,1),new_markers_nziz(:,2),new_markers_nziz(:,3),'d');
+new_markers_nziz = transform_frame_quat(stylus_data, quaternion_extracted, dis_matrix_nziz);
+% 
+plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'o', 'MarkerSize',10);
 hold on;
 
 %%% NZ-IZ
 nziz_dataset =  new_markers_nziz;
-nziz_dataset = rmmissing(nziz_dataset);
+nziz_dataset = rmmissing(new_markers_nziz);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
-hold on
-scatter3(nziz_x,nziz_y,nziz_z);
 
+%% Perform Geometerical Fitting and Extract the datatips from the plots.
 %%% NZ-IZ - The NZIZ tracking data is considered as a spline in
 %%% 2D space. The data points are orthogonally projected on the 2D ZY plane
 %%% and smoothing spline fitting is performed. The smoothing spline with is
@@ -85,21 +69,13 @@ zdata_nziz_front = points(2,:);
 ydata_nziz = [ydata_nziz_back ydata_nziz_front];
 zdata_nziz = [zdata_nziz_back zdata_nziz_front];
 
-figure;
-hold on
-scatter(ydata_nziz,zdata_nziz,'r*');
-hold on
-plot(ydata_nziz(1:1),zdata_nziz(1:1),'rs','MarkerSize',20);
-hold on
-plot(ydata_nziz(end),zdata_nziz(end),'ms','MarkerSize',20);
-% hold on 
-% plot(ydata_nziz(end-100),zdata_nziz(end-100),'ms','MarkerSize',20);
+plot3(zeros(length(ydata_nziz), 1), ydata_nziz.', zdata_nziz.');
 
-% % hold on
-% scatter(nziz_y,nziz_z,'gd');
-% hold on;
-% plot(nziz_y(1:1),nziz_z(1:1),'rs','MarkerSize',20);
-% plot(nziz_y(end),nziz_z(end),'bs','MarkerSize',20);
+%% Predict EEG positions
+%%% The EEG positions are determined using the conventional standard 10/20
+%%% system. Here we are using the Distance Method/ Path Independant Method.
+%%% The positions are predicted using the fractional arc length of the
+%%% geometry usign the interparc() function. 
 
 %%% NZIZ 
 [pt20_nziz,~,~] = interparc(0,ydata_nziz,zdata_nziz,'spline');
@@ -107,12 +83,14 @@ plot(ydata_nziz(end),zdata_nziz(end),'ms','MarkerSize',20);
 [pt22_nziz,~,~] = interparc(0.30,ydata_nziz,zdata_nziz,'spline');
 [pt23_nziz,~,~] = interparc(0.50,ydata_nziz,zdata_nziz,'spline');
 [pt24_nziz,~,~] = interparc(0.70,ydata_nziz,zdata_nziz,'spline');
-[pt25_nziz,~,~] = interparc(0.95,ydata_nziz,zdata_nziz,'spline');
+[pt25_nziz,~,~] = interparc(0.90,ydata_nziz,zdata_nziz,'spline');
 [pt26_nziz,~,~] = interparc(1,ydata_nziz,zdata_nziz,'spline');
 
 %% Collate Data Points
 %%% NZIZ
 nziz = [pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
+% nziz = [pt26_nziz.' pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
+% nziz = [pt21_nziz.' pt20_nziz.'];
 
 %% Find Shortest Euclidean Distance.
 %%% The nearest point on the wanded data is found based on the predicted
@@ -124,31 +102,35 @@ nziz = [pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
 A3 = [nziz_y nziz_z];
 closest_array_nziz = find_closest_from_predicted_to_wanded(nziz, A3);
 
-%% Find left out axis values
-
 %%% NZIZ - The  NZIZ is orthogonally projected in the
 %%% ZY plane and the X values need to be found. 
 %%% If A(:,3)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its X value (1st column).
-% unique_nziz_dataset = unique(nziz_dataset, 'rows');
-% closest_array_nziz = unique(closest_array_nziz, 'rows');
-interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, nziz_dataset,1, 2, 1);
+nziz_dataset = unique(nziz_dataset, 'rows');
+interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, nziz_dataset, 1, 2, 1);
+
 trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 
+%% Reorganize the data
+
 %%% NZIZ 
-final_nziz = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)].';
-plot3(final_nziz(:,1),final_nziz(:,2),final_nziz(:,3), 'ro', 'MarkerSize', 20); 
-final_nziz = [final_nziz(:,1), final_nziz(:,3), final_nziz(:,2)];
-hold on
+final_nziz_python = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
+final_nziz_python = final_nziz_python.';
 
-% plot3(final_nziz(1,1),final_nziz(2,1),final_nziz(3,1), 'rs','MarkerSize', 20); 
-% plot3(final_nziz(1,2),final_nziz(2,2),final_nziz(3,2), 'bs','MarkerSize', 20); 
-% plot3(final_nziz(1,3),final_nziz(2,3),final_nziz(3,3), 'gs','MarkerSize', 20); 
-% plot3(final_nziz(1,4),final_nziz(2,4),final_nziz(3,4), 'ms','MarkerSize', 20); 
-% plot3(final_nziz(1,5),final_nziz(2,5),final_nziz(3,5), 'ks','MarkerSize', 20); 
-% convert_final_nziz = num2cell(final_nziz);
+% Y upwards convention for the GUI
+final_nziz_python = [final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2)]; 
+Fpz = final_nziz_python(1,:);
+% final_nziz_python = final_nziz_python *1000; % convert m to mm
+plot3(final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2), 'd', 'MarkerSize', 20);
+hold on ;
+% xlabel('x');
+% ylabel("y");
+% zlabel("z")
+
+% 
+% predicted_nziz = num2cell(final_nziz_python);
 % nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
-% final_nziz_label = [nziz_label;  convert_final_nziz];
+% final_nziz_label = [nziz_label;  predicted_nziz];
 
-end
+% end
 
