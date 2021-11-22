@@ -18,6 +18,16 @@ from scipy.spatial.transform import Rotation as R
 # https://doc.qt.io/qtforpython/PySide6/QtDataVisualization/QAbstract3DGraph.html#PySide6.QtDataVisualization.PySide6.QtDataVisualization.QAbstract3DGraph.currentFps
 # Numpy data is processed in Nx3 format
 
+# convetions 
+# Matlab Z is upwards 
+# Python QtScatter Y is upwards
+# ScipyRotate 
+
+# Quaternion convention
+# Matlab w, x,y,z
+# Optitrack x,y,z,w
+# Scipy x,y,z,w
+
 
 class MainWindow(QMainWindow):
 
@@ -28,6 +38,7 @@ class MainWindow(QMainWindow):
 
         # The graph
         self.scatter = Q3DScatter()
+
         # self.scatter.setAspectRatio(1)
         # self.scatter.setHorizontalAspectRatio(1)
 
@@ -184,7 +195,21 @@ class MainWindow(QMainWindow):
             self.NZIZ_data = self.stylus_data
             self.NZIZ_specs_data = self.specs
             self.NZIZ_specs_rotate = self.specs_rotation
-            self.update_and_add_scatterNZIZ(self.stylus_data)
+            
+            NZIZ_in_specs_frame = self.transform_from_global_to_specs_frame(self.NZIZ_data, self.NZIZ_specs_data, self.NZIZ_specs_rotate )
+            # print("NZIZ IN SPECS FRAME IS ", NZIZ_in_specs_frame)
+            self.fpz_positon = NZIZ_in_specs_frame
+            np.savetxt("data_NZIZstylus_specs_frame.csv", NZIZ_in_specs_frame, delimiter=',')
+
+            NZIZ_back_to_global_frame = self.transform_spec_to_global_frame(NZIZ_in_specs_frame, self.specs_rotation, self.specs_position)
+
+            self.NZIZscatter_series2 = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
+            self.add_list_to_scatterdata(self.NZIZscatter_series2, NZIZ_back_to_global_frame)
+            self.scatter.addSeries(self.NZIZscatter_series2)
+            self.scatter.show()
+
+            self.update_and_add_scatterNZIZ(NZIZ_in_specs_frame)
+            self.update_and_add_scatterNZIZ(self.NZIZ_data) 
 
         elif (message == self.CIRCUM_BUTTON): # Circum
             print("Main: Saving Circum data")
@@ -205,6 +230,24 @@ class MainWindow(QMainWindow):
             self.EartoEar_specs_data = self.specs
             self.EartoEar_specs_rotate = self.specs_rotation
             self.update_and_add_scatterEarToEar(self.stylus_data)
+
+    def transform_from_global_to_specs_frame (self, stylus_trace, specs_position, specs_rotation):
+        specs_position[:,0] *= -1
+        specs_rotation[:,0] *= -1
+        # specs_rotation = specs_rotation[:,[0,1,3,2]]
+        # print("Before column swap")
+        # print(specs_position[1,:])
+        # specs_position = specs_position[:,[0,2,1]]
+        # print("After column swap")
+        # print(specs_position[1,:])
+
+        r = R.from_quat(specs_rotation)
+        r_inverse = r.inv() # get the inverse
+        new_predicted_positions = r_inverse.apply(stylus_trace) # apply the inverse to the stylus trace to rotate it back to specs frame origin rotation 
+        new_predicted_positions = new_predicted_positions - specs_position # minus the specs displacement amount to bring it to specs origin
+
+        return new_predicted_positions
+
 
     @Slot(np.ndarray)
     def save_predicted_eeg_positions(self, message):
@@ -237,14 +280,15 @@ class MainWindow(QMainWindow):
         # self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor, self.itemsize)
         # self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize)
         # self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor, self.itemsize)
-
+    
     @Slot(np.ndarray)
     def update_fpz_position(self, message):
-        self.fpz_positon = message
-        self.scatter.removeSeries(self.NZIZscatter_series_trace) # remove the old position
-        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
-        self.add_list_to_scatterdata(self.NZIZscatter_series, self.fpz_positon)
-        self.scatter.addSeries(self.NZIZscatter_series)
+        # self.fpz_positon = message
+        # self.scatter.removeSeries(self.NZIZscatter_series_trace) # remove the old position
+        # self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
+        # self.add_list_to_scatterdata(self.NZIZscatter_series, self.fpz_positon)
+        # self.scatter.addSeries(self.NZIZscatter_series)
+        pass
 
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):
@@ -276,20 +320,33 @@ class MainWindow(QMainWindow):
         #     self.scatter.addSeries(self.Predicted21_series)
         #     self.scatter.show()
 
-        # if (self.live_predicted_nziz_positions == True):
-        #     # Convert predicted nziz from spec frame to global frame 
-        #     self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
-        #     if self.NZIZscatter_series_trace in self.scatter.seriesList():
-        #         self.scatter.removeSeries(self.NZIZscatter_series_trace) # remove the trace if its still there
-        #     self.scatter.removeSeries(self.NZIZscatter_series)
-        #     self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
-        #     self.add_list_to_scatterdata(self.NZIZscatter_series, self.global_predicted_nziz_positions)
-        #     self.scatter.addSeries(self.NZIZscatter_series)
+        if (self.live_predicted_nziz_positions == True):
+            # Convert predicted nziz from spec frame to global frame 
+            self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
+            # if self.NZIZscatter_series_trace in self.scatter.seriesList():
+            #     self.scatter.removeSeries(self.NZIZscatter_series_trace) # remove the trace if its still there
+            self.scatter.removeSeries(self.NZIZscatter_series)
+            self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
+            self.add_list_to_scatterdata(self.NZIZscatter_series, self.global_predicted_nziz_positions)
+            self.scatter.addSeries(self.NZIZscatter_series)
 
-        #     self.scatter.show()
+            self.scatter.show()
+            pass
 
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
+        specs_position[0] *= -1
+        specs_rotation[0] *= -1
+        # print(specs_rotation, "ROTATIOn")
+        # print(specs_position, "Position")
+        # specs_rotation = specs_rotation[:,[0,1,3,2]]
+        # print("Before column swap")
+        # print(specs_position[1,:])
+        # specs_position = specs_position[:,[0,2,1]]
+        # print("After column swap")
+        # print(specs_position[1,:])
+
         r = R.from_quat(specs_rotation) # rotate the orientation
+        # print(series, "NIGAA THE SERIES IS THIS ")
         new_predicted_positions = r.apply(series)
         new_predicted_positions = new_predicted_positions + specs_position # now add the displaced amount
         # print("Main: The specs position is",specs_position)

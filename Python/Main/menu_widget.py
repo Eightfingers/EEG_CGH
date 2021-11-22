@@ -43,9 +43,15 @@ class MenuWidget(QWidget):
         self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
         self._optitrack_thread = None 
         
+        # only connect when matlab has finish initializeed
         self.signals_to_matlab = AppSignals()
 
-        self.signals_to_optitrack = AppSignals()
+        # only connect when optitrack has finished initialized
+        # I need 2 make 2 seperate bool signals, 1 to indicate start of recording trace 
+        # and the other to indicate whether to show other markers (non rigid body markers)
+        self.signals_to_optitrack = AppSignals() # show rigid body markers
+        # Another bool signal
+        self.signals_to_optitrack2 = AppSignals() # show other markers 
 
         self.signals_to_main = AppSignals()
         self.signals_to_main.signal_int.connect(parent.save_trace_data) 
@@ -73,7 +79,7 @@ class MenuWidget(QWidget):
         self.EartoearButton.clicked.connect(self.do_ear_to_ear) # start a thread when the button is clicked
 
         self.attach_electrodes_button = QPushButton(self.attach_electrodes_button_text)
-        self.attach_electrodes_button.clicked.connect(self.do_eeg_placements) # can only start when there are 3 scatter data
+        self.attach_electrodes_button.clicked.connect(self.electrode_placements) # can only start when there are 3 scatter data
 
         self.predictpz_button = QPushButton("Predict Fpz")
         self.predictpz_button.clicked.connect(self.predict_fpz_position) # can only start when there are 3 scatter data
@@ -103,9 +109,10 @@ class MenuWidget(QWidget):
 
     def connect_optitrack_signals (self, optitrack_thread):
         self._optitrack_thread = optitrack_thread
-        self.signals_to_status.signal_bool.connect(self._optitrack_thread.set_recording) 
-        self.signals_to_status.signal_bool.connect(self._optitrack_thread.clear_data)
-        self.signals_to_optitrack.signal_bool.connect(self._optitrack_thread.set_show_all_markers)
+
+        self.signals_to_optitrack.signal_bool.connect(self._optitrack_thread.set_recording)
+        self.signals_to_optitrack.signal_bool.connect(self._optitrack_thread.clear_data)
+        self.signals_to_optitrack2.signal_bool.connect(self._optitrack_thread.set_show_all_markers)
 
     @Slot()
     def do_nziz(self):
@@ -120,8 +127,9 @@ class MenuWidget(QWidget):
     def do_ear_to_ear(self):
         self.change_trace_button_state(self.EartoearButton, self.EartoEarbutton_text)
 
+    # Shows optitrack markers as grey in colour in the graph
     @Slot()
-    def do_eeg_placements(self):
+    def electrode_placements(self):
         if ((self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0) or self.lock ):
             QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
         else:
@@ -145,6 +153,7 @@ class MenuWidget(QWidget):
             self.predictpz_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
             self.predictpz_button.setText("Predict Fpz")
     
+    # Show predicted 21 electrode positions 
     def predict_eeg_positions(self):
         if self.lock:
             if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0):
@@ -169,6 +178,8 @@ class MenuWidget(QWidget):
             self.predictpz_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
             self.predictpz_button.setText("Predicting ..")
 
+    # Press down the button to start the trace 
+    # Unflatted the button the stop the trace
     @Slot()
     def change_trace_button_state(self, button, button_label):
         if(button.isFlat()): # If the initial state of the button is flat and it is clicked, unflat them
@@ -186,7 +197,8 @@ class MenuWidget(QWidget):
             elif (button_label == "Start Ear to Ear"):
                 self.signals_to_main.signal_int.emit(self.EARTOEAR_BUTTON)
 
-            self.signals_to_status.signal_bool.emit(False) # Stop recording
+            self.signals_to_status.signal_bool.emit(False) 
+            self.signals_to_optitrack.signal_bool.emit(False) # Stop recording
             self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
             self.signals_to_status.signal_list.emit(["Specs","Stopped"])
 
@@ -197,7 +209,8 @@ class MenuWidget(QWidget):
             button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
             button.setText('Stop!')
             button.setFlat(True)
-            self.signals_to_status.signal_bool.emit(True) # Start recording
+            self.signals_to_status.signal_bool.emit(True) 
+            self.signals_to_optitrack.signal_bool.emit(True) # Start recording
 
         else:
             QMessageBox.warning(self, "Warning", "Finish other recordings first!")
