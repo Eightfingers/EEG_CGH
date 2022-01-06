@@ -14,6 +14,7 @@ function [new_markers] = transform_frame_quat(stylus_data, quaternion_extracted_
         transform_matrix = construct_matrix_transform_xyz(dis_vector, rot_vector);    
         new_vector = inv(transform_matrix) * stylus_vector;
         new_markers = [new_markers; new_vector.';];
+
     end
 end
 
