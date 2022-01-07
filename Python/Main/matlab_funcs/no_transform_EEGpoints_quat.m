@@ -1,4 +1,4 @@
-function [predicted] = Copy_of_EEGpoints_quat()
+function [predicted] = no_transform_EEGpoints_quat()
 
 %%% Circumference
 addpath('helperfuncs\');
@@ -6,120 +6,39 @@ addpath('myfuncs');
 % addpath('NotWorking\');
 step = 5; % used to take only every 2nd data
 
-stylus_data = readmatrix('data_CIRCUMstylus');
-stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-stylus_data = rmmissing(stylus_data);
-stylus_data = stylus_data(1:step:end,:); 
+%%% NZIZ
+new_markers_nziz = readmatrix('data_NZIZstylus_specs_frame')
+step = 5; % used to take only every 2nd data
+new_markers_nziz = new_markers_nziz(1:step:end,:); 
+new_markers_nziz = [new_markers_nziz(:,1) new_markers_nziz(:,3) new_markers_nziz(:,2)]; 
 
-quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-% quaternion_extracted = quaternion_extracted(1:step:end,:);
+%%% Ear to Ear
+new_markers_e2e = readmatrix('data_NZIZstylus_specs_frame')
+step = 5; % used to take only every 2nd data
+new_markers_e2e = new_markers_e2e(1:step:end,:); 
+new_markers_e2e = [new_markers_e2e(:,1) new_markers_e2e(:,3) new_markers_e2e(:,2)]; 
 
-dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
-% dis_matrix_circum = dis_matrix_circum(1:step:end,:); 
+%%% Circum
+new_markers_circum = readmatrix('data_NZIZstylus_specs_frame')
+step = 5; % used to take only every 2nd data
+new_markers_circum = new_markers_circum(1:step:end,:); 
+new_markers_circum = [new_markers_circum(:,1) new_markers_circum(:,3) new_markers_circum(:,2)]; 
 
-%% Run Function to give points
-% Quaternion way
-new_markers_circum = [];
-% disp("Doing quaternion");
-% for i = 1:step:length(stylus_data)
-%     
-% %     disp(i);
-%     quat_vector = quaternion(quaternion_extracted(i,:));
-%     RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
-%     rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
-%     dis_vector_circum = dis_matrix_circum(i,:);
-%     wand_vector_circum = [stylus_data(i,1); ... % X,Y,Z 
-%               stylus_data(i,2); ...
-%               stylus_data(i,3); ...
-%                1];
-%     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
-%     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
-%     new_markers_circum = [new_markers_circum; new_vector_nziz.';];
-% 
-% end
-
-%%% Transformed Circumferene
-circumference_dataset= stylus_data;
+%%% Circumferene
+circumference_dataset= new_markers_circum;
+circumference_dataset = rmmissing(circumference_dataset);
 circumference_x = circumference_dataset(:,1);
 circumference_y = circumference_dataset(:,2);
 circumference_z = circumference_dataset(:,3);
-
 %%% Ear to Ear
-stylus_data = readmatrix('data_EarToEarstylus');
-stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-stylus_data = rmmissing(stylus_data);
-stylus_data = stylus_data(1:step:end,:); 
-
-quaternion_extracted = readmatrix('rotation_data_EarToEarspecs'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-% quaternion_extracted = quaternion_extracted(1:step:end,:);
-
-dis_matrix_ear2ear = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
-% dis_matrix_ear2ear = dis_matrix_ear2ear(1:step:end,:);
-
-%% Run Function to give points
-% Quaternion way
-new_markers_e2e = [];
-% disp("Doing quaternion");
-% for i = 1:1:length(stylus_data)
-%     
-% %     disp(i);
-%     quat_vector = quaternion(quaternion_extracted(i,:));
-%     RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
-%     rot_vector_ear2ear = [-RPY1(1), -RPY1(3), -RPY1(2)];
-%     dis_vector_ear2ear = dis_matrix_ear2ear(i,:);
-%     wand_vector_ear2ear = [stylus_data(i,1); ... % X,Y,Z 
-%               stylus_data(i,2); ...
-%               stylus_data(i,3); ...
-%                1];
-%     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_ear2ear, rot_vector_ear2ear);    
-%     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_ear2ear;
-%     new_markers_e2e = [new_markers_e2e; new_vector_nziz.';];
-% 
-% end
-
-%%% Transformed Ear to Ear
-e2e_dataset= stylus_data;
+e2e_dataset= new_markers_e2e;
+e2e_dataset = rmmissing(e2e_dataset);
 e2e_x = e2e_dataset(:,1);
 e2e_y = e2e_dataset(:,2);
 e2e_z = e2e_dataset(:,3);
-
-%%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus');
-stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-
-stylus_data = stylus_data(1:step:end,:);
-
-quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-% quaternion_extracted = quaternion_extracted(1:step:end,:);
-
-dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
-% dis_matrix_nziz = dis_matrix_nziz(1:step:end,:); 
-
-%% Run Function to give points
-% Quaternion way
-new_markers_nziz = [];
-% disp("Doing quaternion");
-% for i = 1:1:length(stylus_data)
-% %     disp(i);
-%     quat_vector = quaternion(quaternion_extracted(i,:));
-%     RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
-%     rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
-%     dis_vector_nziz = dis_matrix_nziz(i,:);
-%     wand_vector_nziz = [stylus_data(i,1); ... % X,Y,Z 
-%               stylus_data(i,2); ...
-%               stylus_data(i,3); ...
-%                1];
-%     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_nziz, rot_vector_nziz);    
-%     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_nziz;
-%     new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
-% 
-% end
-
 %%% NZ-IZ
-nziz_dataset =  stylus_data;
+nziz_dataset =  new_markers_nziz;
+nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);

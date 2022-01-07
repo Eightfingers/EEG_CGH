@@ -215,6 +215,14 @@ class MainWindow(QMainWindow):
         self.predicted_positions = message
         np.savetxt("21_predicted_positions_specs_frame.csv", message, delimiter=',')
 
+        self.scatter.removeSeries(self.Predicted21_series) # remove the old series
+        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize) # reset the seties
+        self.add_list_to_scatterdata(self.Predicted21_series, self.predicted_positions)
+        self.scatter.addSeries(self.Predicted21_series)
+
+        self.predicted_eeg_positions_global_frame = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
+        np.savetxt("21_predicted_positions_global_frame.csv", message, delimiter=',')
+
     # Clear all data shown in the graph
     @Slot()
     def clear_data(self):

@@ -208,7 +208,7 @@ class MainWindow(QMainWindow):
             self.NZIZ_specs_rotate = self.specs_trace_rotation
 
             ## Debug, Trace in specs frame
-            NZIZ_in_specs_frame = self.transform_from_global_to_specs_frame(self.NZIZ_data, self.NZIZ_specs_data, self.NZIZ_specs_rotate )
+            NZIZ_in_specs_frame = self.transform_from_global_to_specs_frame(self.NZIZ_data, self.NZIZ_specs_rotate, self.NZIZ_specs_data )
             np.savetxt("data_NZIZstylus_specs_frame.csv", NZIZ_in_specs_frame, delimiter=',')
             self.NZIZscatter_series2 = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
             self.add_list_to_scatterdata(self.NZIZscatter_series2, NZIZ_in_specs_frame)
@@ -229,7 +229,7 @@ class MainWindow(QMainWindow):
             self.CIRCUM_specs_rotate = self.specs_trace_rotation
 
             ## Debug, Trace in specs frame
-            Circum_in_specs_frame = self.transform_from_global_to_specs_frame(self.CIRCUM_data, self.CIRCUM_specs_data, self.CIRCUM_specs_rotate )
+            Circum_in_specs_frame = self.transform_from_global_to_specs_frame(self.CIRCUM_data, self.CIRCUM_specs_rotate,  self.CIRCUM_specs_data )
             np.savetxt("data_CIRCUMstylus_specs_frame.csv", Circum_in_specs_frame, delimiter=',')
             self.CIRCUMscatter_series2 = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
             self.add_list_to_scatterdata(self.CIRCUMscatter_series2, Circum_in_specs_frame)
@@ -248,7 +248,7 @@ class MainWindow(QMainWindow):
             self.EartoEar_specs_rotate = self.specs_trace_rotation
 
             ## Debug, Trace in specs frame
-            EartoEar_in_specs_frame = self.transform_from_global_to_specs_frame(self.EartoEar_data, self.EartoEar_specs_data, self.EartoEar_specs_rotate )
+            EartoEar_in_specs_frame = self.transform_from_global_to_specs_frame(self.EartoEar_data, self.EartoEar_specs_rotate, self.EartoEar_specs_data )
             np.savetxt("data_EarToEarstylus_specs_frame.csv", EartoEar_in_specs_frame, delimiter=',')
             self.EarToEarscatter_series2 = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
             self.add_list_to_scatterdata(self.EarToEarscatter_series2, EartoEar_in_specs_frame)
@@ -261,11 +261,15 @@ class MainWindow(QMainWindow):
     def update_save_predicted_eeg_positions(self, message):
         self.predicted_positions = self.transform_spec_to_global_frame(message)
 
-        np.savetxt("21_predicted_positions_specs_frame.csv", message, delimiter=',')
+        np.savetxt("21_predicted_positions_specs_frame_fromcopy.csv", message, delimiter=',')
         self.scatter.removeSeries(self.Predicted21_series) # remove the old series
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize) # reset the seties
         self.add_list_to_scatterdata(self.Predicted21_series, self.predicted_positions)
         self.scatter.addSeries(self.Predicted21_series)
+
+        self.predicted_eeg_positions_global_frame = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
+        np.savetxt("21_predicted_positions_global_frame_fromcopy.csv", message, delimiter=',')
+
 
     # Clear all data shown in the graph
     @Slot()
@@ -388,6 +392,7 @@ class MainWindow(QMainWindow):
 
         return self.scatter_series_new_series
 
+    # Used in the predicted data set
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
 
         r = R.from_quat(specs_rotation) # rotate the orientation back to the axis
@@ -395,7 +400,8 @@ class MainWindow(QMainWindow):
         new_predicted_positions = new_predicted_positions + specs_position # add the displaced amoount
         return new_predicted_positions
 
-    def transform_from_global_to_specs_frame (self, stylus_trace, specs_trace_position, specs_trace_rotation):
+    # Mainly used in the trace
+    def transform_from_global_to_specs_frame (self, stylus_trace, specs_trace_rotation, specs_trace_position,):
 
         # specs_trace_rotation = specs_trace_rotation[:,[0,1,3,2]]
         # print("Before column swap")

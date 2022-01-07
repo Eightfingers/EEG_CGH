@@ -1,4 +1,4 @@
-% function [predicted] = EEGpoints_quat()
+function [predicted] = EEGpoints_quat()
 
 %%% Circumference
 addpath('helperfuncs\');
@@ -497,5 +497,5 @@ four_points = [F4; F3; P3; P4];
 % ylabel('y');
 % zlabel('z');
 
-% end
+end
 

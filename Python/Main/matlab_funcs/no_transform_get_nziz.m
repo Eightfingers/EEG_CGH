@@ -1,4 +1,4 @@
-function final_nziz_python = Copy_get_nziz()
+function final_nziz_python = no_transform_get_nziz()
 
 addpath('helperfuncs');
 addpath('myfuncs');
@@ -9,38 +9,9 @@ step = 5; % used to take only every 2nd data
 stylus_data = stylus_data(1:step:end,:); 
 stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
 % stylus_data = rmmissing(stylus_data);
-quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
-quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
-dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
-
-plot3(stylus_data(:,1), stylus_data(:,2), stylus_data(:,3), '*');
-hold on ;
-
-% Quaternion way
-new_markers_nziz = [];
-rotation_matrix = [];
-for i = 1:1:length(stylus_data)
-%     disp(i);
-    quat_vector = quaternion(quaternion_extracted(i,:));
-    RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
-    rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
-    rotation_matrix = [rotation_matrix; rot_vector_nziz ];
-    
-    dis_vector_circum = dis_matrix_nziz(i,:);
-    wand_vector_circum = [stylus_data(i,1); ... % X,Y,Z 
-              stylus_data(i,2); ...
-              stylus_data(i,3); ...
-               1];
-    transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
-    new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
-    new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
-
-end
-plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'o', 'MarkerSize',10);
-hold on;
 
 %%% NZ-IZ
-nziz_dataset =  new_markers_nziz;
+nziz_dataset =  stylus_data;
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
