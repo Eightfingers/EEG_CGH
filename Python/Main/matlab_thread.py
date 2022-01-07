@@ -50,21 +50,17 @@ class MatlabMainThread(QThread):
 
     @Slot(list)
     def spawn_thread(self, message):
-        stylus_data = message[0]
-        specs_data = message[1]
-        command = message[2]
+        command = message[0]
 
-        self.worker_thread = MatlabWorkerThread(stylus_data, specs_data, command, self)
+        self.worker_thread = MatlabWorkerThread(command, self)
         self.worker_thread.start()
         
 # Create a worker thread that is responsible for executing of scripts inside the matlab engine
 class MatlabWorkerThread(QThread):
-    def __init__(self, stylus_data, specs_data, command, parent=None):
+    def __init__(self, command, parent=None):
         QThread.__init__(self, parent)
         self.parent = parent
         self.matlab_engine = parent.eng
-        self._stylus_data = stylus_data 
-        self._specs_data = specs_data
         self._command = command
 
     def run(self):
@@ -75,6 +71,8 @@ class MatlabWorkerThread(QThread):
                 nziz_positions = self.matlab_engine.Copy_of_get_nziz() # no spec transfofrm
                 nziz_positions = np.array(nziz_positions)
                 print("Matlab: The NZIZ positions are:", nziz_positions)
+                
+                np.savetxt("nziz_positions.csv", nziz_positions, delimiter=',')
                 self.parent.signals_to_main2.signal_numpy.emit(nziz_positions) # Update positions in main.py
                 self.parent.signals_to_main2.signal_bool.emit(True) # Start global transformation
 

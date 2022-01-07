@@ -38,8 +38,6 @@ class OptitrackMainThread(QThread):
         # Control variables 
         self.record = False
         self.show_all_markers = False
-        self.stylus_record = None
-        self.specs_record = None
         self.stylus_lose_track_counter = 0
         self.specs_lose_track_counter = 0
 
@@ -119,8 +117,8 @@ class OptitrackMainThread(QThread):
     def receiveRigidBodyFrame(self, id, position, rotation ):
         position = np.array(position)
         rotation = np.array(rotation)
-        # print( "Received frame for rigid body", id," ",position," ",rotation )
 
+        # print( "Received frame for rigid body", id," ",position," ",rotation )
         if (id == 1004): # if the id is 1004, it is the stylus data
             self.stylus_position = position 
             self.signals_to_main_stylus_pos.signal_numpy.emit(position)
