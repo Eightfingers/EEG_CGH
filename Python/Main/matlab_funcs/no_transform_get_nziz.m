@@ -4,7 +4,7 @@ addpath('helperfuncs');
 addpath('myfuncs');
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus')
+stylus_data = readmatrix('data_NZIZstylus_specs_frame')
 step = 5; % used to take only every 2nd data
 stylus_data = stylus_data(1:step:end,:); 
 stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 

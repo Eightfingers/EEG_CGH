@@ -189,11 +189,13 @@ class MainWindow(QMainWindow):
         self.stylus_data = self.optitrack_main_thread.stylus_data 
         self.specs_trace_position = self.optitrack_main_thread.specs_data 
         self.specs_trace_rotation = self.optitrack_main_thread.specs_rotation_data
+        self.stylus_data[:,0]  *= -1 # Rectify the x axis
 
         # Strip of all the zeroes
         self.stylus_data = self.stylus_data[~np.all(self.stylus_data == 0, axis=1)]
         self.specs_trace_position = self.specs_trace_position[~np.all(self.specs_trace_position == 0, axis=1)]
         self.specs_trace_rotation = self.specs_trace_rotation[~np.all(self.specs_trace_rotation == 0, axis=1)]
+
 
         if (message == self.NZIZ_BUTTON): # NZIZ
             print("Main: Saving NZIZ data")
@@ -201,21 +203,21 @@ class MainWindow(QMainWindow):
             np.savetxt("data_NZIZspecs.csv", self.specs_trace_position, delimiter=',')
             np.savetxt("rotation_data_NZIZspecs.csv", self.specs_trace_rotation, delimiter=',')
 
-            self.stylus_data[:,0]  *= -1 # Rectify the x axis
             self.NZIZ_data = self.stylus_data
             self.NZIZ_specs_data = self.specs_trace_position
             self.NZIZ_specs_rotate = self.specs_trace_rotation
 
-            # NZIZ_in_specs_frame = self.transform_from_global_to_specs_frame(self.NZIZ_data, self.NZIZ_specs_data, self.NZIZ_specs_rotate )
-            # print("NZIZ IN SPECS FRAME IS ", NZIZ_in_specs_frame)
-            # np.savetxt("data_NZIZstylus_specs_frame.csv", NZIZ_in_specs_frame, delimiter=',')
-            # NZIZ_back_to_global_frame = self.transform_spec_to_global_frame(NZIZ_in_specs_frame, self.specs_live_rotation, self.specs_live_position)
-            # self.NZIZscatter_series2 = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
-            # self.add_list_to_scatterdata(self.NZIZscatter_series2, NZIZ_back_to_global_frame)
-            # self.scatter.addSeries(self.NZIZscatter_series2)
-            # self.scatter.show()
+            ## Debug, Trace in specs frame
+            NZIZ_in_specs_frame = self.transform_from_global_to_specs_frame(self.NZIZ_data, self.NZIZ_specs_data, self.NZIZ_specs_rotate )
+            np.savetxt("data_NZIZstylus_specs_frame.csv", NZIZ_in_specs_frame, delimiter=',')
+            self.NZIZscatter_series2 = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
+            self.add_list_to_scatterdata(self.NZIZscatter_series2, NZIZ_in_specs_frame)
+            self.scatter.addSeries(self.NZIZscatter_series2)
+            self.scatter.show()
 
-            self.update_and_add_scatterNZIZ(self.NZIZ_data) 
+            # print("NZIZ IN SPECS FRAME IS ", NZIZ_in_specs_frame)
+            # NZIZ_back_to_global_frame = self.transform_spec_to_global_frame(NZIZ_in_specs_frame, self.specs_live_rotation, self.specs_live_position)
+            self.update_and_add_scatterNZIZ(self.NZIZ_in_specs_frame) 
 
         elif (message == self.CIRCUM_BUTTON): # Circum
             print("Main: Saving Circum data")
@@ -226,7 +228,14 @@ class MainWindow(QMainWindow):
             self.CIRCUM_specs_data = self.specs_trace_position
             self.CIRCUM_specs_rotate = self.specs_trace_rotation
 
-            self.stylus_data[:,0]  *= -1 # Rectify the x axis
+            ## Debug, Trace in specs frame
+            Circum_in_specs_frame = self.transform_from_global_to_specs_frame(self.CIRCUM_data, self.CIRCUM_specs_data, self.CIRCUM_specs_rotate )
+            np.savetxt("data_CIRCUMstylus_specs_frame.csv", Circum_in_specs_frame, delimiter=',')
+            self.CIRCUMscatter_series2 = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
+            self.add_list_to_scatterdata(self.CIRCUMscatter_series2, Circum_in_specs_frame)
+            self.scatter.addSeries(self.CIRCUMscatter_series2)
+            self.scatter.show()
+
             self.update_and_add_scatterCIRCUM(self.stylus_data)
 
         elif (message == self.EARTOEAR_BUTTON): # Ear to Ear
@@ -238,31 +247,19 @@ class MainWindow(QMainWindow):
             self.EartoEar_specs_data = self.specs_trace_position
             self.EartoEar_specs_rotate = self.specs_trace_rotation
 
-            self.stylus_data[:,0]  *= -1 # Rectify the x axis
+            ## Debug, Trace in specs frame
+            EartoEar_in_specs_frame = self.transform_from_global_to_specs_frame(self.EartoEar_data, self.EartoEar_specs_data, self.EartoEar_specs_rotate )
+            np.savetxt("data_EarToEarstylus_specs_frame.csv", EartoEar_in_specs_frame, delimiter=',')
+            self.EarToEarscatter_series2 = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
+            self.add_list_to_scatterdata(self.EarToEarscatter_series2, EartoEar_in_specs_frame)
+            self.scatter.addSeries(self.EarToEarscatter_series2)
+            self.scatter.show()
+
             self.update_and_add_scatterEarToEar(self.stylus_data)
-
-    def transform_from_global_to_specs_frame (self, stylus_trace, specs_trace_position, specs_trace_rotation):
-        specs_trace_position[:,0] *= -1
-        # specs_trace_rotation[:,0] *= -1
-
-        # specs_trace_rotation = specs_trace_rotation[:,[0,1,3,2]]
-        # print("Before column swap")
-        # print(specs_trace_position[1,:])
-        # specs_trace_position = specs_trace_position[:,[0,2,1]]
-        # print("After column swap")
-        # print(specs_trace_position[1,:])
-
-        r = R.from_quat(specs_trace_rotation)
-        r_inverse = r.inv() # get the inverse
-        new_predicted_positions = r_inverse.apply(stylus_trace) # apply the inverse to the stylus trace to rotate it back to specs frame origin rotation 
-        new_predicted_positions = new_predicted_positions - specs_trace_position # minus the specs displacement amount to bring it to specs origin
-
-        return new_predicted_positions
 
     @Slot(np.ndarray)
     def update_save_predicted_eeg_positions(self, message):
         self.predicted_positions = self.transform_spec_to_global_frame(message)
-        self.fpz_positon[:,0]  *= -1 # Rectify the x axis
 
         np.savetxt("21_predicted_positions_specs_frame.csv", message, delimiter=',')
         self.scatter.removeSeries(self.Predicted21_series) # remove the old series
@@ -337,13 +334,6 @@ class MainWindow(QMainWindow):
             self.scatter.addSeries(self.NZIZscatter_series)
             self.scatter.show()
 
-    def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
-
-        r = R.from_quat(specs_rotation) # rotate the orientation back to the axis
-        new_predicted_positions = r.apply(series)
-        new_predicted_positions = new_predicted_positions + specs_position # minus the displaced amoount
-        return new_predicted_positions
-
     @Slot(bool)
     def set_live_predicted_eeg_positions(self, message):
         self.live_predicted_eeg_positions = message
@@ -391,11 +381,35 @@ class MainWindow(QMainWindow):
                 scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
 
     def create_new_scatter_series(self, colour, size):
+
         self.scatter_series_new_series = QScatter3DSeries()
         self.scatter_series_new_series.setBaseColor(colour)
         self.scatter_series_new_series.setItemSize(size)
 
         return self.scatter_series_new_series
+
+    def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
+
+        r = R.from_quat(specs_rotation) # rotate the orientation back to the axis
+        new_predicted_positions = r.apply(series)
+        new_predicted_positions = new_predicted_positions + specs_position # add the displaced amoount
+        return new_predicted_positions
+
+    def transform_from_global_to_specs_frame (self, stylus_trace, specs_trace_position, specs_trace_rotation):
+
+        # specs_trace_rotation = specs_trace_rotation[:,[0,1,3,2]]
+        # print("Before column swap")
+        # print(specs_trace_position[1,:])
+        # specs_trace_position = specs_trace_position[:,[0,2,1]]
+        # print("After column swap")
+        # print(specs_trace_position[1,:])
+
+        r = R.from_quat(specs_trace_rotation)
+        r_inverse = r.inv() # get the inverse
+        new_predicted_positions = r_inverse.apply(stylus_trace) # apply the inverse to the stylus trace to rotate it back to specs frame origin rotation 
+        new_predicted_positions = new_predicted_positions - specs_trace_position # minus the specs displacement amount to bring it to specs origin
+
+        return new_predicted_positions
 
 
 if __name__ == '__main__':  

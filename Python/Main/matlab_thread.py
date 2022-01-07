@@ -68,7 +68,7 @@ class MatlabWorkerThread(QThread):
             if self._command == "NZIZ positions":
                 # nziz_positions = self.matlab_engine.get_nziz()
                 # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
-                nziz_positions = self.matlab_engine.Copy_of_get_nziz() # no spec transfofrm
+                nziz_positions = self.matlab_engine.no_transform_get_nziz() # no spec transfofrm
                 nziz_positions = np.array(nziz_positions)
                 print("Matlab: The NZIZ positions are:", nziz_positions)
                 
@@ -78,7 +78,7 @@ class MatlabWorkerThread(QThread):
 
             elif self._command == "21 positions":
                 #all_positions = self.matlab_engine.EEGpoints_quat() # no spec transform at all
-                all_positions = self.matlab_engine.Copy_of_EEGpoints_quat() # no spec transform at all
+                all_positions = self.matlab_engine.no_transform_EEGpoints_quat() # no spec transform at all
                 all_positions = np.array(all_positions)
                 print(all_positions)
                 print("Matlab: The All positions are:", all_positions)
