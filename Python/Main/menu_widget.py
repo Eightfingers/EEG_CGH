@@ -53,6 +53,7 @@ class MenuWidget(QWidget):
         # Another bool signal
         self.signals_to_optitrack2 = AppSignals() # show other markers 
 
+        # Used to save trace data 
         self.signals_to_main = AppSignals()
         self.signals_to_main.signal_int.connect(parent.save_trace_data) 
         
@@ -117,7 +118,6 @@ class MenuWidget(QWidget):
     @Slot()
     def do_nziz(self):
         self.change_trace_button_state(self.NZIZbutton, self.NZIZbutton_text)
-        np.savetxt("spec_position_before_trace.csv", self.parent.specs_position, delimiter=',')
 
     @Slot()
     def do_circum(self):
@@ -160,7 +160,7 @@ class MenuWidget(QWidget):
                 QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
         else:
             print("Menu: Predicting eeg positions")
-            message =[1,2,"21 positions"] # 1,2 is a dummy message
+            message =["21 positions"] 
             self.signals_to_matlab.signal_list.emit(message)
             self.predict_all_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
             self.predict_all_button.setText("Predicting ..")
@@ -172,7 +172,7 @@ class MenuWidget(QWidget):
         else:
             print("Menu: Predicting FPZ position")
             # message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
-            message =[1,2,"NZIZ positions"] # 1,2 is a dummy message
+            message =["NZIZ positions"] 
             self.signals_to_matlab.signal_list.emit(message)
             self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
             self.predictpz_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
@@ -197,10 +197,14 @@ class MenuWidget(QWidget):
             elif (button_label == "Start Ear to Ear"):
                 self.signals_to_main.signal_int.emit(self.EARTOEAR_BUTTON)
 
-            self.signals_to_status.signal_bool.emit(False) 
             self.signals_to_optitrack.signal_bool.emit(False) # Stop recording
+            self.signals_to_status.signal_bool.emit(False) # change status to stop recording
             self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
             self.signals_to_status.signal_list.emit(["Specs","Stopped"])
+
+            np.savetxt("nziz_spec_position_after_trace.csv", self.parent.specs_live_position, delimiter=',')
+            np.savetxt("nziz_spec_rotation_after_trace.csv", self.parent.specs_live_rotation, delimiter=',')
+
 
         elif (not self.NZIZbutton.isFlat() and not self.Circumbutton.isFlat() and not self.EartoearButton.isFlat()): # only press the button when it is the only button not flat?
             # Not setting border width here causes a bug where the background colour isnt changed at all ?
@@ -211,6 +215,8 @@ class MenuWidget(QWidget):
             button.setFlat(True)
             self.signals_to_status.signal_bool.emit(True) 
             self.signals_to_optitrack.signal_bool.emit(True) # Start recording
+            np.savetxt("nziz_spec_rotation_before_trace.csv", self.parent.specs_live_rotation, delimiter=',')
+            np.savetxt("nziz_spec_position_before_trace.csv", self.parent.specs_live_position, delimiter=',')
 
         else:
             QMessageBox.warning(self, "Warning", "Finish other recordings first!")

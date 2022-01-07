@@ -118,9 +118,7 @@ class OptitrackMainThread(QThread):
         position = np.array(position)
         rotation = np.array(rotation)
 
-
         # print( "Received frame for rigid body", id," ",position," ",rotation )
-
         if (id == 1004): # if the id is 1004, it is the stylus data
             self.stylus_position = position 
             self.signals_to_main_stylus_pos.signal_numpy.emit(position)

@@ -71,6 +71,7 @@ class MainWindow(QMainWindow):
         self.NZIZ_BUTTON = 1
         self.CIRCUM_BUTTON = 2
         self.EARTOEAR_BUTTON = 3
+        
         self.live_predicted_eeg_positions = False
         self.live_predicted_nziz_positions = False
 
@@ -181,6 +182,8 @@ class MainWindow(QMainWindow):
             np.savetxt("data_NZIZspecs.csv", self.specs, delimiter=',')
             np.savetxt("rotation_data_NZIZspecs.csv", self.specs_rotation, delimiter=',')
             self.NZIZ_data = self.stylus_data
+
+            # self.stylus_data[:,0] *= -1 # recitfy the x axis
             self.NZIZ_specs_data = self.specs
             self.NZIZ_specs_rotate = self.specs_rotation
             self.update_and_add_scatterNZIZ(self.stylus_data)
@@ -193,6 +196,7 @@ class MainWindow(QMainWindow):
             self.CIRCUM_data = self.stylus_data
             self.CIRCUM_specs_data = self.specs
             self.CIRCUM_specs_rotate = self.specs_rotation
+            # self.stylus_data[:,0] *= -1 # recitfy the x axis
             self.update_and_add_scatterCIRCUM(self.stylus_data)
 
         elif (message == self.EARTOEAR_BUTTON): # Ear to Ear
@@ -203,6 +207,7 @@ class MainWindow(QMainWindow):
             self.EartoEar_data = self.stylus_data
             self.EartoEar_specs_data = self.specs
             self.EartoEar_specs_rotate = self.specs_rotation
+            # self.stylus_data[:,0] *= -1 # recitfy the x axis
             self.update_and_add_scatterEarToEar(self.stylus_data)
 
     @Slot(np.ndarray)
@@ -213,7 +218,6 @@ class MainWindow(QMainWindow):
     # Clear all data shown in the graph
     @Slot()
     def clear_data(self):
-        
         # set it to false
         self.live_predicted_eeg_positions = False
         self.live_predicted_nziz_positions = False
