@@ -244,7 +244,7 @@ class MainWindow(QMainWindow):
         self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor, self.itemsize)
 
     @Slot(np.ndarray)
-    def update_save_fpz_position(self, message):
+    def update_fpz_position(self, message):
         self.fpz_positon = message
         np.savetxt("nziz_5_positions.csv", message, delimiter=',')
 

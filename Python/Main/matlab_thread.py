@@ -21,7 +21,7 @@ class MatlabMainThread(QThread):
 
         self.signals_to_main.signal_numpy.connect(parent.update_save_predicted_eeg_positions)
         self.signals_to_main.signal_bool.connect(parent.set_live_predicted_eeg_positions)
-        self.signals_to_main2.signal_numpy.connect(parent.update_save_fpz_position)
+        self.signals_to_main2.signal_numpy.connect(parent.update_fpz_position)
         self.signals_to_main2.signal_bool.connect(parent.set_live_fpz_positions)
 
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label) # change label function is found in status_widget.py
@@ -66,9 +66,9 @@ class MatlabWorkerThread(QThread):
     def run(self):
         try:
             if self._command == "NZIZ positions":
-                # nziz_positions = self.matlab_engine.get_nziz()
+                nziz_positions = self.matlab_engine.get_nziz()
                 # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
-                nziz_positions = self.matlab_engine.no_transform_get_nziz() # no spec transfofrm
+                # nziz_positions = self.matlab_engine.no_transform_get_nziz() # no spec transfofrm
                 nziz_positions = np.array(nziz_positions)
                 print("Matlab: The NZIZ positions are:", nziz_positions)
                 
@@ -77,8 +77,8 @@ class MatlabWorkerThread(QThread):
                 self.parent.signals_to_main2.signal_bool.emit(True) # Start global transformation
 
             elif self._command == "21 positions":
-                #all_positions = self.matlab_engine.EEGpoints_quat() # no spec transform at all
-                all_positions = self.matlab_engine.no_transform_EEGpoints_quat() # no spec transform at all
+                all_positions = self.matlab_engine.EEGpoints_quat() # no spec transform at all
+                # all_positions = self.matlab_engine.no_transform_EEGpoints_quat() # no spec transform at all
                 all_positions = np.array(all_positions)
                 print(all_positions)
                 print("Matlab: The All positions are:", all_positions)

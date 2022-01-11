@@ -202,10 +202,6 @@ class MenuWidget(QWidget):
             self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
             self.signals_to_status.signal_list.emit(["Specs","Stopped"])
 
-            np.savetxt("nziz_spec_position_after_trace.csv", self.parent.specs_live_position, delimiter=',')
-            np.savetxt("nziz_spec_rotation_after_trace.csv", self.parent.specs_live_rotation, delimiter=',')
-
-
         elif (not self.NZIZbutton.isFlat() and not self.Circumbutton.isFlat() and not self.EartoearButton.isFlat()): # only press the button when it is the only button not flat?
             # Not setting border width here causes a bug where the background colour isnt changed at all ?
             # I can't seem to replicate this on an standalone code that only has a button widget (without the rest of the dock and stuff)
@@ -215,8 +211,6 @@ class MenuWidget(QWidget):
             button.setFlat(True)
             self.signals_to_status.signal_bool.emit(True) 
             self.signals_to_optitrack.signal_bool.emit(True) # Start recording
-            np.savetxt("nziz_spec_rotation_before_trace.csv", self.parent.specs_live_rotation, delimiter=',')
-            np.savetxt("nziz_spec_position_before_trace.csv", self.parent.specs_live_position, delimiter=',')
 
         else:
             QMessageBox.warning(self, "Warning", "Finish other recordings first!")
