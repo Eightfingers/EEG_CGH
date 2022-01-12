@@ -1,8 +1,8 @@
 function [predicted] = EEGpoints_quat()
 
 %%% Circumference
-addpath('helperfuncs\');
-addpath('myfuncs');
+addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
+addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
 addpath('GUi_wrong');
 step = 1; % used to take only every 2nd data
 

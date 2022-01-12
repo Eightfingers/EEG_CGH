@@ -1,51 +1,113 @@
-function [predicted] = no_transform_EEGpoints_quat()
+% function predicted = EEGpoints_quat_30_9_2021()
 
-%%% Circumference
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
-% addpath('NotWorking\');
-step = 5; % used to take only every 2nd data
+addpath('helperfuncs\')
+addpath('myfuncs\')
+addpath('DataTests\30_9_2021')
 
-%%% NZIZ
-new_markers_nziz = readmatrix('data_NZIZstylus_specs_frame')
-step = 5; % used to take only every 2nd data
-new_markers_nziz = new_markers_nziz(1:step:end,:); 
-new_markers_nziz = [new_markers_nziz(:,1) new_markers_nziz(:,3) new_markers_nziz(:,2)]; 
+%% Load the different wanded data
+circumference = readmatrix('circum_shake_30_9_2021_quat.csv');
+ear2ear = readmatrix('ear2ear_shake_30_9_2021_quat.csv');       
+nziz = readmatrix ('NZIZ_shake_30_9_2021_quat.csv');
 
-%%% Ear to Ear
-new_markers_e2e = readmatrix('data_NZIZstylus_specs_frame')
-step = 5; % used to take only every 2nd data
-new_markers_e2e = new_markers_e2e(1:step:end,:); 
-new_markers_e2e = [new_markers_e2e(:,1) new_markers_e2e(:,3) new_markers_e2e(:,2)]; 
+%% Doing NZIZ
+stylus_data = nziz(:,3:9); 
+stylus_data = rmmissing(stylus_data);
+specs_data = nziz(:,35:41); 
+specs_data = rmmissing(specs_data);
 
-%%% Circum
-new_markers_circum = readmatrix('data_NZIZstylus_specs_frame')
-step = 5; % used to take only every 2nd data
-new_markers_circum = new_markers_circum(1:step:end,:); 
-new_markers_circum = [new_markers_circum(:,1) new_markers_circum(:,3) new_markers_circum(:,2)]; 
+stylus_dis_matrix = stylus_data(:,5:7); % stylus displacement
+specs_dis_matrix = specs_data(:,5:7); % extract the displacement vector out
+specs_dis_matrix = rmmissing(specs_dis_matrix);
+specs_quaternion_extracted = specs_data(:,1:4);
+specs_quaternion_extracted = rmmissing(specs_quaternion_extracted);
 
-%%% Circumferene
-circumference_dataset= new_markers_circum;
-circumference_dataset = rmmissing(circumference_dataset);
-circumference_x = circumference_dataset(:,1);
-circumference_y = circumference_dataset(:,2);
-circumference_z = circumference_dataset(:,3);
-%%% Ear to Ear
-e2e_dataset= new_markers_e2e;
-e2e_dataset = rmmissing(e2e_dataset);
-e2e_x = e2e_dataset(:,1);
-e2e_y = e2e_dataset(:,2);
-e2e_z = e2e_dataset(:,3);
+% flipping of axis
+stylus_dis_matrix = [stylus_dis_matrix(:,1), stylus_dis_matrix(:,3), stylus_dis_matrix(:,2)];
+specs_dis_matrix = [specs_dis_matrix(:,1), specs_dis_matrix(:,3), specs_dis_matrix(:,2)];
+specs_quaternion_extracted = [specs_quaternion_extracted(:,4), specs_quaternion_extracted(:,1), specs_quaternion_extracted(:,2), specs_quaternion_extracted(:,3)];
+
+% quaternion_extracted = quaternion_extracted(1:step:end,:);
+% dis_matrix_ear2ear = dis_matrix_ear2ear(1:step:end,:);
+
+% Transform w.r.t to specs frame
+new_markers_nziz = [];
+new_markers_nziz = transform_frame_quat(stylus_dis_matrix, specs_quaternion_extracted, specs_dis_matrix);
+
+%% Doing Ear to Ear 
+stylus_data = ear2ear(:,3:9); 
+stylus_data = rmmissing(stylus_data);
+specs_data = ear2ear(:,35:41); 
+specs_data = rmmissing(specs_data);
+
+stylus_dis_matrix = stylus_data(:,5:7); % stylus displacement
+specs_dis_matrix = specs_data(:,5:7); % extract the displacement vector out
+specs_dis_matrix = rmmissing(specs_dis_matrix);
+specs_quaternion_extracted = specs_data(:,1:4);
+specs_quaternion_extracted = rmmissing(specs_quaternion_extracted);
+
+% flipping of axis
+stylus_dis_matrix = [stylus_dis_matrix(:,1), stylus_dis_matrix(:,3), stylus_dis_matrix(:,2)];
+specs_dis_matrix = [specs_dis_matrix(:,1), specs_dis_matrix(:,3), specs_dis_matrix(:,2)];
+specs_quaternion_extracted = [specs_quaternion_extracted(:,4), specs_quaternion_extracted(:,1), specs_quaternion_extracted(:,2), specs_quaternion_extracted(:,3)];
+
+% quaternion_extracted = quaternion_extracted(1:step:end,:);
+% dis_matrix_ear2ear = dis_matrix_ear2ear(1:step:end,:);
+
+% Transform w.r.t to specs frame
+new_markers_e2e = [];
+new_markers_e2e = transform_frame_quat(stylus_dis_matrix, specs_quaternion_extracted, specs_dis_matrix);
+
+%% Doing circumference 
+stylus_data = circumference(:,3:9); 
+stylus_data = rmmissing(stylus_data);
+specs_data = circumference(:,35:41); 
+specs_data = rmmissing(specs_data);
+
+stylus_dis_matrix = stylus_data(:,5:7); % stylus displacement
+specs_dis_matrix = specs_data(:,5:7); % extract the displacement vector out
+specs_dis_matrix = rmmissing(specs_dis_matrix);
+specs_quaternion_extracted = specs_data(:,1:4);
+specs_quaternion_extracted = rmmissing(specs_quaternion_extracted);
+
+% flipping of axis
+stylus_dis_matrix = [stylus_dis_matrix(:,1), stylus_dis_matrix(:,3), stylus_dis_matrix(:,2)];
+specs_dis_matrix = [specs_dis_matrix(:,1), specs_dis_matrix(:,3), specs_dis_matrix(:,2)];
+specs_quaternion_extracted = [specs_quaternion_extracted(:,4), specs_quaternion_extracted(:,1), specs_quaternion_extracted(:,2), specs_quaternion_extracted(:,3)];
+
+% quaternion_extracted = quaternion_extracted(1:step:end,:);
+% dis_matrix_ear2ear = dis_matrix_ear2ear(1:step:end,:);
+
+% Transform w.r.t to specs frame
+new_markers_circum = [];
+new_markers_circum = transform_frame_quat(stylus_dis_matrix, specs_quaternion_extracted, specs_dis_matrix);
+
+plot3(new_markers_circum(:,1), new_markers_circum(:,2), new_markers_circum(:,3), '*');
+hold on;
+plot3(stylus_dis_matrix(:,1), stylus_dis_matrix(:,3), stylus_dis_matrix(:,2), 'd');
+legend('Transformed trace', 'original');
+
 %%% NZ-IZ
 nziz_dataset =  new_markers_nziz;
 nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
+%%% Ear to Ear
+e2e_dataset= new_markers_e2e;
+e2e_dataset = rmmissing(e2e_dataset);
+e2e_x = e2e_dataset(:,1);
+e2e_y = e2e_dataset(:,2);
+e2e_z = e2e_dataset(:,3);
+%%% Circumference
+circumference_dataset= new_markers_circum;
+circumference_dataset = rmmissing(circumference_dataset);
+circumference_x = circumference_dataset(:,1);
+circumference_y = circumference_dataset(:,2);
+circumference_z = circumference_dataset(:,3);
 
 %% Perform Geometerical Fitting and Extract the datatips from the plots.
 
-%%% Circumferene - The circumference is considered as and ellipse in 2D
+%%% Circumference - The circumference is considered as and ellipse in 2D
 %%% space. The points are orthogonally projected on the XZ plane and
 %%% linear least squares ellipse fitting is performed usin fitellipse() &
 %%% plotellipse()function
@@ -194,6 +256,7 @@ circum = [pt_circum.' pt1_circum.' pt2_circum.' pt3_circum.' pt4_circum.' pt5_ci
 ear2ear = [pt14_e2e.' pt15_e2e.' pt16_e2e.' pt17_e2e.' pt18_e2e.'];
 %%% NZIZ
 nziz = [pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
+
 %% Find Shortest Euclidean Distance.
 %%% The nearest point on the wanded data is found based on the predicted
 %%% points. This is done such that we care able to determine the left out
@@ -201,44 +264,77 @@ nziz = [pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
 %%% each predicted point and the wanded points are taken in the 2D plane. 
 
 %%% Circumference
-
 A1= [circumference_x circumference_y];
-[closest_array_circum] = find_closest_from_predicted_to_wanded(circum, A1);
+closest_array_circum = find_closest_from_predicted_to_wanded(circum, A1);
 
 %%% Ear to Ear
 A2 = [e2e_x e2e_z];
-[closest_array_e2e] = find_closest_from_predicted_to_wanded(ear2ear, A2);
+closest_array_e2e = find_closest_from_predicted_to_wanded(ear2ear, A2);
 
 %%%NZ-IZ
 A3 = [nziz_y nziz_z];
-[closest_array_nziz] = find_closest_from_predicted_to_wanded(nziz, A3);
+closest_array_nziz = find_closest_from_predicted_to_wanded(nziz, A3);
 
-%% Find left out axis values
-%%% Circumference - The circumference is orthogonally projected in the XZ
-%%% plane and the Y values need to be found. 
-%%% If A(:,1)==closest(:,1) and A(:3)==closest(:,2). Then we need to extract
-%%% that particular entire row and specifically its Y value (2nd column).
-% unique_circumference_dataset = unique(circumference_dataset, 'rows');
-% closest_array_circum = unique(closest_array_circum, 'rows');
-interpolate_closest_circum = find_left_out_axis_values(closest_array_circum, circumference_dataset,3 , 1, 2);
+%% Find left out axis values 
+% Circumference - The circumference is orthogonally projected in the XZ
+% plane and the Y values need to be found. 
+% If A(:,1)==closest(:,1) and A(:3)==closest(:,2). Then we need to extract
+% that particular entire row and specifically its Y value (2nd column).
+
+% % % To confusing to make it to a function so I left it like this. Shouldn't
+% % % be too much of a problem.
+
+interpolate_closest_circum= [];
+for i = 1:1:length(closest_array_circum) 
+    distances_circum_1 = sqrt(sum(bsxfun(@minus, A1,closest_array_circum(i,:) ).^2,2));
+    n = 4; 
+    [~, ascendIdx] = sort(distances_circum_1); 
+    ascendIdx(ascendIdx==closest_array_circum(i,:)) = [];  %remove the pt point
+    ANearest_circum = new_markers_circum(ascendIdx(1:n),:);  % 4 nearest points in 3D 
+
+    xq = closest_array_circum(i,1); % z value 
+    zq = interp1(ANearest_circum(:,1), ANearest_circum(:,3), xq, 'linear');
+    
+    interpolate_closest_circum = [interpolate_closest_circum; zq]; % append to the interpolate losest
+end
 trans_intrapolate_closest_circum = interpolate_closest_circum.';
 
 %%% Ear to Ear - The ear to ear is orthogonally projected in the XY
 %%% plane and the Z values need to be found. 
 %%% If A(:,1)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its Z value (3rd column)
-% unique_e2e_dataset = unique(e2e_dataset, 'rows');
-% closest_array_e2e = unique(closest_array_e2e , 'rows');
-interpolate_closest_e2e = find_left_out_axis_values(closest_array_e2e, e2e_dataset, 2, 1, 1);
+interpolate_closest_e2e= [];
+for j = 1:1:length(closest_array_e2e) 
+    distances_e2e_1 = sqrt(sum(bsxfun(@minus, A2,closest_array_e2e(j,:) ).^2,2));
+    n = 4; 
+    [~, ascendIdx] = sort(distances_e2e_1); 
+    ascendIdx(ascendIdx==closest_array_e2e(j,:)) = [];  %remove the pt point
+    ANearest_e2e = new_markers_e2e(ascendIdx(1:n),:);  % 4 nearest points in 3D 
+
+    xq1 = closest_array_e2e(j,2); % x value 
+    yq = interp1(ANearest_e2e(:,3), ANearest_e2e(:,2), xq1, 'linear');
+    
+    interpolate_closest_e2e = [interpolate_closest_e2e; yq]; % append to the interpolate losest
+end
 trans_intrapolate_closest_e2e = interpolate_closest_e2e.';
 
 %%% NZIZ - The  NZIZ is orthogonally projected in the
 %%% ZY plane and the X values need to be found. 
 %%% If A(:,3)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its X value (1st column).
-% unique_nziz_dataset = unique(nziz_dataset, 'rows');
-% closest_array_nziz = unique(closest_array_nziz, 'rows');
-interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, nziz_dataset,1, 2, 1);
+interpolate_closest_nziz= [];
+for k = 1:1:length(closest_array_nziz) 
+    distances_nziz_1 = sqrt(sum(bsxfun(@minus, A3,closest_array_nziz(k,:) ).^2,2));
+    n = 4; 
+    [~, ascendIdx] = sort(distances_nziz_1); 
+    ascendIdx(ascendIdx==closest_array_nziz(k,:)) = [];  %remove the pt point
+    ANearest_nziz = new_markers_nziz(ascendIdx(1:n),:);  % 4 nearest points in 3D 
+
+    xq2 = closest_array_nziz(k,1); % x value 
+    xxq = interp1(ANearest_nziz(:,2), ANearest_nziz(:,1), xq2, 'linear');
+    
+    interpolate_closest_nziz = [interpolate_closest_nziz; xxq]; % append to the interpolate losest
+end
 trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 
 %% Reorganize the data
@@ -261,6 +357,7 @@ convert_final_nziz = num2cell(final_nziz);
 nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
 final_nziz_label = [nziz_label;  convert_final_nziz];
  
+
 %% Append all together. 
 %%% Create a new variable and append final_circumference, final_e2e and
 %%% final_nziz together.
@@ -289,20 +386,8 @@ midpoint_T4 = mean(common_T4,2);
 
 %%% 17 electrode positions
 final_points = [midpoint_Fpz final_points_mat(:,2) final_points_mat(:,3) midpoint_T4 final_points_mat(:,5) final_points_mat(:,6) midpoint_Oz final_points_mat(:,8) final_points_mat(:,9) midpoint_T3 final_points_mat(:,11) final_points_mat(:,12) final_points_mat(:,14) midpoint_Cz final_points_mat(:,16) final_points_mat(:,19) final_points_mat(:,21)];
-%% Plotting
-% ff=figure;
-% ff.Position = [10 10 550 400]; 
-% xlabel('X')
-% ylabel('Y')
-% zlabel('Z')
-% scatter3(final_points(1:1,:),final_points(2:2,:),final_points(3:3,:),'r*');
-% hold on
-% scatter3(new_markers_static(:,1), new_markers_static(:,2),new_markers_static(:,3));
-% % hold on
-% % scatter3(final_points_converted_x, final_points_converted_y, final_points_converted_z);
-% legend('Final points','Initial 22 electrodes');
-% hold on
-% scatter3(D1_x,D1_y,D1_z,'p');
+% scatter3(final_points(:,1), final_points(:,2), final_points(:,3),'r*');
+
 %% Final 4 Points 
 
 % MATLAB XYZ convention
@@ -329,27 +414,29 @@ Pz = final_points(17,:);
 C4 = final_points(15,:);
 C3 = final_points(13,:);
 % [ x, y, z ; x, y, z;]
+
 %%% P3 spline approximation
 %%% Find X
 %%% Extract out the X and Y values of spline points
 spline_pts = [T5; Pz; T6];
 x_vector = spline_pts(:,1);
 z_vector = spline_pts(:,3);
+
 [xxdata, zzdata] = splineplot(x_vector, z_vector);
 [P3_XZ,~,~] = interparc(0.25, xxdata, zzdata,'spline');
+
 % Visual XZ spline plot
-% figure;
-% plot(P3_XZ(1), P3_XZ(2) ,'d');
+% plot(x_vector, z_vector, '*');
 % hold on;
-% plot(x_vector, z_vector, 'o');
-% plot(xxdata, zzdata);
+% plot(xxdata, zzdata, 'o', 'MarkerSize', 10);
+% plot(P3_XZ(:,1), P3_XZ(:,2), 'd', 'MarkerSize', 10);
 
 %%% Find Y & Z
 %%% Extract out the Y and Z values of spline points
 spline_pts2 = [O1; C3; Fp1];
-y_spline = spline_pts2(:,2);
-z_spline = spline_pts2(:,3);
-[xx_fit2, yy_fit2]  = splineplot(y_spline, z_spline);
+y_vector = spline_pts2(:,2);
+z_vector = spline_pts2(:,3);
+[xx_fit2, yy_fit2] = splineplot(y_vector, z_vector);
 [P3_YZ,~,~] = interparc(0.25, xx_fit2, yy_fit2,'spline');
 P3 = [P3_XZ(1) , P3_YZ(1), P3_YZ(2)];
 % plot3(P3(1), P3(2), P3(3), 'ko');
@@ -358,8 +445,7 @@ P3 = [P3_XZ(1) , P3_YZ(1), P3_YZ(2)];
 % figure;
 % plot(P3_YZ(1), P3_YZ(2),'d');
 % hold on;
-% plot(y_spline, z_spline, 'o');
-% plot(xx_fit2, yy_fit2);
+% plot(xx_fit2, yy_fit2, '*');
 
 %%% P4 spline approximation
 %%% Find X
@@ -368,6 +454,7 @@ x_vector = spline_pts(:,1);
 z_vector = spline_pts(:,3);
 [xxdata, zzdata] = splineplot(x_vector, z_vector);
 [P4_XZ,~,~] = interparc(0.75, xxdata, zzdata,'spline');
+
 % % Visual XZ spline plot
 % figure;
 % plot(P4_XZ(1), P4_XZ(2) ,'d');
@@ -397,7 +484,7 @@ spline_pts4 = [F7; Fz; F8];
 x_spline = spline_pts4(:,1);
 z_spline = spline_pts4(:,3);
 [xxdata4, zzdata4] = splineplot(x_spline, z_spline);
-[F4_XZ,~,~] = interparc(0.80, xxdata4,zzdata4,'spline'); % F4 is located from the right 
+[F4_XZ,~,~] = interparc(0.80, xxdata4, zzdata4,'spline'); % F4 is located from the right 
 
 % % Visual XZ spline plot
 % figure;
@@ -449,18 +536,18 @@ F3 = [F3_XZ(1) , F3_YZ(1), F3_YZ(2)];
 % hold on;
 
 predicted = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; C3; F4; F3; P3; P4 ];
-predicted = [predicted(:,1), predicted(:,3), predicted(:,2)];
 four_points = [F4; F3; P3; P4];
 
-% plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
+plot3(predicted(:,1), predicted(:,2), predicted(:,3), '*');
+hold on;
+plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
+
 % hold on;
 % plot(F3_YZ(1), F3_YZ(2), 'o');
-% figure;
-% title('Predicted Electrode Locations');
-% plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
-% xlabel('x');
-% ylabel('y');
-% zlabel('z');
-
-end
+figure;
+title('Predicted Electrode Locations');
+plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
+xlabel('x');
+ylabel('y');
+zlabel('z');
 

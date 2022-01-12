@@ -1,28 +1,59 @@
-function [predicted] = no_transform_EEGpoints_quat()
+% function [predicted] = EEGpoints_quat()
 
 %%% Circumference
 addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
 addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
-% addpath('NotWorking\');
-step = 5; % used to take only every 2nd data
+addpath('10_1_2022\transform done in python');
 
-%%% NZIZ
-new_markers_nziz = readmatrix('data_NZIZstylus_specs_frame')
-step = 5; % used to take only every 2nd data
-new_markers_nziz = new_markers_nziz(1:step:end,:); 
-new_markers_nziz = [new_markers_nziz(:,1) new_markers_nziz(:,3) new_markers_nziz(:,2)]; 
+stylus_data = readmatrix('data_CIRCUMstylus');
+stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
+stylus_data = rmmissing(stylus_data);
+plot3(stylus_data(:,1), stylus_data(:,2), stylus_data(:,3), 'rd');
+hold on;
+% stylus_data = stylus_data(1:step:end,:); 
+
+% Quaternion way
+quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,3), quaternion_extracted(:,2)];
+% quaternion_extracted = quaternion_extracted(1:step:end,:);
+dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
+% dis_matrix_circum = dis_matrix_circum(1:step:end,:); 
+new_markers_circum = transform_frame_quat(stylus_data, quaternion_extracted, dis_matrix_circum);
+plot3(new_markers_circum(:,1), new_markers_circum(:,2), new_markers_circum(:,3), 'rd');
 
 %%% Ear to Ear
-new_markers_e2e = readmatrix('data_NZIZstylus_specs_frame')
-step = 5; % used to take only every 2nd data
-new_markers_e2e = new_markers_e2e(1:step:end,:); 
-new_markers_e2e = [new_markers_e2e(:,1) new_markers_e2e(:,3) new_markers_e2e(:,2)]; 
+stylus_data = readmatrix('data_EarToEarstylus');
+stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
+stylus_data = rmmissing(stylus_data);
+% stylus_data = stylus_data(1:step:end,:);
+new_markers_e2e = stylus_data;
+plot3(stylus_data(:,1), stylus_data(:,2), stylus_data(:,3), 'rd');
 
-%%% Circum
-new_markers_circum = readmatrix('data_NZIZstylus_specs_frame')
-step = 5; % used to take only every 2nd data
-new_markers_circum = new_markers_circum(1:step:end,:); 
-new_markers_circum = [new_markers_circum(:,1) new_markers_circum(:,3) new_markers_circum(:,2)]; 
+% Quaternion way
+quaternion_extracted = readmatrix('rotation_data_EarToEarspecs'); % extract the rotation vector out
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,3), quaternion_extracted(:,2)];
+% quaternion_extracted = quaternion_extracted(1:step:end,:);
+dis_matrix_ear2ear = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
+% dis_matrix_ear2ear = dis_matrix_ear2ear(1:step:end,:);
+new_markers_e2e = transform_frame_quat(stylus_data, quaternion_extracted, dis_matrix_circum);
+
+%%% NZIZ
+stylus_data = readmatrix('data_NZIZstylus');
+stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
+stylus_data = rmmissing(stylus_data);
+% stylus_data = stylus_data(1:step:end,:);
+new_markers_nziz = stylus_data;
+plot3(stylus_data(:,1), stylus_data(:,2), stylus_data(:,3), 'rd');
+hold on;
+
+% % Quaternion way
+quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,3), quaternion_extracted(:,2)];
+% quaternion_extracted = quaternion_extracted(1:step:end,:);
+
+dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+% dis_matrix_nziz = dis_matrix_nziz(1:step:end,:); 
+new_markers_nziz = transform_frame_quat(stylus_data, quaternion_extracted, dis_matrix_circum);
 
 %%% Circumferene
 circumference_dataset= new_markers_circum;
@@ -42,6 +73,20 @@ nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
+
+plot3(nziz_dataset(:,1), nziz_dataset(:,2), nziz_dataset(:,3), 'bd');
+hold on;
+plot3(e2e_dataset(:,1), e2e_dataset(:,2), e2e_dataset(:,3), 'bd');
+plot3(circumference_dataset(:,1), circumference_dataset(:,2), circumference_dataset(:,3), 'bd');
+
+return;
+
+% plot3(final_points(:,1), final_points(:,2), final_points(:,3), 'kd', 'markersize', 20);
+% plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'rd', 'markersize', 20);
+% plot3(new_markers_e2e(:,1), new_markers_e2e(:,2), new_markers_e2e(:,3), 'o');
+% plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'd');
+% title('All positions');
+% end
 
 %% Perform Geometerical Fitting and Extract the datatips from the plots.
 
@@ -452,15 +497,14 @@ predicted = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; 
 predicted = [predicted(:,1), predicted(:,3), predicted(:,2)];
 four_points = [F4; F3; P3; P4];
 
-% plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
+% plotting
+
+% plot3(new_markers_circum(:,1), new_markers_circum(:,2), new_markers_circum(:,3), 'kd');
 % hold on;
-% plot(F3_YZ(1), F3_YZ(2), 'o');
-% figure;
-% title('Predicted Electrode Locations');
-% plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
-% xlabel('x');
-% ylabel('y');
-% zlabel('z');
-
-end
-
+% plot3(final_points(:,1), final_points(:,2), final_points(:,3), 'kd', 'markersize', 20);
+% plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'rd', 'markersize', 20);
+% plot3(new_markers_e2e(:,1), new_markers_e2e(:,2), new_markers_e2e(:,3), 'o');
+% plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'd');
+% title('All positions');
+% % end
+% 

@@ -1,17 +1,30 @@
-function final_nziz_python = no_transform_get_nziz()
+% function final_nziz_python = get_nziz(nziz ,nziz_spec)
 
 addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
 addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus_specs_frame')
-step = 5; % used to take only every 2nd data
-stylus_data = stylus_data(1:step:end,:); 
+stylus_data = readmatrix('data_NZIZstylus');
 stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-% stylus_data = rmmissing(stylus_data);
+stylus_data = rmmissing(stylus_data);
+quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,3), quaternion_extracted(:,2)];
+dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+
+plot3(stylus_data(:,1), stylus_data(:,2), stylus_data(:,3), '*');
+hold on ;
+
+% Quaternion way
+new_markers_nziz = [];
+rotation_matrix = [];
+new_markers_nziz = transform_frame_quat(stylus_data, quaternion_extracted, dis_matrix_nziz);
+% 
+plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'o', 'MarkerSize',10);
+hold on;
 
 %%% NZ-IZ
-nziz_dataset =  stylus_data;
+nziz_dataset =  new_markers_nziz;
+nziz_dataset = rmmissing(new_markers_nziz);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
@@ -118,5 +131,5 @@ hold on ;
 % nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
 % final_nziz_label = [nziz_label;  predicted_nziz];
 
-end
+% end
 

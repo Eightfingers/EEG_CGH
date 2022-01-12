@@ -1,17 +1,84 @@
-function final_nziz_python = no_transform_get_nziz()
+function final_nziz_python = get_nziz_30_9_2021()
 
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
+addpath('30_9_2021');
+addpath('helperfuncs');
+addpath('myfuncs');
 
-%%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus_specs_frame')
-step = 5; % used to take only every 2nd data
-stylus_data = stylus_data(1:step:end,:); 
-stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-% stylus_data = rmmissing(stylus_data);
+%% NZIZ
+%% Load the different wanded data
+data = readmatrix('NZIZ_shake_30_9_2021.csv');
+
+quaternion_data = readmatrix('quat_NZIZ_shake_30_9_2021');
+
+stylus_data = data(:,3:8); 
+stylus_data = rmmissing(stylus_data);
+
+% plot3(stylus_data(:,1), stylus_data(:,3), stylus_data(:,2), 'd');
+
+specs_data = data(:,34:39); 
+specs_data = rmmissing(specs_data);
+
+rot_matrix_stylus = specs_data(:,1:3); % extract the rotation vector out
+rot_matrix_stylus = rmmissing(rot_matrix_stylus);
+
+dis_matrix_nziz = specs_data(:,4:6); % extract the displacement vector out
+dis_matrix_nziz = [dis_matrix_nziz(:,1), dis_matrix_nziz(:,3), dis_matrix_nziz(:,2)];
+dis_matrix_nziz = rmmissing(dis_matrix_nziz);
+
+x_rot_circum = rot_matrix_stylus(:,1);
+y_rot_circum = rot_matrix_stylus(:,3);
+z_rot_circum = rot_matrix_stylus(:,2);
+
+quaternion_extracted = quaternion_data(:,35:38);
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
+quaternion_extracted = rmmissing(quaternion_extracted);
+
+% Euler Matrix rotation
+% for i = 1:1:length(stylus_data)
+%     disp(i);
+%     rot_vector_nziz = [-x_rot_circum(i), -y_rot_circum(i), -z_rot_circum(i)];
+% %     rot_vector = [-z_rot(i), -y_rot(i), -x_rot(i)];
+%     
+%     dis_vector_circum = dis_matrix_nziz(i,:);
+%     transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
+% 
+%     wand_vector_circum = [stylus_data(i,4); ... % X,Y,Z 
+%               stylus_data(i,6); ...
+%               stylus_data(i,5); ...
+%                1];
+% 
+%     new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
+%     new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
+% end
+% 
+% plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'd');
+% hold on;
+
+% Quaternion way
+new_markers_nziz = [];
+% disp("Doing quaternion");
+for i = 1:1:length(stylus_data)
+    
+%     disp(i);
+    quat_vector = quaternion(quaternion_extracted(i,:));
+    RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
+    rot_vector_nziz = [-RPY1(1), -RPY1(3), -RPY1(2)];
+    dis_vector_circum = dis_matrix_nziz(i,:);
+    wand_vector_circum = [stylus_data(i,4); ... % X,Y,Z 
+              stylus_data(i,6); ...
+              stylus_data(i,5); ...
+               1];
+    transform_matrix_circum = construct_matrix_transform_xyz(dis_vector_circum, rot_vector_nziz);    
+    new_vector_nziz = inv(transform_matrix_circum) * wand_vector_circum;
+    new_markers_nziz = [new_markers_nziz; new_vector_nziz.';];
+
+end
+
+% plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'o', 'MarkerSize',10);
 
 %%% NZ-IZ
-nziz_dataset =  stylus_data;
+nziz_dataset =  new_markers_nziz;
+nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
@@ -54,9 +121,6 @@ zdata_nziz_front = points(2,:);
 %% Combine them back togather
 ydata_nziz = [ydata_nziz_back ydata_nziz_front];
 zdata_nziz = [zdata_nziz_back zdata_nziz_front];
-
-plot3(zeros(length(ydata_nziz), 1), ydata_nziz.', zdata_nziz.');
-
 %% Predict EEG positions
 %%% The EEG positions are determined using the conventional standard 10/20
 %%% system. Here we are using the Distance Method/ Path Independant Method.
@@ -69,14 +133,12 @@ plot3(zeros(length(ydata_nziz), 1), ydata_nziz.', zdata_nziz.');
 [pt22_nziz,~,~] = interparc(0.30,ydata_nziz,zdata_nziz,'spline');
 [pt23_nziz,~,~] = interparc(0.50,ydata_nziz,zdata_nziz,'spline');
 [pt24_nziz,~,~] = interparc(0.70,ydata_nziz,zdata_nziz,'spline');
-[pt25_nziz,~,~] = interparc(0.90,ydata_nziz,zdata_nziz,'spline');
+[pt25_nziz,~,~] = interparc(0.95,ydata_nziz,zdata_nziz,'spline');
 [pt26_nziz,~,~] = interparc(1,ydata_nziz,zdata_nziz,'spline');
 
 %% Collate Data Points
 %%% NZIZ
 nziz = [pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
-% nziz = [pt26_nziz.' pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
-% nziz = [pt21_nziz.' pt20_nziz.'];
 
 %% Find Shortest Euclidean Distance.
 %%% The nearest point on the wanded data is found based on the predicted
@@ -92,9 +154,7 @@ closest_array_nziz = find_closest_from_predicted_to_wanded(nziz, A3);
 %%% ZY plane and the X values need to be found. 
 %%% If A(:,3)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its X value (1st column).
-nziz_dataset = unique(nziz_dataset, 'rows');
-interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, nziz_dataset, 1, 2, 1);
-
+interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, A3, nziz_dataset, 1, 2, 1);
 trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 
 %% Reorganize the data
@@ -102,21 +162,6 @@ trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 %%% NZIZ 
 final_nziz_python = [trans_intrapolate_closest_nziz; nziz(1:1,:); nziz(2:2,:)];
 final_nziz_python = final_nziz_python.';
-
-% Y upwards convention for the GUI
-final_nziz_python = [final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2)]; 
-Fpz = final_nziz_python(1,:);
-% final_nziz_python = final_nziz_python *1000; % convert m to mm
-plot3(final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2), 'd', 'MarkerSize', 20);
-hold on ;
-% xlabel('x');
-% ylabel("y");
-% zlabel("z")
-
-% 
-% predicted_nziz = num2cell(final_nziz_python);
-% nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
-% final_nziz_label = [nziz_label;  predicted_nziz];
+final_nziz_python = [final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2)];
 
 end
-

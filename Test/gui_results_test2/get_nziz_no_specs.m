@@ -1,17 +1,22 @@
-function final_nziz_python = no_transform_get_nziz()
+% function Fpz = get_nziz_no_specs( nziz ,nziz_spec)
 
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
+addpath('helperfuncs');
+addpath('myfuncs');
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus_specs_frame')
-step = 5; % used to take only every 2nd data
-stylus_data = stylus_data(1:step:end,:); 
-stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-% stylus_data = rmmissing(stylus_data);
+stylus_data_before = readmatrix('data_NZIZstylus');
+quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
+quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,2), quaternion_extracted(:,3)];
+dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+
+%% Y upwards from the GUI
+stylus_data_before = [stylus_data_before(:,1), stylus_data_before(:,3), stylus_data_before(:,2)];
+plot3(stylus_data_before(:,1), stylus_data_before(:,2), stylus_data_before(:,3), '*');
+hold on ;
 
 %%% NZ-IZ
-nziz_dataset =  stylus_data;
+nziz_dataset =  stylus_data_before;
+nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
@@ -55,8 +60,6 @@ zdata_nziz_front = points(2,:);
 ydata_nziz = [ydata_nziz_back ydata_nziz_front];
 zdata_nziz = [zdata_nziz_back zdata_nziz_front];
 
-plot3(zeros(length(ydata_nziz), 1), ydata_nziz.', zdata_nziz.');
-
 %% Predict EEG positions
 %%% The EEG positions are determined using the conventional standard 10/20
 %%% system. Here we are using the Distance Method/ Path Independant Method.
@@ -75,8 +78,6 @@ plot3(zeros(length(ydata_nziz), 1), ydata_nziz.', zdata_nziz.');
 %% Collate Data Points
 %%% NZIZ
 nziz = [pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
-% nziz = [pt26_nziz.' pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
-% nziz = [pt21_nziz.' pt20_nziz.'];
 
 %% Find Shortest Euclidean Distance.
 %%% The nearest point on the wanded data is found based on the predicted
@@ -92,9 +93,7 @@ closest_array_nziz = find_closest_from_predicted_to_wanded(nziz, A3);
 %%% ZY plane and the X values need to be found. 
 %%% If A(:,3)==closest(:,1) and A(:2)==closest(:,2). Then we need to extract
 %%% that particular entire row and specifically its X value (1st column).
-nziz_dataset = unique(nziz_dataset, 'rows');
 interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, nziz_dataset, 1, 2, 1);
-
 trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
 
 %% Reorganize the data
@@ -107,16 +106,12 @@ final_nziz_python = final_nziz_python.';
 final_nziz_python = [final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2)]; 
 Fpz = final_nziz_python(1,:);
 % final_nziz_python = final_nziz_python *1000; % convert m to mm
-plot3(final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2), 'd', 'MarkerSize', 20);
+plot3(final_nziz_python(:,1), final_nziz_python(:,3), final_nziz_python(:,2), 'd');
 hold on ;
-% xlabel('x');
-% ylabel("y");
-% zlabel("z")
-
 % 
 % predicted_nziz = num2cell(final_nziz_python);
 % nziz_label = {'Fpz' 'Fz' 'Cz' 'Pz' 'Oz'};
 % final_nziz_label = [nziz_label;  predicted_nziz];
 
-end
+% end
 

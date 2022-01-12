@@ -1,7 +1,7 @@
 % function Fpz = get_nziz_no_specs( nziz ,nziz_spec)
 
-addpath('helperfuncs');
-addpath('myfuncs');
+addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
+addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
 
 %%% NZIZ
 stylus_data_before = readmatrix('data_NZIZstylus');
