@@ -37,6 +37,11 @@ class MainWindow(QMainWindow):
         self.marker_size = 7
         self.bigger_marker_size = 10
 
+        # electrode accuracy placement range 
+        self.threshold_placement_range = 0.008 # 0.008m , 8mm 
+        self.predicted_eeg_positions_with_electrodes = [] #empty list that contains the 21 predicted positions with reflective markers attached on it
+        self.unassigned_electrode_markers = None
+
         # Axis range
         self.axis_range = 5
 
@@ -198,14 +203,14 @@ class MainWindow(QMainWindow):
         self.scatter.removeSeries(self.CIRCUMscatter_series)
         self.scatter.removeSeries(self.EarToEarscatter_series)
         self.scatter.removeSeries(self.Predicted21_series)
-        self.scatter.removeSeries(self.all_markers_series)
+        self.scatter.removeSeries(self.reflective_markers_series)
 
         self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.marker_size)
         self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor, self.marker_size)
         self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor, self.marker_size)
         self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor, self.marker_size)
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.marker_size)
-        self.all_markers_series = self.create_new_scatter_series(self.yellow_qcolor, self.marker_size)
+        self.reflective_markers_series = self.create_new_scatter_series(self.yellow_qcolor, self.marker_size)
 
     @Slot(np.ndarray)
     def update_fpz_position(self, message):
@@ -271,13 +276,24 @@ class MainWindow(QMainWindow):
         self.live_predicted_nziz_positions = message
 
     # This is not the predicted position, rather it will show positions of
-    # electrode with optitrack markers
+    # electrode with optitrack markers. The message here contains the positions of reflective markers
     @Slot(np.ndarray)
     def show_electrode_positions(self, message):
-        self.scatter.removeSeries(self.all_markers_series) # remove the old position
-        self.all_markers_series = self.create_new_scatter_series(self.grey_qcolor, self.marker_size)
-        self.add_list_to_scatterdata2D(self.all_markers_series, message)
-        self.scatter.addSeries(self.all_markers_series)
+        self.scatter.removeSeries(self.reflective_markers_series) # remove the old position
+
+        self.reflective_markers_series = self.create_new_scatter_series(self.grey_qcolor, self.marker_size)
+        self.reflective_marker_in_eeg_position = self.create_new_scatter_series(self.green_qcolor, self.marker_size) # reflective marker in eeg position
+
+        # Check if the optitrack markers are near any electrode positions
+        if self.near_predicted_points(message):
+            self.add_list_to_scatterdata2D(self.reflective_marker_in_eeg_position, self.predicted_eeg_positions_with_electrodes)
+            self.scatter.addSeries(self.reflective_marker_in_eeg_position)
+        else:
+            self.add_list_to_scatterdata2D(self.reflective_markers_series, self.unassigned_electrode_markers)
+            self.scatter.addSeries(self.reflective_markers_series)
+            
+
+        self.scatter.addSeries(self.reflective_markers_series)
         self.scatter.show()
 
     @Slot(np.ndarray)
@@ -309,9 +325,19 @@ class MainWindow(QMainWindow):
 
         return self.scatter_series_new_series
 
-    def in_range_of_points():
-        pass
-        return 
+    def near_predicted_points(self, sample_data):
+        data_set = self.predicted_positions
+        for sample in sample_data:
+            for data in data_set:
+                magnitude_difference = np.absolute(np.linalg.norm(sample) - np.linalg.norm(data))
+                if magnitude_difference < self.threshold_placement_range:
+                    index = np.where(data_set == data) 
+                    self.predicted_eeg_positions_with_electrodes = np.delete(self.predicted_positions, index) # Found the attached electrode
+                    self.predicted_positions = np.delete(self.predicted_positions, index) # Delete from the lsit of 21 positions 
+                    index_sample = np.where(sample_data == sample)
+                    self.unassigned_electrode_markers = np.delete(sample_data, index_sample) # Not yet attached electrodes
+                    return True
+        return False
 
 
 if __name__ == "__main__":
