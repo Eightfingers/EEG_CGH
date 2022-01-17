@@ -12,7 +12,6 @@ from menu_widget import MenuWidget
 from status_widget import StatusWidget
 # from optitrack_thread import OptitrackMainThread
 from optitrack_thread import OptitrackMainThread
-import os
 from scipy.spatial.transform import Rotation as R
 
 # https://doc.qt.io/qtforpython/PySide6/QtDataVisualization/QAbstract3DGraph.html#PySide6.QtDataVisualization.PySide6.QtDataVisualization.QAbstract3DGraph.currentFps
