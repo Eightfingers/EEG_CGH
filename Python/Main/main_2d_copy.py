@@ -1,6 +1,6 @@
 import sys
 from PySide6 import QtWidgets
-from PySide6.QtCore import QPointF, QSize, QStringConverter, Qt, Slot
+from PySide6.QtCore import QPointF, QSize, QStringConverter, Qt, Slot, QTimer
 from PySide6.QtGui import QGuiApplication, QVector3D, QColor, QPainter
 from PySide6.QtWidgets import QBoxLayout, QDockWidget, QHBoxLayout, QMainWindow, QApplication, QSizePolicy, QVBoxLayout, QWidget
 from PySide6.QtCharts import QAbstractAxis, QCategoryAxis, QChart, QChartView, QLegend, QScatterSeries, QValueAxis, QBarCategoryAxis
@@ -11,99 +11,74 @@ from status_widget import StatusWidget
 # from optitrack_thread import OptitrackMainThread
 from optitrack_thread import OptitrackMainThread
 from scipy.spatial.transform import Rotation as R
+import numpy as np
+from pyqtgraph import PlotWidget, plot
+import pyqtgraph as pg
+from random import randint
+import os
 
-# https://doc.qt.io/qtforpython/PySide6/QtDataVisualization/QAbstract3DGraph.html#PySide6.QtDataVisualization.PySide6.QtDataVisualization.QAbstract3DGraph.currentFps
-# Numpy data is processed in Nx3 format
-
-# 2D GUI format
+# Adapted from https://www.pythonguis.com/tutorials/plotting-pyqtgraph/ the tutorial on updating data
+# pyQtgraph docs https://pyqtgraph.readthedocs.io/en/latest/index.html 
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, parent=None):
-        QMainWindow.__init__(self, parent)
+    def __init__(self):
+        super().__init__()
 
-        self.setWindowTitle('CGH EEG Optitrack Assisted EEG localization')
-
-        # Colours used for the graphs
-        self.red_qcolor = QColor(255, 0, 0) # NZIZ
-        self.green_qcolor = QColor(0, 255, 0) # Circum
-        self.blue_qcolor = QColor(0, 0, 255) # Ear2Ear
-        self.yellow_qcolor = QColor(255, 255, 0) # Stylus position
-        self.black_qcolor = QColor(0, 0 ,0) # Specs position
-        self.orange_qcolor = QColor(255, 165, 0) # Predicted position
-        self.grey_qcolor = QColor(128,128,128) # Reflective Markers
-
-        # Size of graph markers
-        self.marker_size = 10
-        self.bigger_marker_size = 12
+        self.setWindowTitle('Qt DataVisualization 2D scatter')
+        self.graphWidget = pg.PlotWidget()
+        self.graphWidget.plotItem.setTitle("2D view")
+        self.setCentralWidget(self.graphWidget)
         
+        self.graphWidget.setBackground('w')
+
         self.live_predicted_eeg_positions = False
         self.live_predicted_nziz_positions = False
 
-        # Each of this series is used to represent data on the graph
-        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.marker_size)
-        self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor, self.marker_size)
-        self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor, self.marker_size)
-        self.EarToEarscatter_series = self.create_new_scatter_series(self.blue_qcolor, self.marker_size)
-        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.marker_size)
-        self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.marker_size)
-        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.marker_size)
-        self.all_markers_series = self.create_new_scatter_series(self.green_qcolor, self.marker_size)
+        # Variables to hold positions
+        self.NZIZscatter_series_x = np.zeros(1)
+        self.NZIZscatter_series_y = np.zeros(1)
+        self.CIRCUMscatter_series_x = None
+        self.CIRCUMscatter_series_y = None
+        self.EarToEarscatter_series_x = None
+        self.EarToEarscatter_series_y = None
+        self.Predicted21_series_x = None
+        self.Predicted21_series_y = None
+        self.electrode_markers_series_x = None
+        self.electrode_markers_series_y = None
+        self.specs_series_x = None
+        self.specs_series_y = None
+        self.stylus_position_series_x = None
+        self.stylus_position_series_y = None
 
-        # electrode accuracy placement range 
-        self.threshold_placement_range = 0.008 # 0.008m , 8mm 
-        self.predicted_eeg_positions_with_electrodes = [] #empty list that contains the 21 predicted positions with reflective markers attached on it
-        self.unassigned_electrode_markers = None
+        # Colours used for the graphs
+        self.red_qcolor = (255, 0, 0) # NZIZ
+        self.green_qcolor = (0, 255, 0) # Circum
+        self.blue_qcolor = (0, 0, 255) # Ear2Ear
+        self.orange_qcolor = (255, 165, 0) # Predicted position
+        self.black_qcolor = (0, 0 ,0) # Specs position
+        self.yellow_qcolor = (255, 255, 0) # Stylus position
+        self.grey_qcolor = (128,128,128) # Reflective Markers
 
-        # Axis range
-        self.axis_range = 5
+        # Can adjust line colours but not scatter plot colours much
 
-        # The 3 scatter series used
-        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.marker_size)
-        self.NZIZscatter_series.setName("NZIZ")
-        self.coordinates = np.random.randint(self.axis_range * -1, self.axis_range, size=(100, 2)) 
-        self.add_list_to_scatterdata2D(self.NZIZscatter_series, self.coordinates)
+        # Init the few data_line
+        self.NZIZ_scatter_trace = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None,symbolBrush=(self.red_qcolor))
+        self.Circum_scatter_traec = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.green_qcolor))
+        self.EartoEar_scatter_trace = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.blue_qcolor))
 
-        self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor, self.marker_size)
-        self.CIRCUMscatter_series.setName("Circumference")
-        # self.coordinates = np.random.randint(self.axis_range * -1, self.axis_range, size=(100, 2)) 
-        # self.add_list_to_scatterdata2D(self.CIRCUMscatter_series, self.coordinates)
+        self.NZIZ_scatter = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None,symbolBrush=(self.red_qcolor))
+        # self.Circum_scatter = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.green_qcolor))
+        # self.EartoEar_scatter = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.blue_qcolor))
 
-        self.EarToEarscatter_series = self.create_new_scatter_series(self.blue_qcolor, self.marker_size)
-        self.EarToEarscatter_series.setName("Ear to Ear")
-        # self.coordinates = np.random.randint(self.axis_range * -1, self.axis_range, size=(100, 2)) 
-        # self.add_list_to_scatterdata2D(self.EarToEarscatter_series, self.coordinates)
+        self.Predicter21_scatter = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.orange_qcolor))
+        self.electrode_marker_scatter = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.green_qcolor))
 
-        # Axis and Chart properties
-        self.axisX = QValueAxis()
-        self.axisX.setRange(self.axis_range * -1, self.axis_range)
-        self.axisX.setTitleText("X")
+        self.reflective_markers_series = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.orange_qcolor))
+        self.reflective_marker_in_eeg_position = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.green_qcolor))
 
-        self.axisY = QValueAxis()
-        self.axisY.setRange(self.axis_range * -1, self.axis_range)
-        self.axisY.setTitleText("Y")
-
-        self.chart = QChart()
-        self.chart.addAxis(self.axisX, Qt.AlignBottom)
-        self.chart.addAxis(self.axisY, Qt.AlignLeft)
-        self.chart.addSeries(self.NZIZscatter_series)
-        self.chart.addSeries(self.CIRCUMscatter_series)
-        self.chart.addSeries(self.EarToEarscatter_series)
-        self.chart.addSeries(self.specs_series)
-        self.chart.addSeries(self.stylus_position_series)
-        self.chart.setTitle("Triple Random Scatter")
-        self.chart.legend().setAlignment(Qt.AlignTop)
-        self.chart.legend().setVisible(True)
-
-        self._chart_view = QChartView(self.chart)
-        self._chart_view.setRenderHint(QPainter.Antialiasing)
-
-        # Main central widget
-        geometry = QGuiApplication.primaryScreen().geometry()
-        size = geometry.height() * 3 / 4
-        self.chart.setMinimumSize(size, size) # GUI size
-        self.chart.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.chart.setFocusPolicy(Qt.StrongFocus)
+        self.specs_scatter = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.black_qcolor))
+        self.stylus_scatter = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.yellow_qcolor))
 
         # Create left dockable window widget
         self.left_dock = QDockWidget("Menu", self)
@@ -133,22 +108,29 @@ class MainWindow(QMainWindow):
         self.left_dock_main_widget.setLayout(self.left_dock_main_layout)
         self.left_dock.setWidget(self.left_dock_main_widget)
 
-        # Start the main thread
+        # Start the matlab thread
         self.matlab_main_thread = MatlabMainThread(self)
         self.matlab_main_thread.start()
 
         # Start the Optitrack Thread
         self.optitrack_main_thread = OptitrackMainThread(self)
         self.optitrack_main_thread.start()  
-        
-        # Now connect and initialize the Signals in the MenuWidget with the threads
-        self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
-        self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
 
-        self.setCentralWidget(self._chart_view)
-        self.chart.show()
+        # self.timer = QTimer()
+        # self.timer.setInterval(10)
+        # self.timer.timeout.connect(self.update_plot_data)
+        # self.timer.start()
 
-    # Function that is called from the menu widget to save trace data into csv files
+    # def update_plot_data(self):
+
+    #     self.x = self.x[1:]  # Remove the first y element.
+    #     self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
+
+    #     self.y = self.y[1:]  # Remove the first
+    #     self.y.append( randint(0,100))  # Add a new random value.
+
+    #     self.data_line.setData(self.x, self.y)  # Update the data.
+
     @Slot(int)
     def save_trace_data (self, message):
         # Get the data from the optitrack thread
@@ -199,14 +181,18 @@ class MainWindow(QMainWindow):
     def update_save_predicted_eeg_positions(self, message):
         self.predicted_positions = message
         np.savetxt("21_predicted_positions_specs_frame.csv", message, delimiter=',')
-        # if self.Predicted21_series is not None:
-        #     self.chart.removeSeries(self.Predicted21_series) # remove the old series
-        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.marker_size) # reset the seties
-        self.add_list_to_scatterdata2D(self.Predicted21_series, self.predicted_positions)
-        self.chart.addSeries(self.Predicted21_series)
+        if self.Predicted21_series is not None:
+            self.chart.removeSeries(self.Predicted21_series) # remove the old series
+        
+        # self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.marker_size) # reset the seties
+        # self.add_list_to_scatterdata2D(self.Predicted21_series, self.predicted_positions)
+        # self.chart.addSeries(self.Predicted21_series)
 
         self.predicted_eeg_positions_global_frame = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
         np.savetxt("21_predicted_positions_global_frame.csv", message, delimiter=',')
+        self.Predicted21_series_x = self.predicted_eeg_positions_global_frame[0]
+        self.Predicted21_series_y = self.predicted_eeg_positions_global_frame[2]
+        self.Predicter21_scatter.setData(self.Predicted21_series_x, self.Predicted21_series_y)
 
     # Clear all data shown in the graph
     @Slot()
@@ -233,48 +219,40 @@ class MainWindow(QMainWindow):
         self.fpz_positon = message
         np.savetxt("nziz_5_positions.csv", message, delimiter=',')
 
-
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):
-        # if self.stylus_position_series is not None:
-        #     self.chart.removeSeries(self.stylus_position_series) # remove the old position
-        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.bigger_marker_size)
-        self.add_list_to_scatterdata2D(self.stylus_position_series, message)
-        self.chart.addSeries(self.stylus_position_series)
-        self.chart.show()
+        x = np.array([message[0]])
+        y = np.array([message[1]])
+        self.stylus_scatter.setData(x,y)
 
     @Slot(list)
     def update_current_specs_position_rotation(self, message):
         self.specs_position = message[0]
         self.specs_rotation = message[1]
-        # if self.specs_series is not None:
-        #     self.chart.removeSeries(self.specs_series) # remove the old position
-        self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.bigger_marker_size) # reset the seties
-        self.add_list_to_scatterdata2D(self.specs_series, self.specs_position)
-        self.chart.addSeries(self.specs_series)
-        self.chart.show()
+
+        x = np.array([self.specs_position[0]])
+        y = np.array([self.specs_position[1]])
+
+        self.specs_scatter.setData(x, y)
 
         if (self.live_predicted_eeg_positions == True):
             # Convert predicted eeg_position from spec frame to global frame 
             self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
-            if self.Predicted21_series is not None:
-                self.chart.removeSeries(self.Predicted21_series) # remove the old series
-            self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.marker_size) # reset the seties
-            self.add_list_to_scatterdata2D(self.Predicted21_series, self.global_predicted_eeg_positions)
-            self.chart.addSeries(self.Predicted21_series)
-            self.chart.show()
+
+            x = np.array([self.self.global_predicted_eeg_positions[0]])
+            y = np.array([self.self.global_predicted_eeg_positions[1]])
+
+            self.Predicter21_scatter.setData(x, y)
+
 
         if (self.live_predicted_nziz_positions == True):
             # Convert predicted nziz from spec frame to global frame 
             self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
-            if self.NZIZscatter_series_trace in self.chart.seriesList():
-                self.chart.removeSeries(self.NZIZscatter_series_trace) # remove the trace if its still there
-            self.chart.removeSeries(self.NZIZscatter_series)
-            self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.marker_size)
-            self.add_list_to_scatterdata2D(self.NZIZscatter_series, self.global_predicted_nziz_positions)
-            self.chart.addSeries(self.NZIZscatter_series)
 
-            self.chart.show()
+            x = np.array([self.self.global_predicted_nziz_positions[0]])
+            y = np.array([self.self.global_predicted_nziz_positions[1]])
+
+            self.Predicter21_scatter.setData(x, y)
 
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
         r = R.from_quat(specs_rotation) # rotate the orientation
@@ -297,46 +275,45 @@ class MainWindow(QMainWindow):
     # electrode with optitrack markers. The message here contains the positions of reflective markers
     @Slot(np.ndarray)
     def show_electrode_positions(self, message):
-        if self.reflective_markers_series is not None:
-            self.chart.removeSeries(self.reflective_markers_series) # remove the old position
-        self.reflective_markers_series = self.create_new_scatter_series(self.grey_qcolor, self.marker_size)
-        self.reflective_marker_in_eeg_position = self.create_new_scatter_series(self.green_qcolor, self.marker_size) # reflective marker in eeg position
-
         # Check if the optitrack markers are near any electrode positions
         if self.near_predicted_points(message):
-            self.add_list_to_scatterdata2D(self.reflective_marker_in_eeg_position, self.predicted_eeg_positions_with_electrodes)
-            self.chart.addSeries(self.reflective_marker_in_eeg_position)
+            x = np.array([message[0]])
+            y = np.array([message[1]])
+            self.reflective_marker_in_eeg_position.setData(x,y)
+
         else:
-            self.add_list_to_scatterdata2D(self.reflective_markers_series, self.unassigned_electrode_markers)
-            self.chart.addSeries(self.reflective_markers_series)
+            x = np.array([message[0]])
+            y = np.array([message[1]])
+            self.reflective_markers_series.setData(x,y)
             
 
-        self.chart.addSeries(self.reflective_markers_series)
-        self.chart.show()
-
     @Slot(np.ndarray)
-    def update_and_add_scatterNZIZ(self, message):
-        self.add_list_to_scatterdata2D(self.NZIZscatter_series_trace, message)
-        self.chart.addSeries(self.NZIZscatter_series_trace)
-        self.chart.show()
+    def update_and_add_scatterNZIZ(self, message):  
+        x = np.array([message[0]])
+        y = np.array([message[1]])
+
+        self.NZIZ_scatter_trace.setData(x,y)
 
     @Slot(np.ndarray)
     def update_and_add_scatterCIRCUM(self, message):
-        self.add_list_to_scatterdata2D(self.CIRCUMscatter_series, message)
-        self.chart.addSeries(self.CIRCUMscatter_series)
-        self.chart.show()
+        x = np.array([message[0]])
+        y = np.array([message[1]])
+
+        self.Circum_scatter_traec.setData(x,y)
 
     @Slot(np.ndarray)
     def update_and_add_scatterEarToEar(self, message):
-        self.add_list_to_scatterdata2D(self.EarToEarscatter_series, message)
-        self.chart.addSeries(self.EarToEarscatter_series)
-        self.chart.show()
+        x = np.array([message[0]])
+        y = np.array([message[1]])
+
+        self.EartoEar_scatter_trace.setData(x,y)
 
     def add_list_to_scatterdata2D(self,scatter_series, data):
+        print(data)
         if data.ndim == 1: # its a single dimensional array
-            x = np.array([data[0]])
-            y = np.array([data[1]])
-            scatter_series.append(x, y)
+            print(data.ndim)
+            print(data[0])
+        # scatter_series.append(data[0], data[2])
 
     def create_new_scatter_series(self, colour, size):
         self.chart_series_new_series = QScatterSeries()
@@ -359,11 +336,8 @@ class MainWindow(QMainWindow):
                     return True
         return False
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
-
-    window = MainWindow()
-    window.show()
-    window.resize(440, 300)
+    main_win = MainWindow()
+    main_win.show()
     sys.exit(app.exec())

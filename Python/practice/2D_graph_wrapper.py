@@ -18,23 +18,44 @@ import os
 class MainWindow(QMainWindow):
 
     def __init__(self):
+        
+        self.NZIZscatter_series_x = np.array([1])
+        self.NZIZscatter_series_y = np.array([2])
+        self.CIRCUMscatter_series_x = None
+        self.CIRCUMscatter_series_y = None
+        self.EarToEarscatter_series_x = None
+        self.EarToEarscatter_series_y = None
+        self.Predicted21_series_x = None
+        self.Predicted21_series_y = None
+        self.electrode_markers_series_x = None
+        self.electrode_markers_series_y = None
+        self.specs_series_x = None
+        self.specs_series_y = None
+        self.stylus_position_series_x = None
+        self.stylus_position_series_y = None
+
         super().__init__()
+
+
+        self.reflective_markers_series = self.graphWidget.plot(self.NZIZscatter_series_x, self.NZIZscatter_series_y, pen=None, symbolBrush=(self.orange_qcolor))
+        self.reflective_marker_in_eeg_position = self.create_new_scatter_series(self.green_qcolor, self.marker_size) # reflective marker in eeg position
+
 
         self.setWindowTitle('Qt DataVisualization 2D scatter')
         self.graphWidget = pg.PlotWidget()
         self.graphWidget.plotItem.setTitle("2D view")
         self.setCentralWidget(self.graphWidget)
+        
 
         self.x = list(range(100))  # 100 time points
         self.y = [randint(0,100) for _ in range(100)]  # 100 data points
 
         self.graphWidget.setBackground('w')
 
-        pen = pg.mkPen(color=(255, 0, 0), style=Qt.DashLine)
-        self.data_line = self.graphWidget.plot(self.x, self.y, pen=pen, symbol='+', symbolBrush=('b'))
+        self.data_line = self.graphWidget.plot(self.x, self.y, pen=None, symbolBrush=('r'))
 
         self.timer = QTimer()
-        self.timer.setInterval(50)
+        self.timer.setInterval(10)
         self.timer.timeout.connect(self.update_plot_data)
         self.timer.start()
 

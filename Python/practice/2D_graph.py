@@ -21,11 +21,12 @@ class TestChart(QMainWindow):
         self.black_qcolor = QColor(0, 0 ,0)
         self.grey_qcolor = QColor(128,128,128)
 
-        self.series = self.create_new_scatter_series(self.red_qcolor, 1)
-        self.series = QScatterSeries()
+        self.series = self.create_new_scatter_series(self.red_qcolor, 10)
+        # self.series = QScatterSeries()
         self.series.setName("Lmfao2")
         self.coordinates = np.random.randint(0, 100, size=(100, 3)) 
         self.add_list_to_scatterdata(self.series, self.coordinates)
+
 
         self.chart = QChart()
         self.axisX = QValueAxis()
@@ -37,6 +38,15 @@ class TestChart(QMainWindow):
         self.chart.setTitle("Simple line chart example")
         self.chart.legend().setVisible(True)
         self.chart.legend().setAlignment(Qt.AlignTop)
+        self.chart.show()
+
+        self.series2 = self.create_new_scatter_series(self.green_qcolor, 10)
+        # self.series = QScatterSeries()
+        self.series2.setName("Lmfao")
+        self.coordinates = np.random.randint(0, 100, size=(100, 3)) 
+        self.add_list_to_scatterdata(self.series2, self.coordinates)
+        self.chart.addSeries(self.series2)
+        self.chart.show()
 
         self._chart_view = QChartView(self.chart)
         self._chart_view.setRenderHint(QPainter.Antialiasing)
@@ -45,7 +55,11 @@ class TestChart(QMainWindow):
 
 
     def add_list_to_scatterdata(self,scatter_series, data):
+        print(type(data))
+        print(data)
         for d in data:
+            print(type(d))
+            print(type(d[0]))
             scatter_series.append(d[0], d[1])
 
     def create_new_scatter_series(self, colour, size):
