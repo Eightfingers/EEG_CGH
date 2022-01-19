@@ -25,16 +25,20 @@ class TestChart(QMainWindow):
         # self.series = QScatterSeries()
         self.series.setName("Lmfao2")
         self.coordinates = np.random.randint(0, 100, size=(100, 3)) 
-        self.add_list_to_scatterdata(self.series, self.coordinates)
-
+        self.add_list_to_series_data2D(self.series, self.coordinates)
 
         self.chart = QChart()
         self.axisX = QValueAxis()
         self.axisX.setRange(-10,10)
         self.axisX.setTitleText("X")
 
+        self.axisY = QValueAxis()
+        self.axisY.setRange(-10,10)
+        self.axisY.setTitleText("Y")
+
         self.chart.addSeries(self.series)
         self.chart.addAxis(self.axisX, Qt.AlignBottom)
+        self.chart.addAxis(self.axisY, Qt.AlignLeft)
         self.chart.setTitle("Simple line chart example")
         self.chart.legend().setVisible(True)
         self.chart.legend().setAlignment(Qt.AlignTop)
@@ -44,7 +48,7 @@ class TestChart(QMainWindow):
         # self.series = QScatterSeries()
         self.series2.setName("Lmfao")
         self.coordinates = np.random.randint(0, 100, size=(100, 3)) 
-        self.add_list_to_scatterdata(self.series2, self.coordinates)
+        self.add_list_to_series_data2D(self.series2, self.coordinates)
         self.chart.addSeries(self.series2)
         self.chart.show()
 
@@ -62,11 +66,11 @@ class TestChart(QMainWindow):
         self.chart.removeSeries(self.series2)
         self.series2 = self.create_new_scatter_series(self.green_qcolor, 10)
         self.coordinates = np.random.randint(0, 100, size=(3, 3)) 
-        self.add_list_to_scatterdata(self.series2, self.coordinates)
+        self.add_list_to_series_data2D(self.series2, self.coordinates)
         self.chart.addSeries(self.series2)
         self.chart.show()
 
-    def add_list_to_scatterdata(self,scatter_series, data):
+    def add_list_to_series_data2D(self,scatter_series, data):
         print(type(data))
         print(data)
         for d in data:
