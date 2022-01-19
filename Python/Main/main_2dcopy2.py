@@ -86,11 +86,11 @@ class MainWindow(QMainWindow):
         self.chart = QChart()
         self.chart.addAxis(self.axisX, Qt.AlignBottom)
         self.chart.addAxis(self.axisY, Qt.AlignLeft)
-        self.chart.addSeries(self.NZIZscatter_series)
-        self.chart.addSeries(self.CIRCUMscatter_series)
-        self.chart.addSeries(self.EarToEarscatter_series)
-        self.chart.addSeries(self.specs_series)
-        self.chart.addSeries(self.stylus_position_series)
+        # self.chart.addSeries(self.NZIZscatter_series)
+        # self.chart.addSeries(self.CIRCUMscatter_series)
+        # self.chart.addSeries(self.EarToEarscatter_series)
+        # self.chart.addSeries(self.specs_series)
+        # self.chart.addSeries(self.stylus_position_series)
         self.chart.setTitle("Triple Random Scatter")
         # self.chart.legend().setAlignment(Qt.AlignTop)
         # self.chart.legend().setVisible(True)
@@ -105,49 +105,48 @@ class MainWindow(QMainWindow):
         self.chart.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.chart.setFocusPolicy(Qt.StrongFocus)
 
-        # Create left dockable window widget
-        self.left_dock = QDockWidget("Menu", self)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.left_dock)
+        # # Create left dockable window widget
+        # self.left_dock = QDockWidget("Menu", self)
+        # self.addDockWidget(Qt.LeftDockWidgetArea, self.left_dock)
 
-        # Create a dummy widget as the main dock widget
-        self.left_dock_main_widget = QWidget()
+        # # Create a dummy widget as the main dock widget
+        # self.left_dock_main_widget = QWidget()
 
-        # Main layout of the left main dockable widget
-        self.left_dock_main_layout = QVBoxLayout()
+        # # Main layout of the left main dockable widget
+        # self.left_dock_main_layout = QVBoxLayout()
 
-        # Layout of the widgets inside the dockable widgets
-        self.menu_layout = QVBoxLayout()
-        self.status_layout = QVBoxLayout()
+        # # Layout of the widgets inside the dockable widgets
+        # self.menu_layout = QVBoxLayout()
+        # self.status_layout = QVBoxLayout()
 
-        # Some comments (might be wrong! not a QT/ Python expert)
-        # This is logically isn't too right? Because even though I created a new MenuWidget, I am not using the layout in the widget 
-        # object at all. I am just passing self.menu_layout parameter to it and then reusing that self.menu_layout paremeter. 
-        # I did it this way because I want to have a more seperate codes for the contents in the dock widget and have a more 
-        # neat code layout. I realize QT doesn't allow nesting widgets inside widgets. And layouts and widgets are 2 seperate entities.
-        self.left_dock_status_widget = StatusWidget(self)
-        self.left_dock_main_layout.addLayout(self.status_layout)
+        # # Some comments (might be wrong! not a QT/ Python expert)
+        # # This is logically isn't too right? Because even though I created a new MenuWidget, I am not using the layout in the widget 
+        # # object at all. I am just passing self.menu_layout parameter to it and then reusing that self.menu_layout paremeter. 
+        # # I did it this way because I want to have a more seperate codes for the contents in the dock widget and have a more 
+        # # neat code layout. I realize QT doesn't allow nesting widgets inside widgets. And layouts and widgets are 2 seperate entities.
+        # self.left_dock_status_widget = StatusWidget(self)
+        # self.left_dock_main_layout.addLayout(self.status_layout)
         
-        self.left_dock_menu_widget = MenuWidget(self)
-        self.left_dock_main_layout.addLayout(self.menu_layout)
+        # self.left_dock_menu_widget = MenuWidget(self)
+        # self.left_dock_main_layout.addLayout(self.menu_layout)
 
-        self.left_dock_main_widget.setLayout(self.left_dock_main_layout)
-        self.left_dock.setWidget(self.left_dock_main_widget)
+        # self.left_dock_main_widget.setLayout(self.left_dock_main_layout)
+        # self.left_dock.setWidget(self.left_dock_main_widget)
 
-        # Start the main thread
-        self.matlab_main_thread = MatlabMainThread(self)
-        self.matlab_main_thread.start()
+        # # Start the main thread
+        # self.matlab_main_thread = MatlabMainThread(self)
+        # self.matlab_main_thread.start()
 
-        # Start the Optitrack Thread
-        self.optitrack_main_thread = OptitrackMainThread(self)
-        self.optitrack_main_thread.start()  
+        # # Start the Optitrack Thread
+        # self.optitrack_main_thread = OptitrackMainThread(self)
+        # self.optitrack_main_thread.start()  
         
-        # Now connect and initialize the Signals in the MenuWidget with the threads
-        self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
-        self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
+        # # Now connect and initialize the Signals in the MenuWidget with the threads
+        # self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
+        # self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
 
         self.setCentralWidget(self._chart_view)
         self.true = True
-        self.series2 = self.create_new_scatter_series(self.green_qcolor, 10)
         self.chart.show()
 
 

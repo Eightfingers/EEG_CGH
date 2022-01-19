@@ -1,7 +1,7 @@
 """PySide6 port of the linechart example from Qt v5.x"""
 
 import sys
-from PySide6.QtCore import QPointF, QSize, QStringConverter, Qt
+from PySide6.QtCore import QPointF, QSize, QStringConverter, Qt, QTimer
 from PySide6.QtGui import QGuiApplication, QVector3D, QColor, QPainter
 from PySide6.QtWidgets import QMainWindow, QApplication
 from PySide6.QtCharts import QAbstractAxis, QCategoryAxis, QChart, QChartView, QLegend, QScatterSeries, QValueAxis, QBarCategoryAxis
@@ -53,6 +53,18 @@ class TestChart(QMainWindow):
 
         self.setCentralWidget(self._chart_view)
 
+        self.timer = QTimer()
+        self.timer.setInterval(10)
+        self.timer.timeout.connect(self.update_plot_data)
+        self.timer.start()
+
+    def update_plot_data(self):
+        self.chart.removeSeries(self.series2)
+        self.series2 = self.create_new_scatter_series(self.green_qcolor, 10)
+        self.coordinates = np.random.randint(0, 100, size=(3, 3)) 
+        self.add_list_to_scatterdata(self.series2, self.coordinates)
+        self.chart.addSeries(self.series2)
+        self.chart.show()
 
     def add_list_to_scatterdata(self,scatter_series, data):
         print(type(data))
