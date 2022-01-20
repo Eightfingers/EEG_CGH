@@ -1,3 +1,4 @@
+from multiprocessing import dummy
 import sys
 from PySide6 import QtWidgets
 from PySide6.QtCore import QPointF, QSize, QStringConverter, Qt, Slot, QTimer
@@ -52,11 +53,33 @@ class MainWindow(QMainWindow):
         # which defines a single set of axes as self.axes.
         self.matlabcanvas = MplCanvas(self, width=5, height=4, dpi=100)
         self.matlabcanvas.axes.scatter(self.xdata, self.ydata)
-        self.setCentralWidget(self.matlabcanvas)
 
-        # We need to store a reference to the plotted line
-        # somewhere, so we can apply the new data to it.
-        self._plot_ref = None
+        dummy_array = np.array([[1000,1000],[1000,1000]])
+        x_dummy = dummy_array[:,0]
+        y_dummy = dummy_array[:,0]
+        
+        self.stylus_position = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.NZIZ_trace_ref = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green') 
+        self.Circum_trace_ref = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.EartoEar_trace_ref = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+
+        self.EartoEar_data_trace = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.EartoEar_specs_data = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.EartoEar_specs_rotate = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        
+        self.NZIZ_data_trace = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.NZIZ_specs_data = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.NZIZ_specs_rotate = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+
+        self.CIRCUM_data_trace = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.CIRCUM_specs_data = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.CIRCUM_specs_rotate = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+
+        self.stylus_position = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.specs_position = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+
+        self.Predicted21_series = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.NZIZscatter_series = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
 
         # Create left dockable window widget
         self.left_dock = QDockWidget("Menu", self)
@@ -85,12 +108,25 @@ class MainWindow(QMainWindow):
 
         self.left_dock_main_widget.setLayout(self.left_dock_main_layout)
         self.left_dock.setWidget(self.left_dock_main_widget)
+        self.setCentralWidget(self.matlabcanvas)
+
+        # Start the main thread
+        self.matlab_main_thread = MatlabMainThread(self)
+        self.matlab_main_thread.start()
+
+        # Start the Optitrack Thread
+        self.optitrack_main_thread = OptitrackMainThread(self)
+        self.optitrack_main_thread.start()  
+        
+        # Now connect and initialize the Signals in the MenuWidget with the threads
+        self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
+        self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
 
         # Setup a timer to trigger the redraw by calling update_plot.
         self.timer = QTimer()
         self.timer.setInterval(33) # ~30hz
         self.timer.timeout.connect(self.update_plot)
-        self.timer.start()
+        # self.timer.start()
 
     def update_plot(self):
         # Drop off the first y element, append a new one.
@@ -112,22 +148,12 @@ class MainWindow(QMainWindow):
         self.matlabcanvas.axes.scatter(self.xdata2, self.ydata2, color='green')
         self.matlabcanvas.draw()
 
-        # # Note: we no longer need to clear the axis.
-        # if self.matlabcanvas is None:
-        #     # First time we have no plot reference, so do a normal plot.
-        #     # .plot returns a list of line <reference>s, as we're
-        #     # only getting one we can take the first element.
-        #     # plot_refs = self.matlabcanvas.axes.scatter(self.x, self.ydata, 'r')
-        # else:
-        #     # We have a reference, we can use it to update the data for that line.
-        #     self._plot_ref.set_ydata(self.ydata)
-
     # Function that is called from the menu widget to save trace data into csv files
     @Slot(int)
     def save_trace_data (self, message):
         # Get the data from the optitrack thread
-        self.stylus_data = self.optitrack_main_thread.stylus_data 
-        self.specs = self.optitrack_main_thread.specs_data 
+        self.stylus_data = self.optitrack_main_thread.stylus_data
+        self.specs = self.optitrack_main_thread.specs_data
         self.specs_rotation = self.optitrack_main_thread.specs_rotation_data
 
         # Strip of all the zeroes
@@ -140,34 +166,50 @@ class MainWindow(QMainWindow):
             np.savetxt("data_NZIZstylus.csv", self.stylus_data, delimiter=',')
             np.savetxt("data_NZIZspecs.csv", self.specs, delimiter=',')
             np.savetxt("rotation_data_NZIZspecs.csv", self.specs_rotation, delimiter=',')
-            self.NZIZ_data = self.stylus_data
-
-            # self.stylus_data[:,0] *= -1 # recitfy the x axis
+            self.stylus_data[:,0] *= -1 # recitfy the x axis
+            self.NZIZ_data_trace = self.stylus_data
             self.NZIZ_specs_data = self.specs
             self.NZIZ_specs_rotate = self.specs_rotation
-            self.update_and_add_scatterNZIZ(self.stylus_data)
+
+            self.x_data = self.NZIZ_data_trace[0]
+            self.y_data = self.NZIZ_data_trace[1]
+            # self.update_and_add_scatterNZIZ(self.stylus_data)
+            self.NZIZ_trace_ref = self.matlabcanvas.axes.scatter(self.xdata2, self.ydata2, color='green')
+            self.matlabcanvas.draw()
 
         elif (message == self.CIRCUM_BUTTON): # Circum
             print("Main: Saving Circum data")
             np.savetxt("data_CIRCUMstylus.csv", self.stylus_data, delimiter=',')
             np.savetxt("data_CIRCUMspecs.csv", self.specs, delimiter=',')
             np.savetxt("rotation_data_CIRCUMspecs.csv", self.specs_rotation, delimiter=',')
-            self.CIRCUM_data = self.stylus_data
+            self.stylus_data[:,0] *= -1 # recitfy the x axis
+
+            self.CIRCUM_data_trace = self.stylus_data
             self.CIRCUM_specs_data = self.specs
             self.CIRCUM_specs_rotate = self.specs_rotation
-            # self.stylus_data[:,0] *= -1 # recitfy the x axis
-            self.update_and_add_scatterCIRCUM(self.stylus_data)
+
+            self.x_data = self.CIRCUM_data_trace[0]
+            self.y_data = self.CIRCUM_data_trace[1]
+            # self.update_and_add_scatterCIRCUM(self.stylus_data)
+            self.Circum_trace_ref = self.matlabcanvas.axes.scatter(self.x_data, self.y_data, color='green')
+            self.matlabcanvas.draw()
 
         elif (message == self.EARTOEAR_BUTTON): # Ear to Ear
             print("Main: Saving Ear to Ear data")
             np.savetxt("data_EarToEarstylus.csv", self.stylus_data, delimiter=',')
             np.savetxt("data_EarToEarspecs.csv", self.specs, delimiter=',')
             np.savetxt("rotation_data_EarToEarspecs.csv", self.specs_rotation, delimiter=',')
-            self.EartoEar_data = self.stylus_data
+            self.stylus_data[:,0] *= -1 # recitfy the x axis
+
+            self.EartoEar_data_trace = self.stylus_data
             self.EartoEar_specs_data = self.specs
             self.EartoEar_specs_rotate = self.specs_rotation
-            # self.stylus_data[:,0] *= -1 # recitfy the x axis
-            self.update_and_add_scatterEarToEar(self.stylus_data)
+            self.x_data = self.EartoEar_data_trace[0]
+            self.y_data = self.EartoEar_data_trace[1]
+            # self.update_and_add_scatterNZIZ(self.stylus_data)
+            # self.update_and_add_scatterEarToEar(self.stylus_data)
+            self.EartoEar_trace_ref = self.matlabcanvas.axes.scatter(self.x_data, self.y_data, color='green')
+            self.matlabcanvas.draw()
 
     @Slot(np.ndarray)
     def update_save_predicted_eeg_positions(self, message):
@@ -186,21 +228,7 @@ class MainWindow(QMainWindow):
     @Slot()
     def clear_data(self):
         # set it to false
-        self.live_predicted_eeg_positions = False
-        self.live_predicted_nziz_positions = False
-
-        self.chart.removeSeries(self.NZIZscatter_series)
-        self.chart.removeSeries(self.CIRCUMscatter_series)
-        self.chart.removeSeries(self.EarToEarscatter_series)
-        self.chart.removeSeries(self.Predicted21_series)
-        self.chart.removeSeries(self.reflective_markers_series)
-
-        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.marker_size)
-        self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor, self.marker_size)
-        self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor, self.marker_size)
-        self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor, self.marker_size)
-        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.marker_size)
-        self.reflective_markers_series = self.create_new_scatter_series(self.yellow_qcolor, self.marker_size)
+        print("Clearing data")
 
     @Slot(np.ndarray)
     def update_fpz_position(self, message):
@@ -210,56 +238,52 @@ class MainWindow(QMainWindow):
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):
         # print("The current stylus position is", message[0])
-        dummy_array = np.array([message, [1,2,3]])
-        self.chart.removeSeries(self.stylus_position_series)
-        self.stylus_position_series = self.create_new_scatter_series(self.green_qcolor, 10)
-        self.add_list_to_scatterdata2D(self.stylus_position_series, dummy_array)
-        # self.chart.addSeries(self.stylus_position_series)
-        # self.chart.show()
+        stylus_position = message[0]
+        x_data = stylus_position[0]
+        y_data = stylus_position[1]
+
+        # self.update_and_add_scatterNZIZ(self.stylus_data)
+        self.stylus_position.remove()
+        self.stylus_position = self.matlabcanvas.axes.scatter(x_data, y_data, color='green')
+        self.matlabcanvas.show()
 
     @Slot(list)
     def update_current_specs_position_rotation(self, message):
         self.specs_position = message[0]
         self.specs_rotation = message[1]
 
-        if self.true == True:
-            print("The current specs position is", self.specs_position)
-            dummy_array = np.array([self.specs_position, [1,2,3]])
-            self.chart.removeSeries(self.specs_series)
-            self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.bigger_marker_size) # reset the seties
-            self.add_list_to_scatterdata2D(self.specs_series, dummy_array)
-            self.chart.addSeries(self.specs_series)
-            self.chart.show()
-            self.true = False
+        print("The current specs position is", self.specs_position)
+        # print("The current stylus position is", message[0])
+        stylus_position = message[0]
+        x_data = stylus_position[0]
+        y_data = stylus_position[1]
 
-        # if self.specs_series is not None:
-        #     self.chart.removeSeries(self.specs_series) # remove the old position
-        # self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.bigger_marker_size) # reset the seties
-        # self.add_list_to_scatterdata2D(self.specs_series, self.specs_position)
-        # self.chart.addSeries(self.specs_series)
-        # self.chart.show()
+        # self.update_and_add_scatterNZIZ(self.stylus_data)
+        self.stylus_position.remove()
+        self.stylus_position = self.matlabcanvas.axes.scatter(x_data, y_data, color='green')
+        self.matlabcanvas.show()
 
         if (self.live_predicted_eeg_positions == True):
             # Convert predicted eeg_position from spec frame to global frame 
             self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
-            if self.Predicted21_series is not None:
-                self.chart.removeSeries(self.Predicted21_series) # remove the old series
-            self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.marker_size) # reset the seties
-            self.add_list_to_scatterdata2D(self.Predicted21_series, self.global_predicted_eeg_positions)
-            self.chart.addSeries(self.Predicted21_series)
-            self.chart.show()
+            x_data = self.global_predicted_eeg_positions[0]
+            y_data = self.global_predicted_eeg_positions[1]
+
+            self.Predicted21_series.remove()
+            self.Predicted21_series = self.matlabcanvas.axes.scatter(x_data, y_data, color='green')
+            self.matlabcanvas.show()
 
         if (self.live_predicted_nziz_positions == True):
             # Convert predicted nziz from spec frame to global frame 
             self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
-            if self.NZIZscatter_series_trace in self.chart.seriesList():
-                self.chart.removeSeries(self.NZIZscatter_series_trace) # remove the trace if its still there
-            self.chart.removeSeries(self.NZIZscatter_series)
-            self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.marker_size)
-            self.add_list_to_scatterdata2D(self.NZIZscatter_series, self.global_predicted_nziz_positions)
-            self.chart.addSeries(self.NZIZscatter_series)
 
-            self.chart.show()
+            self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
+            x_data = self.global_predicted_eeg_positions[0]
+            y_data = self.global_predicted_eeg_positions[1]
+
+            self.NZIZscatter_series_trace.remove()
+            self.NZIZscatter_series_trace = self.matlabcanvas.axes.scatter(x_data, y_data, color='green')
+            self.matlabcanvas.show()
 
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
         r = R.from_quat(specs_rotation) # rotate the orientation
@@ -294,7 +318,6 @@ class MainWindow(QMainWindow):
         else:
             self.add_list_to_scatterdata2D(self.reflective_markers_series, self.unassigned_electrode_markers)
             self.chart.addSeries(self.reflective_markers_series)
-            
 
         self.chart.addSeries(self.reflective_markers_series)
         self.chart.show()
