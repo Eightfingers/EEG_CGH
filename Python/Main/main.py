@@ -38,9 +38,11 @@ class MainWindow(QMainWindow):
         self.orange_qcolor = QColor(255, 165, 0) # Predicted position
         self.grey_qcolor = QColor(128,128,128) # Reflective Markers
 
+
         # Used to control scatter size on the graph
         self.itemsize = 0.1
         self.bigger_itemsize = 0.15
+        self.threshold_placement_range = 0.008 # 0.008m , 8mm 
 
         # Each of this series is used to represent data on the graph
         self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
@@ -346,6 +348,21 @@ class MainWindow(QMainWindow):
         self.scatter_series_new_series.setItemSize(size)
 
         return self.scatter_series_new_series
+
+    def near_predicted_points(self, sample_data):
+        data_set = self.predicted_positions
+        for sample in sample_data:
+            for data in data_set:
+                magnitude_difference = np.absolute(np.linalg.norm(sample) - np.linalg.norm(data))
+                if magnitude_difference < self.threshold_placement_range:
+                    index = np.where(data_set == data) 
+                    self.predicted_eeg_positions_with_electrodes = np.delete(self.predicted_positions, index) # Found the attached electrode
+                    self.predicted_positions = np.delete(self.predicted_positions, index) # Delete from the lsit of 21 positions 
+                    index_sample = np.where(sample_data == sample)
+                    self.unassigned_electrode_markers = np.delete(sample_data, index_sample) # Not yet attached electrodes
+                    return True
+        return False
+
 
 
 if __name__ == '__main__':  

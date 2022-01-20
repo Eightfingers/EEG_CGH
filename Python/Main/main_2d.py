@@ -40,6 +40,10 @@ class MainWindow(QMainWindow):
         self.live_predicted_eeg_positions = False
         self.live_predicted_nziz_positions = False
 
+        self.NZIZ_BUTTON = 1
+        self.CIRCUM_BUTTON = 2
+        self.EARTOEAR_BUTTON = 3
+
         # Each of this series is used to represent data on the graph
         self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.marker_size)
         self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor, self.marker_size)

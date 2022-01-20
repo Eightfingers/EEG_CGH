@@ -23,8 +23,8 @@ class MplCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
-        self.axes.set_xlim([-6, 6])
-        self.axes.set_ylim([-6, 6])
+        self.axes.set_xlim([-3, 3])
+        self.axes.set_ylim([-3, 3])
         super(MplCanvas, self).__init__(fig)
 
 class MainWindow(QMainWindow):
@@ -43,22 +43,23 @@ class MainWindow(QMainWindow):
         self.orange_qcolor = QColor(255, 165, 0) # Predicted position
         self.grey_qcolor = QColor(128,128,128) # Reflective Markers
 
-        self.x = np.array([5,7,8,7,2,17,2,9,4,11,12,9,6])
-        self.y = np.array([99,86,87,88,111,86,103,87,94,78,77,85,86])
-        self.coordinates = np.random.randint(-5, 5, size=(100, 2)) 
-        self.xdata = self.coordinates[0]
-        self.ydata = self.coordinates[1]
+        self.live_predicted_eeg_positions = False
+        self.live_predicted_nziz_positions = False
+        self.reflective_markers_position = None
 
         # Create the maptlotlib FigureCanvas object,
         # which defines a single set of axes as self.axes.
         self.matlabcanvas = MplCanvas(self, width=5, height=4, dpi=100)
-        self.matlabcanvas.axes.scatter(self.xdata, self.ydata)
+        self.threshold_placement_range = 0.008 # 0.008m , 8mm 
 
         dummy_array = np.array([[1000,1000],[1000,1000]])
         x_dummy = dummy_array[:,0]
         y_dummy = dummy_array[:,0]
-        
-        self.stylus_position = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+
+        self.NZIZ_BUTTON = 1
+        self.CIRCUM_BUTTON = 2
+        self.EARTOEAR_BUTTON = 3
+
         self.NZIZ_trace_ref = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green') 
         self.Circum_trace_ref = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
         self.EartoEar_trace_ref = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
@@ -75,12 +76,18 @@ class MainWindow(QMainWindow):
         self.CIRCUM_specs_data = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
         self.CIRCUM_specs_rotate = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
 
-        self.stylus_position = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
-        self.specs_position = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.stylus_position_ref = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.specs_position_ref = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
 
         self.Predicted21_series = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
         self.NZIZscatter_series = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
 
+        self.unassigned_electrode_markers_ref = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+        self.predicted_eeg_positions_with_electrodes_ref = self.matlabcanvas.axes.scatter(x_dummy, y_dummy, color='green')
+
+        self.stylus_position = None
+        self.specs_position = None
+        self.specs_rotation = None
         # Create left dockable window widget
         self.left_dock = QDockWidget("Menu", self)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.left_dock)
@@ -126,27 +133,64 @@ class MainWindow(QMainWindow):
         self.timer = QTimer()
         self.timer.setInterval(33) # ~30hz
         self.timer.timeout.connect(self.update_plot)
-        # self.timer.start()
+        self.timer.start()
+
+    # This is not the predicted position, rather it will show positions of
+    # electrode with optitrack markers. The message here contains the positions of reflective markers
+    @Slot(np.ndarray)
+    def show_electrode_positions(self, message):
+        self.reflective_markers_position = message 
 
     def update_plot(self):
-        # Drop off the first y element, append a new one.
-        self.coordinates = np.random.randint(-5, 5, size=(1, 2)) 
-        self.coordinates2 = np.random.randint(-5, 5, size=(1, 2)) 
-        self.coordinates3 = np.random.randint(-5, 5, size=(1, 2)) 
-        self.xdata = self.coordinates[:,0]
-        self.ydata = self.coordinates[:,1]
-        self.xdata2 = self.coordinates2[:,0]
-        self.ydata2 = self.coordinates2[:,1]
-        self.xdata3 = self.coordinates3[:,0]
-        self.ydata3 = self.coordinates3[:,1]
+        x_data = self.stylus_position[0]
+        y_data = self.stylus_position[1]
 
-        self.matlabcanvas.axes.cla()
-        self.matlabcanvas.axes.set_xlim([-6, 6])
-        self.matlabcanvas.axes.set_ylim([-6, 6])
-        self.matlabcanvas.axes.scatter(self.xdata, self.ydata, color='red')
-        self.matlabcanvas.axes.scatter(self.xdata2, self.ydata2, color='blue')
-        self.matlabcanvas.axes.scatter(self.xdata2, self.ydata2, color='green')
-        self.matlabcanvas.draw()
+        # self.update_and_add_scatterNZIZ(self.stylus_data)
+        self.stylus_position_ref.remove()
+        self.stylus_position_ref = self.matlabcanvas.axes.scatter(x_data, y_data, color='yellow')
+
+        x_data = self.specs_pos[0]
+        y_data = self.specs_pos[1]
+
+        self.specs_position_ref.remove()
+        self.specs_position_ref = self.matlabcanvas.axes.scatter(x_data, y_data, color='black')
+
+        if (self.live_predicted_eeg_positions == True):
+            # Convert predicted eeg_position from spec frame to global frame 
+            self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position_ref)
+            x_data = self.global_predicted_eeg_positions[0]
+            y_data = self.global_predicted_eeg_positions[1]
+
+            self.Predicted21_series.remove()
+            self.Predicted21_series = self.matlabcanvas.axes.scatter(x_data, y_data, color='green')
+
+        if (self.live_predicted_nziz_positions == True):
+            # Convert predicted nziz from spec frame to global frame 
+            self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position_ref)
+
+            self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position_ref)
+            x_data = self.global_predicted_eeg_positions[0]
+            y_data = self.global_predicted_eeg_positions[1]
+
+            self.NZIZscatter_series_trace.remove()
+            self.NZIZscatter_series_trace = self.matlabcanvas.axes.scatter(x_data, y_data, color='red')
+
+        # Check for reflective markers
+        if self.reflective_markers_position: 
+            if self.near_predicted_points(self.reflective_markers_position):
+                x_data = self.predicted_eeg_positions_with_electrodes[0]
+                y_data = self.predicted_eeg_positions_with_electrodes[1]
+
+                self.predicted_eeg_positions_with_electrodes_ref.remove()
+                self.predicted_eeg_positions_with_electrodes_ref = self.matlabcanvas.axes.scatter(x_data, y_data, color='red')
+            else:
+                x_data = self.unassigned_electrode_markers[0]
+                y_data = self.unassigned_electrode_markers[1]
+
+                self.unassigned_electrode_markers_ref.remove()
+                self.unassigned_electrode_markers_ref = self.matlabcanvas.axes.scatter(x_data, y_data, color='red')
+
+        self.matlabcanvas.show()
 
     # Function that is called from the menu widget to save trace data into csv files
     @Slot(int)
@@ -221,7 +265,7 @@ class MainWindow(QMainWindow):
         self.add_list_to_scatterdata2D(self.Predicted21_series, self.predicted_positions)
         self.chart.addSeries(self.Predicted21_series)
 
-        self.predicted_eeg_positions_global_frame = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
+        self.predicted_eeg_positions_global_frame = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position_ref)
         np.savetxt("21_predicted_positions_global_frame.csv", message, delimiter=',')
 
     # Clear all data shown in the graph
@@ -238,60 +282,20 @@ class MainWindow(QMainWindow):
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):
         # print("The current stylus position is", message[0])
-        stylus_position = message[0]
-        x_data = stylus_position[0]
-        y_data = stylus_position[1]
-
-        # self.update_and_add_scatterNZIZ(self.stylus_data)
-        self.stylus_position.remove()
-        self.stylus_position = self.matlabcanvas.axes.scatter(x_data, y_data, color='green')
-        self.matlabcanvas.show()
+        self.stylus_position = message
 
     @Slot(list)
     def update_current_specs_position_rotation(self, message):
-        self.specs_position = message[0]
+        self.specs_pos = message[0]
         self.specs_rotation = message[1]
 
-        print("The current specs position is", self.specs_position)
-        # print("The current stylus position is", message[0])
-        stylus_position = message[0]
-        x_data = stylus_position[0]
-        y_data = stylus_position[1]
-
-        # self.update_and_add_scatterNZIZ(self.stylus_data)
-        self.stylus_position.remove()
-        self.stylus_position = self.matlabcanvas.axes.scatter(x_data, y_data, color='green')
-        self.matlabcanvas.show()
-
-        if (self.live_predicted_eeg_positions == True):
-            # Convert predicted eeg_position from spec frame to global frame 
-            self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
-            x_data = self.global_predicted_eeg_positions[0]
-            y_data = self.global_predicted_eeg_positions[1]
-
-            self.Predicted21_series.remove()
-            self.Predicted21_series = self.matlabcanvas.axes.scatter(x_data, y_data, color='green')
-            self.matlabcanvas.show()
-
-        if (self.live_predicted_nziz_positions == True):
-            # Convert predicted nziz from spec frame to global frame 
-            self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_rotation, self.specs_position)
-
-            self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
-            x_data = self.global_predicted_eeg_positions[0]
-            y_data = self.global_predicted_eeg_positions[1]
-
-            self.NZIZscatter_series_trace.remove()
-            self.NZIZscatter_series_trace = self.matlabcanvas.axes.scatter(x_data, y_data, color='green')
-            self.matlabcanvas.show()
-
-    def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
+    def transform_spec_to_global_frame(self, series, specs_rotation, specs_position_ref):
         r = R.from_quat(specs_rotation) # rotate the orientation
         #print("The SPECS rotation is ..", specs_rotation)
-        # print("The Specs position is ..", specs_position)
+        # print("The Specs position is ..", specs_position_ref)
         new_predicted_positions = r.apply(series)
-        new_predicted_positions = new_predicted_positions + specs_position # now add the displaced amount
-        # print("Main: The specs position is",specs_position)
+        new_predicted_positions = new_predicted_positions + specs_position_ref # now add the displaced amount
+        # print("Main: The specs position is",specs_position_ref)
         return new_predicted_positions
 
     @Slot(bool)
@@ -301,26 +305,6 @@ class MainWindow(QMainWindow):
     @Slot(bool)
     def set_live_fpz_positions(self, message):
         self.live_predicted_nziz_positions = message
-
-    # This is not the predicted position, rather it will show positions of
-    # electrode with optitrack markers. The message here contains the positions of reflective markers
-    @Slot(np.ndarray)
-    def show_electrode_positions(self, message):
-        if self.reflective_markers_series is not None:
-            self.chart.removeSeries(self.reflective_markers_series) # remove the old position
-        self.reflective_markers_series = self.create_new_scatter_series(self.grey_qcolor, self.marker_size)
-        self.reflective_marker_in_eeg_position = self.create_new_scatter_series(self.green_qcolor, self.marker_size) # reflective marker in eeg position
-
-        # Check if the optitrack markers are near any electrode positions
-        if self.near_predicted_points(message):
-            self.add_list_to_scatterdata2D(self.reflective_marker_in_eeg_position, self.predicted_eeg_positions_with_electrodes)
-            self.chart.addSeries(self.reflective_marker_in_eeg_position)
-        else:
-            self.add_list_to_scatterdata2D(self.reflective_markers_series, self.unassigned_electrode_markers)
-            self.chart.addSeries(self.reflective_markers_series)
-
-        self.chart.addSeries(self.reflective_markers_series)
-        self.chart.show()
 
     @Slot(np.ndarray)
     def update_and_add_scatterNZIZ(self, message):
@@ -339,6 +323,21 @@ class MainWindow(QMainWindow):
         self.add_list_to_scatterdata2D(self.EarToEarscatter_series, message)
         self.chart.addSeries(self.EarToEarscatter_series)
         self.chart.show()
+
+    def near_predicted_points(self, sample_data):
+        if sample_data:
+            data_set = self.predicted_positions
+            for sample in sample_data:
+                for data in data_set:
+                    magnitude_difference = np.absolute(np.linalg.norm(sample) - np.linalg.norm(data))
+                    if magnitude_difference < self.threshold_placement_range:
+                        index = np.where(data_set == data) 
+                        self.predicted_eeg_positions_with_electrodes = np.delete(self.predicted_positions, index) # Found the attached electrode
+                        self.predicted_positions = np.delete(self.predicted_positions, index) # Delete from the lsit of 21 positions 
+                        index_sample = np.where(sample_data == sample)
+                        self.unassigned_electrode_markers = np.delete(sample_data, index_sample) # Not yet attached electrodes
+                        return True
+        return False
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -43,6 +43,10 @@ class MainWindow(QMainWindow):
         self.main_chart.addSeries(self.NZIZscatter_series)
         self.main_chart.setTitle("2D Scatter plot")
 
+        self.NZIZ_BUTTON = 1
+        self.CIRCUM_BUTTON = 2
+        self.EARTOEAR_BUTTON = 3
+
         # # Axis
         # self.main_chart.createDefaultAxes()
         self.axisX = QValueAxis()
