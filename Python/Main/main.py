@@ -34,7 +34,7 @@ class MainWindow(QMainWindow):
         self.green_qcolor = QColor(0, 255, 0) # Circum
         self.blue_qcolor = QColor(0, 0, 255) # Ear2Ear
         self.yellow_qcolor = QColor(255, 255, 0) # Stylus position
-        self.black_qcolor = QColor(0, 0 ,0) # Specs position
+        self.black_qcolor = QColor(0, 0 ,0) # Specs positionQqqqqqqqqqq
         self.orange_qcolor = QColor(255, 165, 0) # Predicted position
         self.grey_qcolor = QColor(128,128,128) # Reflective Markers
 
@@ -79,8 +79,8 @@ class MainWindow(QMainWindow):
         # Set the axis properties
         segment_count = 8
         sub_segment_count = 2
-        axis_minimum = -0.8
-        axis_maximum = 0.8
+        axis_minimum = -0.6
+        axis_maximum = 0.6
         self.x_axis = QValue3DAxis()
         self.x_axis.setTitle('X')
         self.x_axis.setTitleVisible(True)
@@ -249,7 +249,6 @@ class MainWindow(QMainWindow):
         self.fpz_positon = message
         np.savetxt("nziz_5_positions.csv", message, delimiter=',')
 
-
     @Slot(np.ndarray)
     def show_current_stylus_position(self, message):
         self.scatter.removeSeries(self.stylus_position_series) # remove the old position
@@ -316,6 +315,10 @@ class MainWindow(QMainWindow):
         self.add_list_to_scatterdata(self.all_markers_series, message)
         self.scatter.addSeries(self.all_markers_series)
         self.scatter.show()
+
+        # if near become green.
+
+        # else it is grey
 
     @Slot(np.ndarray)
     def update_and_add_scatterNZIZ(self, message):

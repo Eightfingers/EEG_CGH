@@ -39,9 +39,9 @@ class MatlabMainThread(QThread):
             tf = self.eng.isprime(37)
             print("MATLAB: Matlab says its ...")
             print(tf)
-            # print("MATLAB: Trying to call matlab script")
-            # triangle_size = self.eng.test(1,2)
-            # print(triangle_size)
+            print("MATLAB: Trying to call matlab script")
+            triangle_size = self.eng.test(1,2)
+            print(triangle_size)
             print("MATLAB: Success")
             self.signals_to_status.signal_list.emit(["Matlab","Okay"]) # emit a list signal
         except Exception as e:

@@ -18,13 +18,17 @@ from matplotlib.figure import Figure
 import numpy as np
 import random 
 
+# QT central widget not updating
+
 class MplCanvas(FigureCanvasQTAgg):
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
+        # self.plt = fig.ion()
         self.axes = fig.add_subplot(111)
         self.axes.set_xlim([-3, 3])
         self.axes.set_ylim([-3, 3])
+
         super(MplCanvas, self).__init__(fig)
 
 class MainWindow(QMainWindow):
@@ -117,6 +121,8 @@ class MainWindow(QMainWindow):
         self.left_dock.setWidget(self.left_dock_main_widget)
         self.setCentralWidget(self.matlabcanvas)
 
+        self.CentralWidget_ref = self.takeCentralWidget()
+
         # Start the main thread
         self.matlab_main_thread = MatlabMainThread(self)
         self.matlab_main_thread.start()
@@ -131,11 +137,11 @@ class MainWindow(QMainWindow):
 
         # Setup a timer to trigger the redraw by calling update_plot.
         self.timer = QTimer()
-        self.timer.setInterval(33) # ~30hz
+        self.timer.setInterval(1000) # ~30hz
         self.timer.timeout.connect(self.update_plot)
-        self.timer.start()
+        #self.timer.start()
 
-    # This is not the predicted position, rather it will show positions of
+    # This is not the predicted position, rather set will show positions of
     # electrode with optitrack markers. The message here contains the positions of reflective markers
     @Slot(np.ndarray)
     def show_electrode_positions(self, message):
@@ -149,14 +155,22 @@ class MainWindow(QMainWindow):
         self.stylus_position_ref.remove()
         self.stylus_position_ref = self.matlabcanvas.axes.scatter(x_data, y_data, color='yellow')
 
-        x_data = self.specs_pos[0]
-        y_data = self.specs_pos[1]
+        # x_data = self.specs_pos[0]
+        # y_data = self.specs_pos[1]
+
+        self.coordinates = np.random.randint(-3, 3, size=(1, 2)) 
+        print(self.coordinates)
+        x_data = self.coordinates[0][0]
+        y_data = self.coordinates[0][1]
+
+        print(x_data, y_data)
 
         self.specs_position_ref.remove()
         self.specs_position_ref = self.matlabcanvas.axes.scatter(x_data, y_data, color='black')
+        self.matlabcanvas.show()
 
         if (self.live_predicted_eeg_positions == True):
-            # Convert predicted eeg_position from spec frame to global frame 
+            # Convert predicted eeg_position from spec frame to global frame
             self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position_ref)
             x_data = self.global_predicted_eeg_positions[0]
             y_data = self.global_predicted_eeg_positions[1]
@@ -191,6 +205,8 @@ class MainWindow(QMainWindow):
                 self.unassigned_electrode_markers_ref = self.matlabcanvas.axes.scatter(x_data, y_data, color='red')
 
         self.matlabcanvas.show()
+        self.CentralWidget_ref.update()
+
 
     # Function that is called from the menu widget to save trace data into csv files
     @Slot(int)
@@ -283,11 +299,22 @@ class MainWindow(QMainWindow):
     def show_current_stylus_position(self, message):
         # print("The current stylus position is", message[0])
         self.stylus_position = message
+        self.matlabcanvas.show()
 
     @Slot(list)
     def update_current_specs_position_rotation(self, message):
         self.specs_pos = message[0]
         self.specs_rotation = message[1]
+
+        x_data = self.specs_pos[0]
+        y_data = self.specs_pos[1]
+
+        print(x_data, y_data)
+
+        self.specs_position_ref.remove()
+        self.specs_position_ref = self.matlabcanvas.axes.scatter(x_data, y_data, color='black')
+        self.matlabcanvas.show()
+
 
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position_ref):
         r = R.from_quat(specs_rotation) # rotate the orientation
@@ -344,5 +371,4 @@ if __name__ == "__main__":
 
     window = MainWindow()
     window.show()
-    window.resize(440, 300)
     sys.exit(app.exec())
