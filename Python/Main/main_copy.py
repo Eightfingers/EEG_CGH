@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtCore import (Signal, QMutex, QElapsedTimer, QMutexLocker,
                             QPoint, QPointF, QSize, Qt, QThread, QObject, 
-                            QWaitCondition, Slot, QSize)
+                            QWaitCondition, Slot, QSize, QTimer)
 from PySide6.QtGui import QGuiApplication, QVector3D, QColor
 from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget, QLabel, QBoxLayout
 from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBarDataItem, QAbstract3DGraph,
@@ -26,6 +26,7 @@ from scipy.spatial.transform import Rotation as R
 # Matlab w, x,y,z
 # Optitrack x,y,z,w
 # Scipy x,y,z,w
+# Qt
 
 
 class MainWindow(QMainWindow):
@@ -33,11 +34,12 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
 
+        self.debug = False
+
         self.setWindowTitle('CGH EEG Optitrack Assisted EEG localization')
 
         # The graph
         self.scatter = Q3DScatter()
-
         # self.scatter.setAspectRatio(1)
         # self.scatter.setHorizontalAspectRatio(1)
 
@@ -62,7 +64,9 @@ class MainWindow(QMainWindow):
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize)
         self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.bigger_itemsize)
         self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.bigger_itemsize)
-        self.all_markers_series = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
+        self.reflective_markers_position_series = self.create_new_scatter_series(self.grey_qcolor, self.itemsize)
+
+        # Variables to hold data 
 
         # Predicted positions
         self.predicted_positions = None
@@ -79,12 +83,13 @@ class MainWindow(QMainWindow):
         self.EarToEar_specs_data = None
         self.EarToEar_specs_rotate = None
 
-        # Specs data during trace
-        self.specs_trace_position = None
-        self.specs_trace_rotation = None
+        # position of stray reflective markers
+        self.reflective_markers_position = None
 
+        # Used to hold latest specs / stylus latest position or rotation
         self.specs_live_position = None
         self.specs_live_rotation = None
+        self.live_stylus_position = None
 
         self.NZIZ_BUTTON = 1
         self.CIRCUM_BUTTON = 2
@@ -92,42 +97,19 @@ class MainWindow(QMainWindow):
 
         self.live_predicted_eeg_positions = False
         self.live_predicted_nziz_positions = False
-
+        self.live_reflective_markers = False
+        
         # Set the axis properties
         segment_count = 8
         sub_segment_count = 2
         axis_minimum = -0.8
         axis_maximum = 0.8
-        self.x_axis = QValue3DAxis()
-        self.x_axis.setTitle('X')
-        self.x_axis.setTitleVisible(True)
-        self.x_axis.setSegmentCount(segment_count)
-        self.x_axis.setRange(axis_minimum, axis_maximum)
-        self.x_axis.setSubSegmentCount(sub_segment_count)
-        # self.x_axis.setAutoAdjustRange(True)
-
-        self.y_axis = QValue3DAxis()
-        self.y_axis.setTitle('Y')
-        self.y_axis.setTitleVisible(True)  
-        self.y_axis.setSegmentCount(8)  
-        self.y_axis.setSegmentCount(segment_count)
-        self.y_axis.setRange(axis_minimum, axis_maximum)
-        self.y_axis.setSubSegmentCount(sub_segment_count)
-        # self.y_axis.setAutoAdjustRange(True)
-
-        self.z_axis = QValue3DAxis()
-        self.z_axis.setTitle('Z')
-        self.z_axis.setTitleVisible(True)
-        self.z_axis.setSegmentCount(8)  
-        self.z_axis.setSegmentCount(segment_count)
-        self.z_axis.setRange(axis_minimum, axis_maximum)
-        self.z_axis.setSubSegmentCount(sub_segment_count)
-        # self.z_axis.setAutoAdjustRange(True)
-
+        self.x_axis = self.create_axis('X', segment_count, sub_segment_count, axis_minimum, axis_maximum)
         self.scatter.setAxisX(self.x_axis)
+        self.y_axis = self.create_axis('Y', segment_count, sub_segment_count, axis_minimum, axis_maximum)
         self.scatter.setAxisY(self.y_axis)
+        self.z_axis = self.create_axis('Z', segment_count, sub_segment_count, axis_minimum, axis_maximum)
         self.scatter.setAxisZ(self.z_axis)
-        # self.scatter.setMargin(0.01)
 
         # Set no Shadow
         self.scatter.setShadowQuality(QAbstract3DGraph.ShadowQualityNone)
@@ -181,30 +163,32 @@ class MainWindow(QMainWindow):
         self.left_dock_menu_widget.connect_matlab_signals(self.matlab_main_thread)
         self.left_dock_menu_widget.connect_optitrack_signals(self.optitrack_main_thread)
 
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_plot_data)
+        self.timer.start(100)
+
     # Function that is called from the menu widget to save trace data into csv files
     @Slot(int)
     def save_trace_data (self, message):
         # Get the data from the optitrack thread
-        self.stylus_data = self.optitrack_main_thread.stylus_data 
-        self.specs_trace_position = self.optitrack_main_thread.specs_data 
-        self.specs_trace_rotation = self.optitrack_main_thread.specs_rotation_data
-        self.stylus_data[:,0]  *= -1 # Rectify the x axis
+        stylus_data = self.optitrack_main_thread.stylus_data 
+        specs_trace_position = self.optitrack_main_thread.specs_data 
+        specs_trace_rotation = self.optitrack_main_thread.specs_rotation_data
 
-        # Strip of all the zeroes
-        self.stylus_data = self.stylus_data[~np.all(self.stylus_data == 0, axis=1)]
-        self.specs_trace_position = self.specs_trace_position[~np.all(self.specs_trace_position == 0, axis=1)]
-        self.specs_trace_rotation = self.specs_trace_rotation[~np.all(self.specs_trace_rotation == 0, axis=1)]
-
+        #strip of all the zeroes
+        stylus_data = self.stylus_data[~np.all(self.stylus_data == 0, axis=1)]
+        specs_trace_position = self.specs_trace_position[~np.all(self.specs_trace_position == 0, axis=1)]
+        specs_trace_rotation = self.specs_trace_rotation[~np.all(self.specs_trace_rotation == 0, axis=1)]
 
         if (message == self.NZIZ_BUTTON): # NZIZ
-            print("Main: Saving NZIZ data")
-            np.savetxt("data_NZIZstylus.csv", self.stylus_data, delimiter=',')
-            np.savetxt("data_NZIZspecs.csv", self.specs_trace_position, delimiter=',')
-            np.savetxt("rotation_data_NZIZspecs.csv", self.specs_trace_rotation, delimiter=',')
+            self.NZIZ_data = stylus_data
+            self.NZIZ_specs_data = specs_trace_position
+            self.NZIZ_specs_rotate = specs_trace_rotation
 
-            self.NZIZ_data = self.stylus_data
-            self.NZIZ_specs_data = self.specs_trace_position
-            self.NZIZ_specs_rotate = self.specs_trace_rotation
+            print("Main: Saving NZIZ data")
+            np.savetxt("data_NZIZstylus.csv", self.NZIZ_data, delimiter=',')
+            np.savetxt("data_NZIZspecs.csv", self.NZIZ_specs_data, delimiter=',')
+            np.savetxt("rotation_data_NZIZspecs.csv", self.NZIZ_specs_rotate, delimiter=',')
 
             ## Debug, Trace in specs frame
             NZIZ_in_specs_frame = self.transform_from_global_to_specs_frame(self.NZIZ_data, self.NZIZ_specs_rotate, self.NZIZ_specs_data )
@@ -219,13 +203,14 @@ class MainWindow(QMainWindow):
             self.update_and_add_scatterNZIZ(self.NZIZ_in_specs_frame) 
 
         elif (message == self.CIRCUM_BUTTON): # Circum
+            self.CIRCUM_data = stylus_data
+            self.CIRCUM_specs_data = specs_trace_position
+            self.CIRCUM_specs_rotate = specs_trace_rotation
+
             print("Main: Saving Circum data")
-            np.savetxt("data_CIRCUMstylus.csv", self.stylus_data, delimiter=',')
-            np.savetxt("data_CIRCUMspecs.csv", self.specs_trace_position, delimiter=',')
-            np.savetxt("rotation_data_CIRCUMspecs.csv", self.specs_trace_rotation, delimiter=',')
-            self.CIRCUM_data = self.stylus_data
-            self.CIRCUM_specs_data = self.specs_trace_position
-            self.CIRCUM_specs_rotate = self.specs_trace_rotation
+            np.savetxt("data_CIRCUMstylus.csv", self.CIRCUM_data, delimiter=',')
+            np.savetxt("data_CIRCUMspecs.csv", self.CIRCUM_specs_data, delimiter=',')
+            np.savetxt("rotation_data_CIRCUMspecs.csv", self.CIRCUM_specs_rotate, delimiter=',')
 
             ## Debug, Trace in specs frame
             Circum_in_specs_frame = self.transform_from_global_to_specs_frame(self.CIRCUM_data, self.CIRCUM_specs_rotate,  self.CIRCUM_specs_data )
@@ -238,13 +223,14 @@ class MainWindow(QMainWindow):
             self.update_and_add_scatterCIRCUM(self.stylus_data)
 
         elif (message == self.EARTOEAR_BUTTON): # Ear to Ear
+            self.EartoEar_data = stylus_data
+            self.EartoEar_specs_data = specs_trace_position
+            self.EartoEar_specs_rotate = specs_trace_rotation
+
             print("Main: Saving Ear to Ear data")
-            np.savetxt("data_EarToEarstylus.csv", self.stylus_data, delimiter=',')
-            np.savetxt("data_EarToEarspecs.csv", self.specs_trace_position, delimiter=',')
-            np.savetxt("rotation_data_EarToEarspecs.csv", self.specs_trace_rotation, delimiter=',')
-            self.EartoEar_data = self.stylus_data
-            self.EartoEar_specs_data = self.specs_trace_position
-            self.EartoEar_specs_rotate = self.specs_trace_rotation
+            np.savetxt("data_EarToEarstylus.csv", self.EartoEar_data, delimiter=',')
+            np.savetxt("data_EarToEarspecs.csv", self.EartoEar_specs_data, delimiter=',')
+            np.savetxt("rotation_data_EarToEarspecs.csv", self.EartoEar_specs_rotate, delimiter=',')
 
             ## Debug, Trace in specs frame
             EartoEar_in_specs_frame = self.transform_from_global_to_specs_frame(self.EartoEar_data, self.EartoEar_specs_rotate, self.EartoEar_specs_data )
@@ -258,32 +244,53 @@ class MainWindow(QMainWindow):
 
     @Slot(np.ndarray)
     def update_save_predicted_eeg_positions(self, message):
-        self.predicted_positions = self.transform_spec_to_global_frame(message)
+        self.predicted_positions = message
+        np.savetxt("21_predicted_positions_specs_frame_from_copy_py.csv", message, delimiter=',')
 
-        np.savetxt("21_predicted_positions_specs_frame_fromcopy.csv", message, delimiter=',')
         self.scatter.removeSeries(self.Predicted21_series) # remove the old series
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize) # reset the seties
         self.add_list_to_scatterdata(self.Predicted21_series, self.predicted_positions)
         self.scatter.addSeries(self.Predicted21_series)
 
-        self.predicted_eeg_positions_global_frame = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_rotation, self.specs_position)
-        np.savetxt("21_predicted_positions_global_frame_fromcopy.csv", message, delimiter=',')
-
+        self.predicted_eeg_positions_global_frame = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_live_rotation, self.specs_live_position)
+        np.savetxt("21_predicted_positions_global_frame_from_copy_py.csv", message, delimiter=',')
 
     # Clear all data shown in the graph
     @Slot()
     def clear_data(self):
-        
         # set it to false
         self.live_predicted_eeg_positions = False
         self.live_predicted_nziz_positions = False
+
+        if self.NZIZscatter_series in self.scatter.seriesList():
+            self.scatter.removeSeries(self.NZIZscatter_series) 
+        if self.NZIZscatter_series_trace in self.scatter.seriesList():
+            self.scatter.removeSeries(self.NZIZscatter_series_trace) 
+
+        if self.CIRCUMscatter_series in self.scatter.seriesList():
+            self.scatter.removeSeries(self.CIRCUMscatter_series)
+
+        if self.EarToEarscatter_series in self.scatter.seriesList():
+            self.scatter.removeSeries(self.EarToEarscatter_series)
+
+        if self.Predicted21_series in self.scatter.seriesList():
+            self.scatter.removeSeries(self.Predicted21_series)
 
         self.scatter.removeSeries(self.NZIZscatter_series)
         self.scatter.removeSeries(self.CIRCUMscatter_series)
         self.scatter.removeSeries(self.EarToEarscatter_series)
         self.scatter.removeSeries(self.Predicted21_series)
-        self.scatter.removeSeries(self.all_markers_series)
-    
+        self.scatter.removeSeries(self.reflective_markers_position_series)
+
+        self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
+        self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
+        self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
+        self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor, self.itemsize)
+        self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize)
+        self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.bigger_itemsize)
+        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.bigger_itemsize)
+        self.reflective_markers_position_series = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
+
     @Slot(np.ndarray)
     def update_fpz_position(self, message):
         self.fpz_positon = message
@@ -293,23 +300,16 @@ class MainWindow(QMainWindow):
         self.add_list_to_scatterdata(self.NZIZscatter_series, self.fpz_positon)
         self.scatter.addSeries(self.NZIZscatter_series)
 
-    @Slot(np.ndarray)
-    def show_current_stylus_position(self, message):
-        new_stylus_position = message 
-        new_stylus_position[0]  *= -1 # Rectify the x axis
+    # Update the scatter plot with the new data 
+    def update_plot_data(self):
 
         self.scatter.removeSeries(self.stylus_position_series) # remove the old position
         self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.bigger_itemsize)
-        self.add_list_to_scatterdata(self.stylus_position_series, new_stylus_position)
+        self.add_list_to_scatterdata(self.stylus_position_series, self.live_stylus_position)
         self.scatter.addSeries(self.stylus_position_series)
         self.scatter.show()
 
-    @Slot(list)
-    def update_current_specs_position_rotation(self, message):
-        self.specs_live_position = message[0]
-        self.specs_live_rotation = message[1]
-
-        self.specs_live_position[0]  *= -1 # Rectify the x axis
+        # self.specs_live_position[0]  *= -1 # Rectify the x axis
         self.scatter.removeSeries(self.specs_series) # remove the old position
         self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.bigger_itemsize) # reset the seties
             
@@ -329,13 +329,28 @@ class MainWindow(QMainWindow):
         if (self.live_predicted_nziz_positions == True):
             # Convert predicted nziz from spec frame to global frame 
             self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_live_rotation, self.specs_live_position)
-            if self.NZIZscatter_series_trace in self.scatter.seriesList():
-                self.scatter.removeSeries(self.NZIZscatter_series_trace) # remove the trace if its still there
             self.scatter.removeSeries(self.NZIZscatter_series)
             self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
             self.add_list_to_scatterdata(self.NZIZscatter_series, self.global_predicted_nziz_positions)
             self.scatter.addSeries(self.NZIZscatter_series)
             self.scatter.show()
+
+        self.scatter.removeSeries(self.reflective_markers_position_series) # remove the old position
+        self.reflective_markers_position_series = self.create_new_scatter_series(self.grey_qcolor, self.itemsize)
+        self.add_list_to_scatterdata(self.reflective_markers_position_series, message)
+        self.scatter.addSeries(self.reflective_markers_position_series)
+        self.scatter.show()
+
+
+    @Slot(np.ndarray)
+    def update_current_stylus_position(self, message):
+        self.live_stylus_position = message 
+        # self.live_stylus_position[0] *= -1 # Rectify the x axis
+
+    @Slot(list)
+    def update_current_specs_position_rotation(self, message):
+        self.specs_live_position = message[0]
+        self.specs_live_rotation = message[1]
 
     @Slot(bool)
     def set_live_predicted_eeg_positions(self, message):
@@ -344,19 +359,25 @@ class MainWindow(QMainWindow):
         self.scatter.removeSeries(self.EarToEarscatter_series)
 
     @Slot(bool)
+    def set_reflective_markers(self, message):
+        self.live_reflective_markers = message
+
+    @Slot(bool)
     def set_live_fpz_positions(self, message):
         self.live_predicted_nziz_positions = message
+        self.scatter.removeSeries(self.NZIZscatter_series_trace) 
+
+    @Slot(bool)
+    def set_live_fpz_positions(self, message):
+        self.live_predicted_nziz_positions = message
+        self.scatter.removeSeries(self.NZIZscatter_series_trace) 
 
 
     # This is not the predicted position, rather it will show positions of
     # electrode with optitrack markers
     @Slot(np.ndarray)
-    def show_electrode_positions(self, message):
-        self.scatter.removeSeries(self.all_markers_series) # remove the old position
-        self.all_markers_series = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
-        self.add_list_to_scatterdata(self.all_markers_series, message)
-        self.scatter.addSeries(self.all_markers_series)
-        self.scatter.show()
+    def update_reflective_markers_positions(self, message):
+        self.reflective_markers_position = message
 
     @Slot(np.ndarray)
     def update_and_add_scatterNZIZ(self, message):
@@ -384,12 +405,21 @@ class MainWindow(QMainWindow):
                 scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(d[0], d[1], d[2])))
 
     def create_new_scatter_series(self, colour, size):
+        scatter_series_new_series = QScatter3DSeries()
+        scatter_series_new_series.setBaseColor(colour)
+        scatter_series_new_series.setItemSize(size)
 
-        self.scatter_series_new_series = QScatter3DSeries()
-        self.scatter_series_new_series.setBaseColor(colour)
-        self.scatter_series_new_series.setItemSize(size)
+        return scatter_series_new_series
 
-        return self.scatter_series_new_series
+    def create_axis(self, title, segment_count, sub_segment_count, axis_min, axis_max):
+        new_axis = QValue3DAxis()
+        new_axis.setTitle(title)
+        new_axis.setTitleVisible(True)
+        new_axis.setSegmentCount(segment_count)
+        new_axis.setRange(axis_min, axis_max)
+        new_axis.setSubSegmentCount(sub_segment_count)
+
+        return new_axis
 
     # Used in the predicted data set
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
@@ -416,6 +446,19 @@ class MainWindow(QMainWindow):
 
         return new_predicted_positions
 
+    def near_predicted_points(self, sample_data):
+        data_set = self.predicted_positions
+        for sample in sample_data:
+            for data in data_set:
+                magnitude_difference = np.absolute(np.linalg.norm(sample) - np.linalg.norm(data))
+                if magnitude_difference < self.threshold_placement_range:
+                    index = np.where(data_set == data) 
+                    self.predicted_eeg_positions_with_electrodes = np.delete(self.predicted_positions, index) # Found the attached electrode
+                    self.predicted_positions = np.delete(self.predicted_positions, index) # Delete from the lsit of 21 positions 
+                    index_sample = np.where(sample_data == sample)
+                    self.unassigned_electrode_markers = np.delete(sample_data, index_sample) # Not yet attached electrodes
+                    return True
+        return False
 
 if __name__ == '__main__':  
     app = QApplication(sys.argv)

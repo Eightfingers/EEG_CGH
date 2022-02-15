@@ -30,10 +30,10 @@ class OptitrackMainThread(QThread):
         self.signals_to_main_specs_pos_rotation = AppSignals()
         self.signals_to_main_show_electrode_placements = AppSignals()
 
-        self.signals_to_main_stylus_pos.signal_numpy.connect(parent.show_current_stylus_position) # rotation is not needed for now
+        self.signals_to_main_stylus_pos.signal_numpy.connect(parent.update_current_stylus_position) # rotation is not needed for now
         self.signals_to_main_specs_pos_rotation.signal_list.connect(parent.update_current_specs_position_rotation)
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label)
-        self.signals_to_main_show_electrode_placements.signal_numpy.connect(parent.show_electrode_positions)
+        self.signals_to_main_show_electrode_placements.signal_numpy.connect(parent.update_reflective_markers_positions)
 
         # Control variables 
         self.record = False

@@ -220,7 +220,7 @@ class MainWindow(QMainWindow):
         np.savetxt("nziz_5_positions.csv", message, delimiter=',')
 
     @Slot(np.ndarray)
-    def show_current_stylus_position(self, message):
+    def update_current_stylus_position(self, message):
         x = np.array([message[0]])
         y = np.array([message[1]])
         self.stylus_scatter.setData(x,y)
@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
     # This is not the predicted position, rather it will show positions of
     # electrode with optitrack markers. The message here contains the positions of reflective markers
     @Slot(np.ndarray)
-    def show_electrode_positions(self, message):
+    def update_reflective_markers_positions(self, message):
         # Check if the optitrack markers are near any electrode positions
         if self.near_predicted_points(message):
             x = np.array([message[0]])

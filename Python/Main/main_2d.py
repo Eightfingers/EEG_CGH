@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.marker_size)
         self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.marker_size)
         self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.marker_size)
-        self.all_markers_series = self.create_new_scatter_series(self.green_qcolor, self.marker_size)
+        self.reflective_markers_position_series = self.create_new_scatter_series(self.green_qcolor, self.marker_size)
 
         # electrode accuracy placement range 
         self.threshold_placement_range = 0.008 # 0.008m , 8mm 
@@ -241,7 +241,7 @@ class MainWindow(QMainWindow):
         np.savetxt("nziz_5_positions.csv", message, delimiter=',')
 
     @Slot(np.ndarray)
-    def show_current_stylus_position(self, message):
+    def update_current_stylus_position(self, message):
         # print("The current stylus position is", message[0])
         dummy_array = np.array([message, [1,2,3]])
         self.chart.removeSeries(self.stylus_position_series)
@@ -314,7 +314,7 @@ class MainWindow(QMainWindow):
     # This is not the predicted position, rather it will show positions of
     # electrode with optitrack markers. The message here contains the positions of reflective markers
     @Slot(np.ndarray)
-    def show_electrode_positions(self, message):
+    def update_reflective_markers_positions(self, message):
         if self.reflective_markers_series is not None:
             self.chart.removeSeries(self.reflective_markers_series) # remove the old position
         self.reflective_markers_series = self.create_new_scatter_series(self.grey_qcolor, self.marker_size)

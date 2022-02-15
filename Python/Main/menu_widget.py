@@ -50,8 +50,7 @@ class MenuWidget(QWidget):
         # I need 2 make 2 seperate bool signals, 1 to indicate start of recording trace 
         # and the other to indicate whether to show other markers (non rigid body markers)
         self.signals_to_optitrack = AppSignals() # show rigid body markers
-        # Another bool signal
-        self.signals_to_optitrack2 = AppSignals() # show other markers 
+        self.signals_to_optitrack2 = AppSignals() # show reflective markers
 
         # Used to save trace data 
         self.signals_to_main = AppSignals()
@@ -65,6 +64,9 @@ class MenuWidget(QWidget):
 
         self.EarToEardata_to_main_signals = AppSignals()
         self.EarToEardata_to_main_signals.signal_numpy.connect(parent.update_and_add_scatterEarToEar)
+
+        self.reflective_markers_to_main_signals = AppSignals()
+        self.reflective_markers_to_main_signals.signal_bool.connect(parent.set_reflective_markers)
 
         self.signals_to_status = AppSignals() 
         self.signals_to_status.signal_list.connect(parent.left_dock_status_widget.change_label)
@@ -130,7 +132,7 @@ class MenuWidget(QWidget):
     # Shows optitrack markers as grey in colour in the graph
     @Slot()
     def electrode_placements(self):
-        if ((self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0) or self.lock ):
+        if ((self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.  EarToEarscatter_series.dataProxy().itemCount() == 0) or self.lock ):
             QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
         else:
             if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat -> it is clicked, unflat them
@@ -138,11 +140,13 @@ class MenuWidget(QWidget):
                 self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
                 self.attach_electrodes_button.setFlat(False)
                 self.signals_to_optitrack.signal_bool.emit(False)
+                self.reflective_markers_to_main_signals.signal_bool.emit(False)
             else:
                 self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
                 self.attach_electrodes_button.setText('Stop!')
                 self.attach_electrodes_button.setFlat(True)
                 self.signals_to_optitrack.signal_bool.emit(True)
+                self.reflective_markers_to_main_signals.signal_bool.emit(True)
 
     @Slot(str) # used by the matlab thread to indicate that it has finished predicting
     def change_predict_state(self, message):

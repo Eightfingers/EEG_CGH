@@ -144,7 +144,7 @@ class MainWindow(QMainWindow):
     # This is not the predicted position, rather set will show positions of
     # electrode with optitrack markers. The message here contains the positions of reflective markers
     @Slot(np.ndarray)
-    def show_electrode_positions(self, message):
+    def update_reflective_markers_positions(self, message):
         self.reflective_markers_position = message 
 
     def update_plot(self):
@@ -296,7 +296,7 @@ class MainWindow(QMainWindow):
         np.savetxt("nziz_5_positions.csv", message, delimiter=',')
 
     @Slot(np.ndarray)
-    def show_current_stylus_position(self, message):
+    def update_current_stylus_position(self, message):
         # print("The current stylus position is", message[0])
         self.stylus_position = message
         self.matlabcanvas.show()
