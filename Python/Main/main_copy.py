@@ -317,7 +317,7 @@ class MainWindow(QMainWindow):
         self.scatter.addSeries(self.specs_series)
         self.scatter.show()
         
-        if (self.live_predicted_eeg_positions == True):
+        if self.live_predicted_eeg_positions == True:
             # Convert predicted eeg_position from spec frame to global frame 
             self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_live_rotation, self.specs_live_position)
             self.scatter.removeSeries(self.Predicted21_series) # remove the old series
@@ -326,7 +326,7 @@ class MainWindow(QMainWindow):
             self.scatter.addSeries(self.Predicted21_series)
             self.scatter.show()
 
-        if (self.live_predicted_nziz_positions == True):
+        if self.live_predicted_nziz_positions == True:
             # Convert predicted nziz from spec frame to global frame 
             self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_live_rotation, self.specs_live_position)
             self.scatter.removeSeries(self.NZIZscatter_series)
@@ -335,11 +335,12 @@ class MainWindow(QMainWindow):
             self.scatter.addSeries(self.NZIZscatter_series)
             self.scatter.show()
 
-        self.scatter.removeSeries(self.reflective_markers_position_series) # remove the old position
-        self.reflective_markers_position_series = self.create_new_scatter_series(self.grey_qcolor, self.itemsize)
-        self.add_list_to_scatterdata(self.reflective_markers_position_series, message)
-        self.scatter.addSeries(self.reflective_markers_position_series)
-        self.scatter.show()
+        if self.set_reflective_markers == True:
+            self.scatter.removeSeries(self.reflective_markers_position_series) # remove the old position
+            self.reflective_markers_position_series = self.create_new_scatter_series(self.grey_qcolor, self.itemsize)
+            self.add_list_to_scatterdata(self.reflective_markers_position_series, self.reflective_markers_position)
+            self.scatter.addSeries(self.reflective_markers_position_series)
+            self.scatter.show()
 
 
     @Slot(np.ndarray)
@@ -372,7 +373,6 @@ class MainWindow(QMainWindow):
         self.live_predicted_nziz_positions = message
         self.scatter.removeSeries(self.NZIZscatter_series_trace) 
 
-
     # This is not the predicted position, rather it will show positions of
     # electrode with optitrack markers
     @Slot(np.ndarray)
@@ -398,7 +398,9 @@ class MainWindow(QMainWindow):
         self.scatter.show()
 
     def add_list_to_scatterdata(self, scatter_series, data):
-        if data.ndim == 1: # if its one dimensional
+        if data == None:
+            pass
+        elif data.ndim == 1: # if its one dimensional
             scatter_series.dataProxy().addItem(QScatterDataItem(QVector3D(data[0], data[1], data[2])))
         else:
             for d in data:
