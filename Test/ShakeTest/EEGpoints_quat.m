@@ -1,9 +1,11 @@
 % function [predicted] = EEGpoints_quat()
 
 %%% Circumference
-addpath('helperfuncs\');
-addpath('myfuncs');
-addpath('GUi_wrong');
+% addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
+% addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs
+addpath('C:\Users\65859\Desktop\eeg_cgh_main\Python\Main\matlab_funcs\myfuncs');
+addpath('C:\Users\65859\Desktop\eeg_cgh_main\Python\Main\matlab_funcs\helperfuncs\');
+
 step = 1; % used to take only every 2nd data
 
 stylus_data = readmatrix('data_CIRCUMstylus');

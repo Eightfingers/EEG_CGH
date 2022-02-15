@@ -143,8 +143,14 @@ closest_endpoint_e2e = trans_newmat_xz(find(dist_endpoint_e2e==min(dist_endpoint
 [row_startpoint_e2e,~] = find(trans_newmat_xz==closest_startpoint_e2e);
 [row_endpoint_e2e,~] = find(trans_newmat_xz==closest_endpoint_e2e);
 
-new_matrix_x_e2e = [trans_newmat_xz(row_startpoint_e2e:row_endpoint_e2e,1)].';
-new_matrix_z_e2e = [trans_newmat_xz(row_startpoint_e2e:row_endpoint_e2e,2)].';
+if row_startpoint_e2e > 50
+    new_matrix_x_e2e = [trans_newmat_xz(row_endpoint_e2e:row_startpoint_e2e,1)].';
+    new_matrix_z_e2e = [trans_newmat_xz(row_endpoint_e2e:row_startpoint_e2e,2)].';
+else
+    % Swapped for some reason
+    new_matrix_x_e2e = [trans_newmat_xz(row_startpoint_e2e:row_endpoint_e2e,1)].';
+    new_matrix_z_e2e = [trans_newmat_xz(row_startpoint_e2e:row_endpoint_e2e,2)].';
+end
 
 %%% NZ-IZ - The NZIZ tracking data is considered as a spline in
 %%% 2D space. The data points are orthogonally projected on the 2D ZY plane

@@ -290,6 +290,8 @@ class MainWindow(QMainWindow):
             self.scatter.show()
 
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
+        print(specs_rotation)
+        specs_rotation[[3,0]] = specs_rotation[[0, 3]]
         r = R.from_quat(specs_rotation) # rotate the orientation
         #print("The SPECS rotation is ..", specs_rotation)
         # print("The Specs position is ..", specs_position)
