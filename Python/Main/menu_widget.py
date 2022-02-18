@@ -12,6 +12,7 @@ import sys, os
 from matlab_thread import MatlabMainThread
 from pathlib import Path
 from app_signals import AppSignals
+from debug_trace import trace_menu
 
 class MenuWidget(QWidget):
 
@@ -52,18 +53,9 @@ class MenuWidget(QWidget):
         self.signals_to_optitrack = AppSignals() # show rigid body markers
         self.signals_to_optitrack2 = AppSignals() # show reflective markers
 
-        # Used to save trace data 
+        # Used to save the 3 traces data 
         self.signals_to_main = AppSignals()
         self.signals_to_main.signal_int.connect(parent.save_trace_data) 
-        
-        self.NZIZdata_to_main_signals = AppSignals()
-        self.NZIZdata_to_main_signals.signal_numpy.connect(parent.update_and_add_scatterNZIZ)
-
-        self.CIRCUMdata_to_main_signals = AppSignals()
-        self.CIRCUMdata_to_main_signals.signal_numpy.connect(parent.update_and_add_scatterCIRCUM)
-
-        self.EarToEardata_to_main_signals = AppSignals()
-        self.EarToEardata_to_main_signals.signal_numpy.connect(parent.update_and_add_scatterEarToEar)
 
         self.reflective_markers_to_main_signals = AppSignals()
         self.reflective_markers_to_main_signals.signal_bool.connect(parent.set_reflective_markers)
@@ -132,21 +124,21 @@ class MenuWidget(QWidget):
     # Shows optitrack markers as grey in colour in the graph
     @Slot()
     def electrode_placements(self):
-        if ((self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.  EarToEarscatter_series.dataProxy().itemCount() == 0) or self.lock ):
-            QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
+        # if ((self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.  EarToEarscatter_series.dataProxy().itemCount() == 0) or self.lock ):
+        #     QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
+        # else:
+        if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat -> it is clicked, unflat them
+            self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
+            self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
+            self.attach_electrodes_button.setFlat(False)
+            self.signals_to_optitrack2.signal_bool.emit(False)
+            self.reflective_markers_to_main_signals.signal_bool.emit(False)
         else:
-            if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat -> it is clicked, unflat them
-                self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
-                self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
-                self.attach_electrodes_button.setFlat(False)
-                self.signals_to_optitrack.signal_bool.emit(False)
-                self.reflective_markers_to_main_signals.signal_bool.emit(False)
-            else:
-                self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
-                self.attach_electrodes_button.setText('Stop!')
-                self.attach_electrodes_button.setFlat(True)
-                self.signals_to_optitrack.signal_bool.emit(True)
-                self.reflective_markers_to_main_signals.signal_bool.emit(True)
+            self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
+            self.attach_electrodes_button.setText('Stop!')
+            self.attach_electrodes_button.setFlat(True)
+            self.signals_to_optitrack2.signal_bool.emit(True)
+            self.reflective_markers_to_main_signals.signal_bool.emit(True)
 
     @Slot(str) # used by the matlab thread to indicate that it has finished predicting
     def change_predict_state(self, message):
@@ -163,7 +155,7 @@ class MenuWidget(QWidget):
             if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.EarToEarscatter_series.dataProxy().itemCount() == 0):
                 QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
         else:
-            print("Menu: Predicting eeg positions")
+            trace_menu("Predicting eeg positions")
             message =["21 positions"] 
             self.signals_to_matlab.signal_list.emit(message)
             self.predict_all_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
@@ -174,7 +166,7 @@ class MenuWidget(QWidget):
             if (self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 ):
                 QMessageBox.warning(self, "Warning", "Please complete NZIZ trace!!")
         else:
-            print("Menu: Predicting FPZ position")
+            trace_menu("Predicting FPZ position")
             # message = [self.parent.NZIZ_data, self.parent.NZIZ_specs_data]
             message =["NZIZ positions"] 
             self.signals_to_matlab.signal_list.emit(message)

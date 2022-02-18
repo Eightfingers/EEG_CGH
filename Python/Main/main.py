@@ -223,6 +223,10 @@ class MainWindow(QMainWindow):
 
         self.predicted_eeg_positions_global_frame = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_live_rotation , self.specs_live_position)
         np.savetxt("21_predicted_positions_global_frame.csv", message, delimiter=',')
+    
+    @Slot(bool)
+    def set_reflective_markers(self, message):
+        self.live_reflective_markers = message
 
     # Clear all data shown in the graph
     @Slot()

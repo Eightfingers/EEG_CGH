@@ -3,6 +3,8 @@ import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QMessageBox
 import matlab.engine
+from debug_trace import trace_opitrack_status
+from debug_trace import trace_opitrack_status_bodies
 from PythonClient4_0.NatNetClient import NatNetClient
 # from PythonClient.NatNetClient import NatNetClient
 from app_signals import AppSignals
@@ -64,24 +66,24 @@ class OptitrackMainThread(QThread):
         is_running = self.streaming_client.run()
         
         if not is_running:
-            print("ERROR: Could not start streaming client.")
+            trace_opitrack_status("ERROR: Could not start streaming client.")
             self.signals_to_status.signal_list.emit(["Optitrack","Error"])
             try:
                 sys.exit(1)
             except SystemExit:
-                print("...")
+                trace_opitrack_status("...")
             finally:
-                print("exiting")
+                trace_opitrack_status("exiting")
         time.sleep(1)
         if self.streaming_client.connected() is False:
-            print("ERROR: Could not connect properly.  Check that Motive streaming is on.")
+            trace_opitrack_status("ERROR: Could not connect properly.  Check that Motive streaming is on.")
             self.signals_to_status.signal_list.emit(["Optitrack","Error"])
             try:
                 sys.exit(2)
             except SystemExit:
-                print("...")
+                trace_opitrack_status("...")
             finally:
-                print("exiting")
+                trace_opitrack_status("exiting")
         else:
             self.signals_to_status.signal_list.emit(["Optitrack","Okay"])
 
@@ -103,7 +105,6 @@ class OptitrackMainThread(QThread):
     # This is a callback function that gets connected to the NatNet client and called once per mocap frame.
     # This callback function is used to get marker positions that are not part of the rigidbody.
     def receiveNewFrame(self, data_dict ):
-        # print( "Optitrack: frame number ", frameNumber )
         order_list=[ "frameNumber", "markerSetCount", "unlabeledMarkersCount", "rigidBodyCount", "skeletonCount",
                 "labeledMarkerCount", "marker_modelID_0_positions", "timecode", "timecodeSub", "timestamp", "isRecording", "trackedModelsChanged" ]
         if (self.show_all_markers == True):
@@ -111,6 +112,8 @@ class OptitrackMainThread(QThread):
             labeledMarkerPositions = np.round(marker_modelID_0_positions, 5)
             if labeledMarkerPositions.size > 0: # Only emit the data when its not empty
                 self.signals_to_main_show_electrode_placements.signal_numpy.emit(labeledMarkerPositions) 
+                trace_opitrack_status_bodies("Labeled Marker Positions are")
+                trace_opitrack_status_bodies(labeledMarkerPositions)
         pass 
 
     # This is a callback function that gets connected to the NatNet client. It is called once per rigid body per frame
@@ -118,7 +121,7 @@ class OptitrackMainThread(QThread):
         position = np.array(position)
         rotation = np.array(rotation)
 
-        # print( "Received frame for rigid body", id," ",position," ",rotation )
+        # trace_opitrack_status( "Received frame for rigid body", id," ",position," ",rotation )
         if (id == 1004): # if the id is 1004, it is the stylus data
             self.stylus_position = position 
             self.signals_to_main_stylus_pos.signal_numpy.emit(position)
@@ -130,7 +133,7 @@ class OptitrackMainThread(QThread):
                     self.stylus_lose_track_counter = 0
                 else:  # if the new position is the same as the old one, there is a big chance that it has lost detection.
                     self.stylus_lose_track_counter += 1
-                    print("Optitrack: Stylus is not detected!")
+                    trace_opitrack_status("Optitrack: Stylus is not detected!")
                     if (self.stylus_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Stylus","Lost detection"])
         elif (id == 1005): # specs data
@@ -146,18 +149,18 @@ class OptitrackMainThread(QThread):
                     self.specs_lose_track_counter = 0
                 else:
                     self.specs_lose_track_counter += 1
-                    print("Optitrack: Specs is not detected!!")
+                    trace_opitrack_status("Optitrack: Specs is not detected!!")
                     if (self.specs_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Specs","Lost detection"])
 
-        # print("Optitrack: index counter is at", self.index_counter)
+        # trace_opitrack_status("Optitrack: index counter is at", self.index_counter)
         if self.index_counter > self.row:
-            print("Optitrack: Overflow of data!") 
+            trace_opitrack_status("Optitrack: Overflow of data!") 
             
     @Slot()
     def spawn_thread(self, message):
-        print("Optitrack: Spawn matlab thread called!!!")
-        print(message)
+        trace_opitrack_status("Optitrack: Spawn matlab thread called!!!")
+        trace_opitrack_status(message)
 
     @Slot(bool)
     def set_recording(self, message):
@@ -168,7 +171,7 @@ class OptitrackMainThread(QThread):
     @Slot(bool)
     def set_show_all_markers(self, message):
         self.show_all_markers = message
-        print("Optitrack: Showing all markers ", message)
+        trace_opitrack_status("Optitrack: Showing all markers ", message)
 
     def clear_data(self):
         self.index_counter = 0

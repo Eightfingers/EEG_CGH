@@ -4,6 +4,7 @@ import numpy as np
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, QMessageBox
 import matlab.engine
+from debug_trace import trace_matlab
 from app_signals import AppSignals
 
 # In optitrack, the quaternion follows q=x*i+y*j+z*k+w; However, In matlab, the quaternion follows q=w+x*i+y*j+z*k
@@ -32,21 +33,21 @@ class MatlabMainThread(QThread):
         try:
             # I know this can be a tuple/dictionary but this is the first thing that came to my mind
             self.signals_to_status.signal_list.emit(["Matlab","Testing"]) # emit a list signal
-            print("MATLAB: Starting Matlab engine!")
+            trace_matlab("Starting Matlab engine!")
             self.eng = matlab.engine.start_matlab()
-            print("MATLAB: Matlab engine running!")
-            print("MATLAB: Is 37 a prime?")
+            trace_matlab("Matlab engine running!")
+            trace_matlab("Is 37 a prime?")
             tf = self.eng.isprime(37)
-            print("MATLAB: Matlab says its ...")
-            print(tf)
-            print("MATLAB: Trying to call matlab script")
+            trace_matlab("Matlab says its ...")
+            trace_matlab(tf)
+            trace_matlab("Trying to call matlab script")
             triangle_size = self.eng.test(1,2)
-            print(triangle_size)
-            print("MATLAB: Success")
+            trace_matlab(triangle_size)
+            trace_matlab("Success")
             self.signals_to_status.signal_list.emit(["Matlab","Okay"]) # emit a list signal
         except Exception as e:
             self.signals_to_status.signal_list.emit(["Matlab","Error"]) # emit a list signal
-            print(e)
+            trace_matlab(e)
 
     @Slot(list)
     def spawn_thread(self, message):
@@ -70,7 +71,7 @@ class MatlabWorkerThread(QThread):
                 # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
                 # nziz_positions = self.matlab_engine.no_transform_get_nziz() # no spec transfofrm
                 nziz_positions = np.array(nziz_positions)
-                print("Matlab: The NZIZ positions are:", nziz_positions)
+                trace_matlab("The NZIZ positions are:", nziz_positions)
                 
                 np.savetxt("nziz_positions.csv", nziz_positions, delimiter=',')
                 self.parent.signals_to_main2.signal_numpy.emit(nziz_positions) # Update positions in main.py
@@ -80,12 +81,12 @@ class MatlabWorkerThread(QThread):
                 all_positions = self.matlab_engine.EEGpoints_quat() # no spec transform at all
                 # all_positions = self.matlab_engine.no_transform_EEGpoints_quat() # no spec transform at all
                 all_positions = np.array(all_positions)
-                print(all_positions)
-                print("Matlab: The All positions are:", all_positions)
+                trace_matlab(all_positions)
+                trace_matlab("The All positions are:", all_positions)
                 self.parent.signals_to_main.signal_numpy.emit(all_positions) 
                 self.parent.signals_to_main.signal_bool.emit(True) # After finish predicting, make it live 
             self.parent.signals_to_menu.signal_str.emit(self._command) # indicate it has finished predicting
 
         except Exception as e:
-            print("Matlab: Error in running the script")
-            print(e)
+            trace_matlab("Error in running the script")
+            trace_matlab(e)
