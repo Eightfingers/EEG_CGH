@@ -4,12 +4,12 @@ addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_func
 % addpath('C:\Users\65859\Desktop\eeg_cgh_main\Python\Main\matlab_funcs\helperfuncs\');
 % addpath('C:\Users\65859\Desktop\eeg_cgh_main\Python\Main\matlab_funcs\myfuncs\');
 
-addpath('9_2_2022\');
+addpath('7_2_2022\');
 
 %% Load the different wanded data
-circumference = readmatrix('brenda_circum_004.csv');
-ear2ear = readmatrix('brenda_ear2ear_007.csv');
-nziz = readmatrix ('brenda_nziz_002.csv');
+circumference = readmatrix('danielle_circum_002.csv');
+ear2ear = readmatrix('danielle_ear2ear_003.csv');
+nziz = readmatrix ('danielle_nziz_001.csv');
 
 %% Doing NZIZ
 new_markers_nziz = nziz(:,7:9); 
@@ -42,21 +42,35 @@ zlabel('Z');
 %%% NZ-IZ;
 nziz_dataset =  new_markers_nziz;
 nziz_dataset = rmmissing(nziz_dataset);
-nziz_x = nziz_dataset(:,1);
-nziz_y = nziz_dataset(:,2);
-nziz_z = nziz_dataset(:,3);
+noiseIntensity = 0.005; %
+noise_x = rand(size(nziz_dataset(:,1))) * noiseIntensity;
+noise_y = rand(size(nziz_dataset(:,1))) * noiseIntensity;
+noise_z = rand(size(nziz_dataset(:,1))) * noiseIntensity;
+nziz_x = nziz_dataset(:,1) +noise_x;
+nziz_y = nziz_dataset(:,2) +noise_y; 
+nziz_z = nziz_dataset(:,3) +noise_z;
+
 %%% Ear to Ear
 e2e_dataset= new_markers_e2e;
 e2e_dataset = rmmissing(e2e_dataset);
-e2e_x = e2e_dataset(:,1);
-e2e_y = e2e_dataset(:,2);
-e2e_z = e2e_dataset(:,3);
+noiseIntensity = 0.005; %
+noise_x = rand(size(e2e_dataset(:,1))) * noiseIntensity;
+noise_y = rand(size(e2e_dataset(:,1))) * noiseIntensity;
+noise_z = rand(size(e2e_dataset(:,1))) * noiseIntensity;
+e2e_x = e2e_dataset(:,1)+ +noise_x;
+e2e_y = e2e_dataset(:,2) + +noise_y;
+e2e_z = e2e_dataset(:,3)+ +noise_z;
+
 %%% Circumference
 circumference_dataset= new_markers_circum;
 circumference_dataset = rmmissing(circumference_dataset);
-circumference_x = circumference_dataset(:,1);
-circumference_y = circumference_dataset(:,2);
-circumference_z = circumference_dataset(:,3);
+noiseIntensity = 0.005; %
+noise_x = rand(size(circumference_dataset(:,1))) * noiseIntensity;
+noise_y = rand(size(circumference_dataset(:,1))) * noiseIntensity;
+noise_z = rand(size(circumference_dataset(:,1))) * noiseIntensity;
+circumference_x = circumference_dataset(:,1) + +noise_x;
+circumference_y = circumference_dataset(:,2) +noise_y;
+circumference_z = circumference_dataset(:,3)+ +noise_z;
 
 %% Perform Geometerical Fitting and Extract the datatips from the plots.
 
@@ -470,7 +484,7 @@ xlabel('x');
 ylabel('y');
 zlabel('z');
 
-static = readmatrix('brenda_static_001.csv');
+static = readmatrix('danielle_static.csv');
 first_row_static = static(9,:);
 
 % The for loop starts at 3 as the first 2 columns of the csv files are
@@ -489,27 +503,27 @@ for i = 1:1:length(static_markers)
     text(static_markers(i,1), static_markers(i,2), static_markers(i,3),string(i));
 end
 
-Fpz_static = static_markers(5,:);
-Fp2_static = static_markers(19,:);
-F8_static = static_markers(8,:);
-T4_static = static_markers(12,:);
-T6_static = static_markers(9,:);
-O2_static = static_markers(15,:);
-Oz_static = static_markers(11,:);
-O1_static = static_markers(10,:);
+Fpz_static = static_markers(11,:);
+Fp2_static = static_markers(12,:);
+F8_static = static_markers(16,:);
+T4_static = static_markers(13,:);
+T6_static = static_markers(15,:);
+O2_static = static_markers(1,:);
+Oz_static = static_markers(6,:);
+O1_static = static_markers(4,:);
 T5_static = static_markers(16,:);
-T3_static = static_markers(2,:);
-F7_static = static_markers(21,:);
-Fp1_static = static_markers(1,:);
-Cz_static = static_markers(18,:);
-Pz_static = static_markers(4,:);
-C4_static = static_markers(7,:);
-C3_static = static_markers(14,:);
-FZ_static = static_markers(20,:)
-F4_static = static_markers(17,:);
-F3_static = static_markers(6,:);
-P3_static = static_markers(13,:);
-P4_static = static_markers(3,:);
+T3_static = static_markers(17,:);
+F7_static = static_markers(18,:);
+Fp1_static = static_markers(19,:);
+Cz_static = static_markers(5,:);
+Pz_static = static_markers(2,:);
+C4_static = static_markers(10,:);
+C3_static = static_markers(20,:);
+FZ_static = static_markers(9,:)
+F4_static = static_markers(14,:);
+F3_static = static_markers(7,:);
+P3_static = static_markers(8,:);
+P4_static = static_markers(6,:);
 
 Fpz_error = norm(Fpz_static - Fpz)
 Fp2_error = norm(Fp2_static - Fp2)
