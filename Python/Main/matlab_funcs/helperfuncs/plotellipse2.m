@@ -78,3 +78,7 @@ h = plot(hAx, X(1,:), X(2,:), linespec);
 if nargout == 1
     varargout = {h};
 end
+if nargout == 2
+    varargout{1} = X(1,:);
+    varargout{2} = X(2,:);
+end

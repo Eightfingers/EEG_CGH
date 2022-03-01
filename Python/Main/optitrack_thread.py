@@ -171,7 +171,7 @@ class OptitrackMainThread(QThread):
     @Slot(bool)
     def set_show_all_markers(self, message):
         self.show_all_markers = message
-        trace_opitrack_status("Optitrack: Showing all markers ", message)
+        print("Optitrack: Showing all markers ", message)
 
     def clear_data(self):
         self.index_counter = 0

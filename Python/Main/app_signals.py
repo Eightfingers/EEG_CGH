@@ -9,3 +9,4 @@ class AppSignals(QObject):
     signal_numpy = Signal(np.ndarray)
     signal_str = Signal(str)
     signal_dict = Signal(dict)
+    signal_float = Signal(float)

@@ -29,7 +29,6 @@ from debug_trace import trace_main
 # Scipy x,y,z,w
 # Qt
 
-
 class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
@@ -57,17 +56,20 @@ class MainWindow(QMainWindow):
         self.itemsize = 0.1
         self.bigger_itemsize = 0.15
 
+        self.threshold_placement_range = 0.017
+
         # Each of this series is used to represent data on the graph
         self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
         self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
         self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
         self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor, self.itemsize)
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize)
-        self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.bigger_itemsize)
-        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.bigger_itemsize)
+        self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.itemsize)
+        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.itemsize)
 
-        self.reflmarkers_not_near_predict = self.create_new_scatter_series(self.grey_qcolor, self.bigger_itemsize)
-        self.reflmarkers_near_predicted = self.create_new_scatter_series(self.green_qcolor, self.bigger_itemsize)
+        self.reflmarkers_not_near_predict = self.create_new_scatter_series(self.grey_qcolor, self.itemsize)
+        self.reflective_markers_position_series = self.create_new_scatter_series(self.grey_qcolor, self.itemsize)
+        self.reflmarkers_near_predicted = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
 
         # Variables to hold data 
 
@@ -106,15 +108,15 @@ class MainWindow(QMainWindow):
         self.live_reflective_markers = False
         
         # Set the axis properties
-        segment_count = 8
-        sub_segment_count = 2
-        axis_minimum = -0.8
-        axis_maximum = 0.8
-        self.x_axis = self.create_axis('X', segment_count, sub_segment_count, axis_minimum, axis_maximum)
+        self.segment_count = 8
+        self.sub_segment_count = 2
+        self.axis_minimum = -0.8
+        self.axis_maximum = 0.8
+        self.x_axis = self.create_axis('X', self.segment_count, self.sub_segment_count, self.axis_minimum, self.axis_maximum)
         self.scatter.setAxisX(self.x_axis)
-        self.y_axis = self.create_axis('Y', segment_count, sub_segment_count, axis_minimum, axis_maximum)
+        self.y_axis = self.create_axis('Y', self.segment_count, self.sub_segment_count, self.axis_minimum, self.axis_maximum)
         self.scatter.setAxisY(self.y_axis)
-        self.z_axis = self.create_axis('Z', segment_count, sub_segment_count, axis_minimum, axis_maximum)
+        self.z_axis = self.create_axis('Z', self.segment_count, self.sub_segment_count, self.axis_minimum, self.axis_maximum)
         self.scatter.setAxisZ(self.z_axis)
 
         # Set no Shadow
@@ -175,16 +177,27 @@ class MainWindow(QMainWindow):
 
     # Update the scatter plot with the new data 
     def update_plot_data(self):
-        self.scatter.removeSeries(self.stylus_position_series) # remove the old position
-        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.bigger_itemsize)
+        # Remove Old plots
+        if self.reflmarkers_not_near_predict in self.scatter.seriesList():
+            self.scatter.removeSeries(self.reflmarkers_not_near_predict) # remove the old position
+        if self.reflmarkers_near_predicted in self.scatter.seriesList():
+            self.scatter.removeSeries(self.reflmarkers_near_predicted) # remove the old position
+        if self.Predicted21_series in self.scatter.seriesList():
+            self.scatter.removeSeries(self.Predicted21_series) # remove the old position
+        if self.reflective_markers_position_series in self.scatter.seriesList():
+            self.scatter.removeSeries(self.reflective_markers_position_series) # remove the old position
+        if self.NZIZscatter_series in self.scatter.seriesList():
+            self.scatter.removeSeries(self.NZIZscatter_series) # remove the old position
+
+        self.scatter.removeSeries(self.stylus_position_series)
+        self.scatter.removeSeries(self.specs_series) # remove the old position
+
+        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.itemsize)
         self.add_list_to_scatterdata(self.stylus_position_series, self.live_stylus_position)
         self.scatter.addSeries(self.stylus_position_series)
         self.scatter.show()
 
-        # self.specs_live_position[0]  *= -1 # Rectify the x axis
-        self.scatter.removeSeries(self.specs_series) # remove the old position
-        self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.bigger_itemsize) # reset the seties
-            
+        self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.itemsize) # reset the seties
         self.add_list_to_scatterdata(self.specs_series, self.specs_live_position)
         self.scatter.addSeries(self.specs_series)
         self.scatter.show()
@@ -192,42 +205,58 @@ class MainWindow(QMainWindow):
         if self.live_predicted_nziz_positions == True:
             # Convert predicted nziz from spec frame to global frame 
             self.global_predicted_nziz_positions = self.transform_spec_to_global_frame(self.fpz_positon, self.specs_live_rotation, self.specs_live_position)
-            self.scatter.removeSeries(self.NZIZscatter_series)
             self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
             self.add_list_to_scatterdata(self.NZIZscatter_series, self.global_predicted_nziz_positions)
             self.scatter.addSeries(self.NZIZscatter_series)
             self.scatter.show()
 
         if self.live_reflective_markers == True:
-            self.scatter.removeSeries(self.reflective_markers_position_series) # remove the old position
+            self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_live_rotation, self.specs_live_position)
             if self.near_predicted_points(self.reflective_markers_positions):  # Remove predicted_positions which are near reflective markers
-                self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions_to_draw, self.specs_live_rotation, self.specs_live_position)
                 trace_main("Detected reflective markers near positions")
                 # print("Predicted positions", self.predicted_positions)
                 # print("Predicted positions to draw", self.predicted_positions_to_draw)
-                
-                self.add_list_to_scatterdata(self.Predicted21_series, self.predicted_positions_to_draw)
-                self.scatter.addSeries(self.predicted_series)
 
-                self.reflmarkers_near_predicted.setItemSize(0.15)
+                self.reflmarkers_not_near_predict = self.create_new_scatter_series(self.grey_qcolor, self.itemsize)
+                self.reflmarkers_near_predicted = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
+                self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize) # reset the seties
+
                 self.add_list_to_scatterdata(self.reflmarkers_near_predicted, self.reflmarkers_in_predicted_positions)
                 self.scatter.addSeries(self.reflmarkers_near_predicted)
 
-                self.reflmarkers_not_near_predict.setItemSize(0.15)
+                self.add_list_to_scatterdata(self.Predicted21_series, self.predicted_positions_to_draw)
+                self.scatter.addSeries(self.Predicted21_series)
+
                 self.add_list_to_scatterdata(self.reflmarkers_not_near_predict, self.reflective_markers_positions_to_draw)
                 self.scatter.addSeries(self.reflmarkers_not_near_predict)
+            else:
+                self.reflective_markers_position_series = self.create_new_scatter_series(self.grey_qcolor, self.itemsize)
+                self.add_list_to_scatterdata(self.reflective_markers_position_series, self.reflective_markers_positions)
+                self.scatter.addSeries(self.reflective_markers_position_series)
 
+                self.scatter.removeSeries(self.Predicted21_series) # remove the old series
+                self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize) # reset the seties
+                self.add_list_to_scatterdata(self.Predicted21_series, self.global_predicted_eeg_positions)
+                self.scatter.addSeries(self.Predicted21_series)
 
-        if (self.live_predicted_eeg_positions) == True and (self.live_reflective_markers == False) :
+        # This is to only show the global 21 predicted positions
+        if (self.live_predicted_eeg_positions) == True and (self.live_reflective_markers == False):
             # Convert predicted eeg_position from spec frame to global frame 
-            self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions_to_draw, self.specs_live_rotation, self.specs_live_position)
+            self.global_predicted_eeg_positions = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_live_rotation, self.specs_live_position)
             self.scatter.removeSeries(self.Predicted21_series) # remove the old series
             self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize) # reset the seties
             self.add_list_to_scatterdata(self.Predicted21_series, self.global_predicted_eeg_positions)
             self.scatter.addSeries(self.Predicted21_series)
-            self.scatter.show()
 
+        self.scatter.show()
 
+    @Slot(float)
+    def adjust_axis_min_max(self, message):
+        position = message / 10
+        # Make bigger range
+        self.scatter.axisX().setRange(self.axis_minimum - position, self.axis_maximum + position)
+        self.scatter.axisY().setRange(self.axis_minimum - position, self.axis_maximum + position)
+        self.scatter.axisZ().setRange(self.axis_minimum - position, self.axis_maximum + position)
 
     # Function that is called from the menu widget to save trace data into csv files
     @Slot(int)
@@ -306,47 +335,38 @@ class MainWindow(QMainWindow):
         # set it to false
         self.live_predicted_eeg_positions = False
         self.live_predicted_nziz_positions = False
-        self.live_reflective_markers == False
 
         if self.NZIZscatter_series in self.scatter.seriesList():
             self.scatter.removeSeries(self.NZIZscatter_series) 
         if self.NZIZscatter_series_trace in self.scatter.seriesList():
             self.scatter.removeSeries(self.NZIZscatter_series_trace) 
-
         if self.CIRCUMscatter_series in self.scatter.seriesList():
             self.scatter.removeSeries(self.CIRCUMscatter_series)
-
         if self.EarToEarscatter_series in self.scatter.seriesList():
             self.scatter.removeSeries(self.EarToEarscatter_series)
-
         if self.Predicted21_series in self.scatter.seriesList():
             self.scatter.removeSeries(self.Predicted21_series)
-
-        self.scatter.removeSeries(self.NZIZscatter_series)
-        self.scatter.removeSeries(self.CIRCUMscatter_series)
-        self.scatter.removeSeries(self.EarToEarscatter_series)
-        self.scatter.removeSeries(self.Predicted21_series)
-        self.scatter.removeSeries(self.reflective_markers_position_series)
+        if self.reflective_markers_position_series in self.scatter.seriesList():
+            self.scatter.removeSeries(self.reflective_markers_position_series)
 
         self.NZIZscatter_series = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
         self.NZIZscatter_series_trace = self.create_new_scatter_series(self.red_qcolor, self.itemsize)
         self.CIRCUMscatter_series = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
         self.EarToEarscatter_series = self.create_new_scatter_series(self.black_qcolor, self.itemsize)
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize)
-        self.specs_series = self.create_new_scatter_series(self.black_qcolor, self.bigger_itemsize)
-        self.stylus_position_series = self.create_new_scatter_series(self.yellow_qcolor, self.bigger_itemsize)
-        self.reflective_markers_position_series = self.create_new_scatter_series(self.green_qcolor, self.itemsize)
+        
+        print("Run finished!")
 
     @Slot(np.ndarray)
     def update_save_predicted_eeg_positions(self, message):
         self.predicted_positions = message
+        if self.NZIZscatter_series_trace in self.scatter.seriesList():
+            self.scatter.removeSeries(self.NZIZscatter_series_trace) 
         np.savetxt("21_predicted_positions_specs_frame_from_copy_py.csv", message, delimiter=',')
-
         self.scatter.removeSeries(self.Predicted21_series) # remove the old series
         self.Predicted21_series = self.create_new_scatter_series(self.orange_qcolor, self.itemsize) # reset the seties
         self.add_list_to_scatterdata(self.Predicted21_series, self.predicted_positions)
         self.scatter.addSeries(self.Predicted21_series)
-
         self.predicted_eeg_positions_global_frame = self.transform_spec_to_global_frame(self.predicted_positions, self.specs_live_rotation, self.specs_live_position)
         np.savetxt("21_predicted_positions_global_frame_from_copy_py.csv", message, delimiter=',')
 
@@ -441,7 +461,9 @@ class MainWindow(QMainWindow):
 
     # Used in the predicted data set
     def transform_spec_to_global_frame(self, series, specs_rotation, specs_position):
-
+        # print("SERIES", series)
+        # print("Position", specs_position)
+        # print("Rotation", specs_rotation)
         r = R.from_quat(specs_rotation) # rotate the orientation back to the axis
         new_predicted_positions = r.apply(series)
         new_predicted_positions = new_predicted_positions + specs_position # add the displaced amoount
@@ -469,49 +491,52 @@ class MainWindow(QMainWindow):
         predicted_positions_to_remove = []
         tmp_reflmarkers_near_predicted = [] # contains all the reflective markers that are near the predicted positions
         sucess = False
-
-        for sample in sample_data:  
+        for sample in sample_data: 
             for position in self.global_predicted_eeg_positions:
                 magnitude_difference = np.absolute(np.linalg.norm(sample - position))
-                print("position is ", position, "Sample is ", sample, " magnitude diff is: ", magnitude_difference)
+                # print("position is ", position, "Sample is ", sample, " magnitude diff is: ", magnitude_difference)
 
                 if magnitude_difference < self.threshold_placement_range:
                     predicted_positions_to_remove.append(np.array(position))
                     tmp_reflmarkers_near_predicted.append(np.array(sample))
                     sucess = True
+        if sucess:
+            np_predicted_positions_to_remove = np.array(predicted_positions_to_remove)
+            self.reflmarkers_in_predicted_positions = np.array(tmp_reflmarkers_near_predicted)
 
-        np_predicted_positions_to_remove = np.array(predicted_positions_to_remove)
-        self.reflmarkers_in_predicted_positions = np.array(tmp_reflmarkers_near_predicted)
+            ## I couldn't find a built in numpy function remove a specific subarray from a numpy array so...
+            # find the predicted positions to remove
+            self.predicted_positions_to_draw = self.global_predicted_eeg_positions
+            index = 0
+            idx_positions1 = []
+            for predicted_position in self.predicted_positions_to_draw:
+                for position_to_remove in np_predicted_positions_to_remove:
+                    # print(position_to_remove, predicted_position)
+                    if np.equal(position_to_remove,predicted_position).all(): 
+                        idx_positions1.append(index)
+                index += 1 
+            
+            # find the refl markers position to remove
+            self.reflective_markers_positions_to_draw = self.reflective_markers_positions
+            index = 0
+            idx_positions2 = []
+            for reflmarkers_position in self.reflective_markers_positions_to_draw:
+                for position_to_remove in self.reflmarkers_in_predicted_positions:
+                    if np.equal(position_to_remove, reflmarkers_position).all():
+                        idx_positions2.append(index)
+                index += 1 
+            self.predicted_positions_to_draw = np.delete(self.predicted_positions_to_draw, idx_positions1, 0)
+            self.reflective_markers_positions_to_draw = np.delete(self.reflective_markers_positions_to_draw, idx_positions2, 0)
 
-        ## I couldn't find a built in numpy function remove a specific subarray from a numpy array so...
-        # find the predicted positions to remove
-        self.predicted_positions_to_draw = self.global_predicted_eeg_positions
-        index = 0
-        idx_positions1 = []
-        for predicted_position in self.predicted_positions_to_draw:
-            for position_to_remove in np_predicted_positions_to_remove:
-                # print(position_to_remove, predicted_position)
-                if np.equal(position_to_remove,predicted_position).all(): 
-                    idx_positions1.append(index)
-            index += 1 
-        
-        # find the refl markers position to remove
-        self.reflective_markers_positions_to_draw = self.reflective_markers_positions
-        index = 0
-        idx_positions2 = []
-        for reflmarkers_position in self.reflective_markers_positions_to_draw:
-            for position_to_remove in self.reflmarkers_in_predicted_positions:
-                if np.equal(position_to_remove, reflmarkers_position).all():
-                    idx_positions2.append(index)
-            index += 1 
-
-        self.predicted_positions_to_draw = np.delete(self.predicted_positions_to_draw, idx_positions1, 0)
-        self.reflective_markers_positions_to_draw = np.delete(self.reflective_markers_positions_to_draw, idx_positions2, 0)
-        # print(idx_positions1)
-        # print(idx_positions2)
+            print(type(self.predicted_positions_to_draw), "predicted positions to draw") 
+            print(self.reflective_markers_positions_to_draw, "reflective marker positions to draw") 
+        else:
+            self.predicted_positions_to_draw = self.predicted_positions
+            self.reflective_markers_positions_to_draw = self.reflective_markers_positions
+        print(self.reflective_markers_positions_to_draw)
         return sucess
 
-if __name__ == '__main__':  
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     main_win = MainWindow()
     main_win.show()

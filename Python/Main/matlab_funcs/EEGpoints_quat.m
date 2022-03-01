@@ -88,11 +88,11 @@ f1= figure('Name',' Circumference');
 Ellipse=([circumference_x,circumference_y]);
 [centre, a, b, alpha] = fitellipse(Ellipse,'linear');
 
-plotellipse(centre, a, b, alpha, 'b-');
+[xdata_circum, ydata_circum] = plotellipse2(centre, a, b, alpha, 'b-');
 f1 = gcf; %current figure handle
 axesObjs = get(f1, 'Children');  %axes handles
 dataObjs = get(axesObjs, 'Children'); %handles t
-xdata_circum = get(dataObjs, 'XData'); 
+xdata_circum = get(dataObjs, 'XData');
 ydata_circum = get(dataObjs, 'YData');
 start_A = circumference_dataset(1:1,:);
 

@@ -3,7 +3,7 @@ from PySide6.QtCore import (Signal, QMutex, QElapsedTimer, QMutexLocker,
                             QPoint, QPointF, QSize, Qt, QThread, QObject, 
                             QWaitCondition, Slot, QSize)
 from PySide6.QtGui import QGuiApplication, QVector3D
-from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget, QLabel, QBoxLayout, QMessageBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QDockWidget, QLabel, QBoxLayout, QMessageBox, QSlider
 from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBarDataItem,
                                          QCategory3DAxis, QScatter3DSeries, QValue3DAxis, QScatterDataItem)
 
@@ -40,8 +40,7 @@ class MenuWidget(QWidget):
         self.EartoEarbutton_text = "Start Ear to Ear"
         self.attach_electrodes_button_text = "Attach electrodes"
 
-        # I dont think this is being used yet for now.. 
-        self._matlab_thread = None # None for now, we will wait until the Matlab engine finish intializing the threads in the main.py loop then connect them
+        self._matlab_thread = None 
         self._optitrack_thread = None 
         
         # only connect when matlab has finish initializeed
@@ -55,7 +54,10 @@ class MenuWidget(QWidget):
 
         # Used to save the 3 traces data 
         self.signals_to_main = AppSignals()
-        self.signals_to_main.signal_int.connect(parent.save_trace_data) 
+        self.signals_to_main.signal_int.connect(parent.save_trace_data)
+
+        self.slider_signals_to_main = AppSignals()
+        self.slider_signals_to_main.signal_float.connect(parent.adjust_axis_min_max)
 
         self.reflective_markers_to_main_signals = AppSignals()
         self.reflective_markers_to_main_signals.signal_bool.connect(parent.set_reflective_markers)
@@ -85,6 +87,15 @@ class MenuWidget(QWidget):
         self.clear_button = QPushButton("Clear") # Clear EEG positions
         self.clear_button.clicked.connect(parent.clear_data) 
 
+        self.slider_label = QLabel()
+        self.slider_label.setAlignment(Qt.AlignHCenter)
+        self.slider_label.setText("Adjust axis")
+
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setRange(-5, 5)
+        self.slider.setSingleStep(1)
+        self.slider.sliderMoved.connect(self.slider_position)
+
         self.layout.addWidget(self.NZIZbutton)
         self.layout.addWidget(self.Circumbutton)
         self.layout.addWidget(self.EartoearButton)
@@ -92,8 +103,13 @@ class MenuWidget(QWidget):
         self.layout.addWidget(self.predict_all_button)
         self.layout.addWidget(self.attach_electrodes_button)
         self.layout.addWidget(self.clear_button)
+        self.layout.addWidget(self.slider_label)
+        self.layout.addWidget(self.slider)
         self.layout.addStretch()
 
+    def slider_position(self, p):
+        self.slider_signals_to_main.signal_float.emit(p)
+        
     # I am not sure if this is the best way or so but
     # These functions are called from the main.py and these signals are only initialized and connected after 
     # matlab engine is fullying running and stuff
@@ -124,21 +140,21 @@ class MenuWidget(QWidget):
     # Shows optitrack markers as grey in colour in the graph
     @Slot()
     def electrode_placements(self):
-        # if ((self.parent.NZIZscatter_series.dataProxy().itemCount() == 0 and  self.parent.CIRCUMscatter_series.dataProxy().itemCount() == 0 and self.parent.  EarToEarscatter_series.dataProxy().itemCount() == 0) or self.lock ):
-        #     QMessageBox.warning(self, "Warning", "Please complete all 3 takes first!!")
-        # else:
-        if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat -> it is clicked, unflat them
-            self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
-            self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
-            self.attach_electrodes_button.setFlat(False)
-            self.signals_to_optitrack2.signal_bool.emit(False)
-            self.reflective_markers_to_main_signals.signal_bool.emit(False)
+        if (self.parent.Predicted21_series.dataProxy().itemCount() == 0 and self.lock == False):
+            QMessageBox.warning(self, "Warning", "Complete all the 3 traces and prediction first!")
         else:
-            self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
-            self.attach_electrodes_button.setText('Stop!')
-            self.attach_electrodes_button.setFlat(True)
-            self.signals_to_optitrack2.signal_bool.emit(True)
-            self.reflective_markers_to_main_signals.signal_bool.emit(True)
+            if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat -> it is clicked, unflat them
+                self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
+                self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
+                self.attach_electrodes_button.setFlat(False)
+                self.signals_to_optitrack2.signal_bool.emit(False)
+                self.reflective_markers_to_main_signals.signal_bool.emit(False)
+            else:
+                self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
+                self.attach_electrodes_button.setText('Stop!')
+                self.attach_electrodes_button.setFlat(True)
+                self.signals_to_optitrack2.signal_bool.emit(True)
+                self.reflective_markers_to_main_signals.signal_bool.emit(True)
 
     @Slot(str) # used by the matlab thread to indicate that it has finished predicting
     def change_predict_state(self, message):

@@ -14,7 +14,7 @@ def trace_opitrack_status(msg):
         print("Optitrack: ", msg)
 
 def trace_opitrack_status_bodies(msg):
-    debug = True
+    debug = False
     if debug == True:
         print("Optitrack: ", msg)
 
