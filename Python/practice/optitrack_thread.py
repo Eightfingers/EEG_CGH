@@ -5,7 +5,8 @@ from PySide6.QtWidgets import QApplication, QPushButton, QVBoxLayout, QWidget, Q
 import matlab.engine
 from debug_trace import trace_opitrack_status
 from debug_trace import trace_opitrack_status_bodies
-from PythonClient4_0.NatNetClient import NatNetClient
+
+from . import Main.PythonClient4_0.NatNetClient import NatNetClient
 # from PythonClient.NatNetClient import NatNetClient
 from app_signals import AppSignals
 import time
@@ -127,12 +128,10 @@ class OptitrackMainThread(QThread):
             self.signals_to_main_stylus_pos.signal_numpy.emit(position)
             if self.record == True: # Record the positions into numpy array
                 self.stylus_data[self.index_counter,:] = position
-                self.index_counter += 1 # Increment the index counter everytime the final rigidbody is sent
                 if np.all(self.stylus_previous_position != position):    # if its not the same as the old position update to the new position
                     self.stylus_previous_position = position 
                     self.signals_to_status.signal_list.emit(["Stylus","Detected"])
                     self.stylus_lose_track_counter = 0
-                    print(self.stylus_data)
                 else:  # if the new position is the same as the old one, there is a big chance that it has lost detection.
                     self.stylus_lose_track_counter += 1
                     trace_opitrack_status("Optitrack: Stylus is not detected!")
@@ -144,6 +143,7 @@ class OptitrackMainThread(QThread):
             if self.record == True:
                 self.specs_data[self.index_counter,:] = position
                 self.specs_rotation_data[self.index_counter,:] = rotation
+                self.index_counter += 1 # Increment the index counter everytime the final rigidbody is sent
                 if np.all(self.specs_previous_position != position): 
                     self.specs_previous_position = position 
                     self.signals_to_status.signal_list.emit(["Specs","Detected"])

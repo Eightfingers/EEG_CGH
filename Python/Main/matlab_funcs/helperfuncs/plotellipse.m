@@ -1,4 +1,4 @@
-function varargout = plotellipse2(varargin)
+function varargout = plotellipse(varargin)
 %PLOTELLIPSE   Plot parametrically specified ellipse
 %
 %   PLOTELLIPSE(Z, A, B, ALPHA) Plots the ellipse specified by Z, A, B,
@@ -77,8 +77,4 @@ h = plot(hAx, X(1,:), X(2,:), linespec);
 % Return the handle if asked for
 if nargout == 1
     varargout = {h};
-end
-if nargout == 2
-    varargout{1} = X(1,:);
-    varargout{2} = X(2,:);
 end

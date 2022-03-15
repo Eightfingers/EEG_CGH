@@ -78,7 +78,7 @@ class MatlabWorkerThread(QThread):
                 self.parent.signals_to_main2.signal_bool.emit(True) # Start global transformation
 
             elif self._command == "21 positions":
-                all_positions = self.matlab_engine.EEGpoints_quat() # no spec transform at all
+                all_positions = self.matlab_engine.No_specs_EEGpoints_quat() # no spec transform at all
                 # all_positions = self.matlab_engine.no_transform_EEGpoints_quat() # no spec transform at all
                 all_positions = np.array(all_positions)
                 trace_matlab(all_positions)

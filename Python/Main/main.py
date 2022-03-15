@@ -372,6 +372,15 @@ class MainWindow(QMainWindow):
                     return True
         return False
 
+    @Slot(float)
+    def adjust_axis_min_max(self, message):
+        position = message / 10
+        # Make bigger range
+        self.scatter.axisX().setRange(self.axis_minimum - position, self.axis_maximum + position)
+        self.scatter.axisY().setRange(self.axis_minimum - position, self.axis_maximum + position)
+        self.scatter.axisZ().setRange(self.axis_minimum - position, self.axis_maximum + position)
+
+
 if __name__ == '__main__':  
     app = QApplication(sys.argv)
     main_win = MainWindow()
