@@ -1,7 +1,8 @@
-class EEGPositions():
-    def __init__(self, x, y, z, name):
-        self.x_pos = x
-        self.y_pos = y
-        self.z_pos = z
+import numpy as np
+
+class EEGPosition():
+    def __init__(self, position, name):
+
+        self.position = position # numpy array of xyz
         self.name = name
         self.visible = False

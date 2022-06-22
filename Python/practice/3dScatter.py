@@ -5,7 +5,8 @@ from PySide6.QtCore import (Signal, QMutex, QElapsedTimer, QMutexLocker,
 from PySide6.QtGui import QGuiApplication, QVector3D, QColor
 from PySide6.QtWidgets import QApplication, QSizePolicy, QMainWindow, QWidget
 from PySide6.QtDataVisualization import (Q3DBars, Q3DScatter, QBar3DSeries, QBarDataItem,
-                                         QCategory3DAxis, QScatter3DSeries, QValue3DAxis, QScatterDataItem)
+                                         QCategory3DAxis, QScatter3DSeries, QValue3DAxis, QScatterDataItem, QCustom3DLabel, 
+                                         QCustom3DItem) 
 import numpy as np
 
 class MainWindow(QMainWindow):
@@ -34,6 +35,10 @@ class MainWindow(QMainWindow):
         self.scatter.setAxisX(self.x_axis)
         self.scatter.setAxisY(self.y_axis)
         self.scatter.setAxisZ(self.z_axis)
+
+        self.customlabel1 = QCustom3DLabel(text= "LMFAO",position=QVector3D(1,2,3), scaling=QVector3D(3,3,3)) 
+        self.customlabel1.setFacingCamera(True)
+        self.scatter.addCustomItem(self.customlabel1)
 
         # create 10000 random spatial positions 
         self.coordinates = np.random.randint(0, 100, size=(100, 3)) 

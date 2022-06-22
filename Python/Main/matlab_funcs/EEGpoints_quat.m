@@ -1,32 +1,40 @@
 function [predicted] = EEGpoints_quat()
 
 %%% Circumference
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
-addpath('GUi_wrong');
+addpath('helperfuncs');
+addpath('myfuncs');
+
 step = 1; % used to take only every 2nd data
 
-stylus_data = readmatrix('data_CIRCUMstylus');
-stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-stylus_data = rmmissing(stylus_data);
-% stylus_data = stylus_data(1:step:end,:); 
+circum_stylus_data = readmatrix('data_CIRCUMstylus');
+circum_stylus_data = [circum_stylus_data(:,1) circum_stylus_data(:,3) circum_stylus_data(:,2)]; 
+circum_stylus_data = rmmissing(circum_stylus_data);
+% stylus_data = stylus_data(1:step:end,:);
 
 quaternion_extracted = readmatrix('rotation_data_CIRCUMspecs.csv'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,3), quaternion_extracted(:,2)];
 % quaternion_extracted = quaternion_extracted(1:step:end,:);
 
 dis_matrix_circum = readmatrix('data_CIRCUMspecs.csv'); % extract the displacement vector out
+dis_matrix_circum = [dis_matrix_circum(:,1) dis_matrix_circum(:,3) dis_matrix_circum(:,2)]; 
 % dis_matrix_circum = dis_matrix_circum(1:step:end,:); 
 
-%% Run Function to give spec frame points
-% Quaternion way
-new_markers_circum = [];
-new_markers_circum = transform_frame_quat(stylus_data, quaternion_extracted, dis_matrix_circum);
+%% Ensure both stylus and specs data are of the same length
+data_length = min([length(circum_stylus_data), length(quaternion_extracted), length(dis_matrix_circum)]);
+if length(circum_stylus_data) == data_length 
+    quaternion_extracted = quaternion_extracted(1:data_length,:);
+    dis_matrix_circum = dis_matrix_circum(1:data_length,:);
+else
+    circum_stylus_data = circum_stylus_data(1:data_length,:);
+end
+
+new_markers_circum = transform_to_specs_frame(circum_stylus_data, quaternion_extracted, dis_matrix_circum);
+% new_markers_circum = stylus_data;
 
 %%% Ear to Ear
-stylus_data = readmatrix('data_EarToEarstylus');
-stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-stylus_data = rmmissing(stylus_data);
+ear2ear_stylus_data = readmatrix('data_EarToEarstylus');
+ear2ear_stylus_data = [ear2ear_stylus_data(:,1) ear2ear_stylus_data(:,3) ear2ear_stylus_data(:,2)]; 
+ear2ear_stylus_data = rmmissing(ear2ear_stylus_data);
 % stylus_data = stylus_data(1:step:end,:); 
 
 quaternion_extracted = readmatrix('rotation_data_EarToEarspecs'); % extract the rotation vector out
@@ -34,17 +42,24 @@ quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), qu
 % quaternion_extracted = quaternion_extracted(1:step:end,:);
 
 dis_matrix_ear2ear = readmatrix('data_EarToEarspecs.csv'); % extract the displacement vector out
+dis_matrix_ear2ear = [dis_matrix_ear2ear(:,1) dis_matrix_ear2ear(:,3) dis_matrix_ear2ear(:,2)]; 
+
 % dis_matrix_ear2ear = dis_matrix_ear2ear(1:step:end,:);
 
-%% Run Function to give points
-% Quaternion way
-new_markers_e2e = [];
-new_markers_e2e = transform_frame_quat(stylus_data, quaternion_extracted, dis_matrix_circum);
+data_length = min([length(ear2ear_stylus_data), length(quaternion_extracted), length(dis_matrix_ear2ear)]);
+if length(ear2ear_stylus_data) == data_length 
+    quaternion_extracted = quaternion_extracted(1:data_length,:);
+    dis_matrix_ear2ear = dis_matrix_ear2ear(1:data_length,:);
+else
+    ear2ear_stylus_data = ear2ear_stylus_data(1:data_length,:);
+end
+
+new_markers_e2e = transform_to_specs_frame(ear2ear_stylus_data, quaternion_extracted, dis_matrix_ear2ear);
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus');
-stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-stylus_data = rmmissing(stylus_data);
+nziz_stylus_data = readmatrix('data_NZIZstylus.csv');
+nziz_stylus_data = [nziz_stylus_data(:,1) nziz_stylus_data(:,3) nziz_stylus_data(:,2)]; 
+nziz_stylus_data = rmmissing(nziz_stylus_data);
 
 % stylus_data = stylus_data(1:step:end,:);
 
@@ -53,58 +68,91 @@ quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), qu
 % quaternion_extracted = quaternion_extracted(1:step:end,:);
 
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+dis_matrix_nziz = [dis_matrix_nziz(:,1) dis_matrix_nziz(:,3) dis_matrix_nziz(:,2)]; 
 % dis_matrix_nziz = dis_matrix_nziz(1:step:end,:); 
+
+data_length = min([length(nziz_stylus_data), length(quaternion_extracted), length(dis_matrix_nziz)]);
+if length(nziz_stylus_data) == data_length 
+    quaternion_extracted = quaternion_extracted(1:data_length,:);
+    dis_matrix_nziz = dis_matrix_nziz(1:data_length,:);
+else
+    nziz_stylus_data = nziz_stylus_data(1:data_length,:);
+end
 
 %% Run Function to give points
 % Quaternion way
-new_markers_nziz = [];
-new_markers_nziz = transform_frame_quat(stylus_data, quaternion_extracted, dis_matrix_circum);
+% new_markers_nziz = stylus_data;
+new_markers_nziz = transform_to_specs_frame(nziz_stylus_data, quaternion_extracted, dis_matrix_nziz);
+
+hold on;
+% shifted_nziz = new_markers_nziz(:,1:3) + dis_matrix_nziz(2,:);
+% plot3(shifted_nziz(:,1), shifted_nziz(:,2), shifted_nziz(:,3), '*');
+plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), '*');
+plot3(nziz_stylus_data(:,1), nziz_stylus_data(:,2), nziz_stylus_data(:,3), 'd');
+
+% shifted_ear2ear = new_markers_e2e(:,1:3) + dis_matrix_ear2ear(1,:);
+% plot3(shifted_ear2ear(:,1), shifted_ear2ear(:,2), shifted_ear2ear(:,3), '*');
+plot3(new_markers_e2e(:,1), new_markers_e2e(:,2), new_markers_e2e(:,3), '*');
+plot3(ear2ear_stylus_data(:,1), ear2ear_stylus_data(:,2), ear2ear_stylus_data(:,3), 'd');
+
+% shifted_circum = new_markers_circum(:,1:3) + dis_matrix_circum(1,:);
+% plot3(shifted_circum(:,1), shifted_circum(:,2), shifted_circum(:,3), '*');
+plot3(new_markers_circum(:,1), new_markers_circum(:,2), new_markers_circum(:,3), '*');
+plot3(circum_stylus_data(:,1), circum_stylus_data(:,2), circum_stylus_data(:,3), 'd');
+
+plot3(0,0,0, '+','MarkerSize',10);
 
 %%% Circumferene
 circumference_dataset= new_markers_circum;
-circumference_dataset = rmmissing(circumference_dataset);
 circumference_x = circumference_dataset(:,1);
 circumference_y = circumference_dataset(:,2);
 circumference_z = circumference_dataset(:,3);
 %%% Ear to Ear
 e2e_dataset= new_markers_e2e;
-e2e_dataset = rmmissing(e2e_dataset);
 e2e_x = e2e_dataset(:,1);
 e2e_y = e2e_dataset(:,2);
 e2e_z = e2e_dataset(:,3);
 %%% NZ-IZ
 nziz_dataset =  new_markers_nziz;
-nziz_dataset = rmmissing(nziz_dataset);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);
+
 %% Perform Geometerical Fitting and Extract the datatips from the plots.
 
 %%% Circumferene - The circumference is considered as and ellipse in 2D
 %%% space. The points are orthogonally projected on the XZ plane and
 %%% linear least squares ellipse fitting is performed usin fitellipse() &
 %%% plotellipse()function
-f1= figure('Name',' Circumference');
-Ellipse=([circumference_x,circumference_y]);
-[centre, a, b, alpha] = fitellipse(Ellipse,'linear');
 
-[xdata_circum, ydata_circum] = plotellipse2(centre, a, b, alpha, 'b-');
-f1 = gcf; %current figure handle
-axesObjs = get(f1, 'Children');  %axes handles
-dataObjs = get(axesObjs, 'Children'); %handles t
-xdata_circum = get(dataObjs, 'XData');
-ydata_circum = get(dataObjs, 'YData');
-start_A = circumference_dataset(1:1,:);
-
-startpoint_2d_circum = [start_A(:,1) start_A(:,2)];
-newmat_xy = [xdata_circum; ydata_circum];
-trans_newmat_xy = newmat_xy.';
-dist_startpoint_circum = sqrt(sum(bsxfun(@minus, trans_newmat_xy, startpoint_2d_circum).^2,2));
-closest_startpoint_circum = trans_newmat_xy(find(dist_startpoint_circum==min(dist_startpoint_circum)),:);
-[row_circum,~] = find(trans_newmat_xy==closest_startpoint_circum);
-new_matrix_x_circum = [trans_newmat_xy(row_circum:2000,1); trans_newmat_xy(1:row_circum-1,1)].';
-new_matrix_y_circum = [trans_newmat_xy(row_circum:2000,2); trans_newmat_xy(1:row_circum-1,2)].';
-
+try
+    f1= figure('Name',' Circumference');
+    Ellipse=([circumference_x,circumference_y]);
+    plot(circumference_x, circumference_y, '*');
+    [centre, a, b, alpha] = fitellipse(Ellipse,'linear');
+    
+    plotellipse(centre, a, b, alpha, 'b-');
+    f1 = gcf; %current figure handle
+    axesObjs = get(f1, 'Children');  %axes handles
+    dataObjs = get(axesObjs, 'Children'); %handles t
+    xdata_circum = get(dataObjs, 'XData');
+    ydata_circum = get(dataObjs, 'YData');
+    start_A = circumference_dataset(1:1,:);
+    
+    startpoint_2d_circum = [start_A(:,1) start_A(:,2)];
+    newmat_xy = [xdata_circum; ydata_circum];
+    trans_newmat_xy = newmat_xy.';
+    dist_startpoint_circum = sqrt(sum(bsxfun(@minus, trans_newmat_xy, startpoint_2d_circum).^2,2));
+    closest_startpoint_circum = trans_newmat_xy(find(dist_startpoint_circum==min(dist_startpoint_circum)),:);
+    [row_circum,~] = find(trans_newmat_xy==closest_startpoint_circum);
+    new_matrix_x_circum = [trans_newmat_xy(row_circum:2000,1); trans_newmat_xy(1:row_circum-1,1)].';
+    new_matrix_y_circum = [trans_newmat_xy(row_circum:2000,2); trans_newmat_xy(1:row_circum-1,2)].';
+catch ME
+    rethrow(ME);
+    warning("Error in estimating trace as an ellipse");
+    predicted = [0];
+    return 
+end
 %%% Ear to Ear - The ear to ear tracking data is considered as a spline in
 %%% 2D space. The data points are orthogonally projected on the 2D XY plane
 %%% and smoothing spline fitting is performed. The smoothing spline with is
@@ -112,10 +160,17 @@ new_matrix_y_circum = [trans_newmat_xy(row_circum:2000,2); trans_newmat_xy(1:row
 %%% smoothing parameter used here is 0.999999481874551. 
 
 % Spline fit & extracting out the numerical X, Z data. 
-spline_e2e = splinetest_e2e(e2e_x,e2e_z);
-points = fnplt(spline_e2e);
-xdata_e2e = points(1,:);
-zdata_e2e = points(2,:);
+try
+    spline_e2e = splinetest_e2e(e2e_x,e2e_z);
+    points = fnplt(spline_e2e);
+    xdata_e2e = points(1,:);
+    zdata_e2e = points(2,:);
+catch ME
+    rehtrow(ME);
+    warning("Error in smoothing the ear2ear trace as a spline!");
+    predicted = [1];
+    return 
+end
 %% The least square fit of the plot has excess length that exceed the starting 
 %% and ending position of the e2e dataset. Uncomment the code below to see it.
 % fnplt(spline_e2e);
@@ -125,33 +180,38 @@ zdata_e2e = points(2,:);
 %% We fix this by finding the point on the fitted line that is closest to the actual e2e dataset.
 %% And making the fitted line start and end nearest to the e2e starting and ending dataset.
 % Get the starting and ending position of e2e dataset
-start_B = e2e_dataset(1:1,:);
-startpoint_2d_e2e = [start_B(:,1) start_B(:,3)];
-
-end_B = e2e_dataset(end,:);
-endpoint_2d_e2e = [end_B(:,1) end_B(:,3)];
-
-newmat_xz = [xdata_e2e; zdata_e2e];
-trans_newmat_xz = newmat_xz.';
-
-dist_startpoint_e2e = sqrt(sum(bsxfun(@minus, trans_newmat_xz, startpoint_2d_e2e).^2,2));
-closest_startpoint_e2e = trans_newmat_xz(find(dist_startpoint_e2e==min(dist_startpoint_e2e)),:);
-
-dist_endpoint_e2e = sqrt(sum(bsxfun(@minus, trans_newmat_xz, endpoint_2d_e2e).^2,2));
-closest_endpoint_e2e = trans_newmat_xz(find(dist_endpoint_e2e==min(dist_endpoint_e2e)),:);
-
-[row_startpoint_e2e,~] = find(trans_newmat_xz==closest_startpoint_e2e);
-[row_endpoint_e2e,~] = find(trans_newmat_xz==closest_endpoint_e2e);
-
-if row_startpoint_e2e > 50
-    new_matrix_x_e2e = [trans_newmat_xz(row_endpoint_e2e:row_startpoint_e2e,1)].';
-    new_matrix_z_e2e = [trans_newmat_xz(row_endpoint_e2e:row_startpoint_e2e,2)].';
-else
-    % Swapped for some reason
-    new_matrix_x_e2e = [trans_newmat_xz(row_startpoint_e2e:row_endpoint_e2e,1)].';
-    new_matrix_z_e2e = [trans_newmat_xz(row_startpoint_e2e:row_endpoint_e2e,2)].';
+try
+    start_B = e2e_dataset(1:1,:);
+    startpoint_2d_e2e = [start_B(:,1) start_B(:,3)];
+    
+    end_B = e2e_dataset(end,:);
+    endpoint_2d_e2e = [end_B(:,1) end_B(:,3)];
+    
+    newmat_xz = [xdata_e2e; zdata_e2e];
+    trans_newmat_xz = newmat_xz.';
+    
+    dist_startpoint_e2e = sqrt(sum(bsxfun(@minus, trans_newmat_xz, startpoint_2d_e2e).^2,2));
+    closest_startpoint_e2e = trans_newmat_xz(find(dist_startpoint_e2e==min(dist_startpoint_e2e)),:);
+    
+    dist_endpoint_e2e = sqrt(sum(bsxfun(@minus, trans_newmat_xz, endpoint_2d_e2e).^2,2));
+    closest_endpoint_e2e = trans_newmat_xz(find(dist_endpoint_e2e==min(dist_endpoint_e2e)),:);
+    
+    [row_startpoint_e2e,~] = find(trans_newmat_xz==closest_startpoint_e2e);
+    [row_endpoint_e2e,~] = find(trans_newmat_xz==closest_endpoint_e2e);
+    
+    if row_startpoint_e2e > 50
+        new_matrix_x_e2e = [trans_newmat_xz(row_endpoint_e2e:row_startpoint_e2e,1)].';
+        new_matrix_z_e2e = [trans_newmat_xz(row_endpoint_e2e:row_startpoint_e2e,2)].';
+    else
+        % Swapped for some reason
+        new_matrix_x_e2e = [trans_newmat_xz(row_startpoint_e2e:row_endpoint_e2e,1)].';
+        new_matrix_z_e2e = [trans_newmat_xz(row_startpoint_e2e:row_endpoint_e2e,2)].';
+    end
+catch ME
+    rehtrow(ME);
+    warning("Error in fixing the ear2ear data set!");
+    predicted = [2];
 end
-
 %%% NZ-IZ - The NZIZ tracking data is considered as a spline in
 %%% 2D space. The data points are orthogonally projected on the 2D ZY plane
 %%% and smoothing spline fitting is performed. The smoothing spline with is
@@ -196,37 +256,59 @@ zdata_nziz = [zdata_nziz_back zdata_nziz_front];
 %%% geometry usign the interparc() function. 
 
 %%% Circumference - 13 positions (first and last being the same)
-[pt_circum,~,~] = interparc(0,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt1_circum,~,~] = interparc(0.05,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt2_circum,~,~] = interparc(0.15,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt3_circum,~,~] = interparc(0.25,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt4_circum,~,~] = interparc(0.35,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt5_circum,~,~] = interparc(0.45,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt6_circum,~,~] = interparc(0.50,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt7_circum,~,~] = interparc(0.55,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt8_circum,~,~] = interparc(0.65,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt9_circum,~,~] = interparc(0.75,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt10_circum,~,~] = interparc(0.85,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt11_circum,~,~] = interparc(0.95,new_matrix_x_circum,new_matrix_y_circum,'linear');
-[pt12_circum,~,~] = interparc(1,new_matrix_x_circum,new_matrix_y_circum,'linear');
+try
 
-%%% Ear to Ear
-[pt13_e2e,~,~] = interparc(0,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
-[pt14_e2e,~,~] = interparc(0.1,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
-[pt15_e2e,~,~] = interparc(0.3,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
-[pt16_e2e,~,~] = interparc(0.5,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
-[pt17_e2e,~,~] = interparc(0.7,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
-[pt18_e2e,~,~] = interparc(0.9,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
-[pt19_e2e,~,~] = interparc(1,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
+    [pt_circum,~,~] = interparc(0,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt1_circum,~,~] = interparc(0.05,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt2_circum,~,~] = interparc(0.15,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt3_circum,~,~] = interparc(0.25,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt4_circum,~,~] = interparc(0.35,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt5_circum,~,~] = interparc(0.45,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt6_circum,~,~] = interparc(0.50,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt7_circum,~,~] = interparc(0.55,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt8_circum,~,~] = interparc(0.65,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt9_circum,~,~] = interparc(0.75,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt10_circum,~,~] = interparc(0.85,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt11_circum,~,~] = interparc(0.95,new_matrix_x_circum,new_matrix_y_circum,'linear');
+    [pt12_circum,~,~] = interparc(1,new_matrix_x_circum,new_matrix_y_circum,'linear');
+catch ME
+    rehtrow(ME);
+    warning("Error in circum interparc!");
+    predicted = [3];
+    return
+end
+
+try 
+    %%% Ear to Ear
+    [pt13_e2e,~,~] = interparc(0,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
+    [pt14_e2e,~,~] = interparc(0.1,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
+    [pt15_e2e,~,~] = interparc(0.3,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
+    [pt16_e2e,~,~] = interparc(0.5,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
+    [pt17_e2e,~,~] = interparc(0.7,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
+    [pt18_e2e,~,~] = interparc(0.9,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
+    [pt19_e2e,~,~] = interparc(1,new_matrix_x_e2e,new_matrix_z_e2e,'spline');
+catch ME
+    rehtrow(ME);
+    warning("Error in ear2ear interparc!");
+    predicted = [4];
+    return
+end
 
 %%% NZIZ 
-[pt20_nziz,~,~] = interparc(0,ydata_nziz,zdata_nziz,'spline');
-[pt21_nziz,~,~] = interparc(0.1,ydata_nziz,zdata_nziz,'spline');
-[pt22_nziz,~,~] = interparc(0.30,ydata_nziz,zdata_nziz,'spline');
-[pt23_nziz,~,~] = interparc(0.50,ydata_nziz,zdata_nziz,'spline');
-[pt24_nziz,~,~] = interparc(0.70,ydata_nziz,zdata_nziz,'spline');
-[pt25_nziz,~,~] = interparc(0.95,ydata_nziz,zdata_nziz,'spline');
-[pt26_nziz,~,~] = interparc(1,ydata_nziz,zdata_nziz,'spline');
+try 
+    [pt20_nziz,~,~] = interparc(0,ydata_nziz,zdata_nziz,'spline');
+    [pt21_nziz,~,~] = interparc(0.1,ydata_nziz,zdata_nziz,'spline');
+    [pt22_nziz,~,~] = interparc(0.30,ydata_nziz,zdata_nziz,'spline');
+    [pt23_nziz,~,~] = interparc(0.50,ydata_nziz,zdata_nziz,'spline');
+    [pt24_nziz,~,~] = interparc(0.70,ydata_nziz,zdata_nziz,'spline');
+    [pt25_nziz,~,~] = interparc(0.95,ydata_nziz,zdata_nziz,'spline');
+    [pt26_nziz,~,~] = interparc(1,ydata_nziz,zdata_nziz,'spline');
+catch ME
+    rehtrow(ME);
+    warning("Error in NZIZ interparc!");
+    predicted = [5];
+    return
+end
 
 %% Collate Data Points
 %%% Circuference
@@ -235,6 +317,7 @@ circum = [pt_circum.' pt1_circum.' pt2_circum.' pt3_circum.' pt4_circum.' pt5_ci
 ear2ear = [pt14_e2e.' pt15_e2e.' pt16_e2e.' pt17_e2e.' pt18_e2e.'];
 %%% NZIZ
 nziz = [pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
+
 %% Find Shortest Euclidean Distance.
 %%% The nearest point on the wanded data is found based on the predicted
 %%% points. This is done such that we care able to determine the left out
@@ -243,16 +326,36 @@ nziz = [pt25_nziz.' pt24_nziz.' pt23_nziz.' pt22_nziz.' pt21_nziz.'];
 
 %%% Circumference
 
-A1= [circumference_x circumference_y];
-[closest_array_circum] = find_closest_from_predicted_to_wanded(circum, A1);
+try 
+    A1= [circumference_x circumference_y];
+    [closest_array_circum] = find_closest_from_predicted_to_wanded(circum, A1);
+catch ME
+    rehtrow(ME);
+    warning("Error in finding shortest euclidian distance for circumference!");
+    predicted = [6];
+    return
+end
 
 %%% Ear to Ear
-A2 = [e2e_x e2e_z];
-[closest_array_e2e] = find_closest_from_predicted_to_wanded(ear2ear, A2);
+try
+    A2 = [e2e_x e2e_z];
+    [closest_array_e2e] = find_closest_from_predicted_to_wanded(ear2ear, A2);
+catch ME
+    rehtrow(ME);
+    warning("Error in finding shortest euclidian distance for ear2ear!");
+    predicted = [7];
+    return
+end
 
 %%%NZ-IZ
-A3 = [nziz_y nziz_z];
-[closest_array_nziz] = find_closest_from_predicted_to_wanded(nziz, A3);
+try 
+    A3 = [nziz_y nziz_z];
+    [closest_array_nziz] = find_closest_from_predicted_to_wanded(nziz, A3);
+catch ME
+    warning("Error in finding shortest euclidian distance for NZIZ!");
+    predicted = [8];
+    return;
+end
 
 %% Find left out axis values
 %%% Circumference - The circumference is orthogonally projected in the XZ
@@ -261,8 +364,16 @@ A3 = [nziz_y nziz_z];
 %%% that particular entire row and specifically its Y value (2nd column).
 % unique_circumference_dataset = unique(circumference_dataset, 'rows');
 % closest_array_circum = unique(closest_array_circum, 'rows');
-interpolate_closest_circum = find_left_out_axis_values(closest_array_circum, circumference_dataset,3 , 1, 2);
-trans_intrapolate_closest_circum = interpolate_closest_circum.';
+
+try
+    interpolate_closest_circum = find_left_out_axis_values(closest_array_circum, circumference_dataset,3 , 1, 2);
+    trans_intrapolate_closest_circum = interpolate_closest_circum.';
+catch ME
+    rehtrow(ME);
+    warning("Error in finding shortest left axis value for circumference!");
+    predicted = [9];
+    return;
+end
 
 %%% Ear to Ear - The ear to ear is orthogonally projected in the XY
 %%% plane and the Z values need to be found. 
@@ -270,8 +381,15 @@ trans_intrapolate_closest_circum = interpolate_closest_circum.';
 %%% that particular entire row and specifically its Z value (3rd column)
 % unique_e2e_dataset = unique(e2e_dataset, 'rows');
 % closest_array_e2e = unique(closest_array_e2e , 'rows');
-interpolate_closest_e2e = find_left_out_axis_values(closest_array_e2e, e2e_dataset, 2, 1, 1);
-trans_intrapolate_closest_e2e = interpolate_closest_e2e.';
+try 
+    interpolate_closest_e2e = find_left_out_axis_values(closest_array_e2e, e2e_dataset, 2, 1, 1);
+    trans_intrapolate_closest_e2e = interpolate_closest_e2e.';
+catch ME
+    rehtrow(ME);
+    warning("Error in finding shortest left axis value for ear to ear");
+    predicted = [10];
+    return;
+end
 
 %%% NZIZ - The  NZIZ is orthogonally projected in the
 %%% ZY plane and the X values need to be found. 
@@ -279,8 +397,15 @@ trans_intrapolate_closest_e2e = interpolate_closest_e2e.';
 %%% that particular entire row and specifically its X value (1st column).
 % unique_nziz_dataset = unique(nziz_dataset, 'rows');
 % closest_array_nziz = unique(closest_array_nziz, 'rows');
-interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, nziz_dataset,1, 2, 1);
-trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
+
+try
+    interpolate_closest_nziz = find_left_out_axis_values(closest_array_nziz, nziz_dataset,1, 2, 1);
+    trans_intrapolate_closest_nziz = interpolate_closest_nziz.';
+catch ME
+    warning("Error in finding shortest left axis value for NZIZ");
+    predicted = [11];
+    return;
+end
 
 %% Reorganize the data
 %%% Circumference
@@ -491,17 +616,33 @@ F3 = [F3_XZ(1) , F3_YZ(1), F3_YZ(2)];
 
 predicted = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; C3; F4; F3; P3; P4 ];
 predicted = [predicted(:,1), predicted(:,3), predicted(:,2)];
+
 four_points = [F4; F3; P3; P4];
 
 % plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
 % hold on;
 % plot(F3_YZ(1), F3_YZ(2), 'o');
 % figure;
-% title('Predicted Electrode Locations');
-% plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
-% xlabel('x');
-% ylabel('y');
-% zlabel('z');
+figure;
+title('Predicted Electrode Locations');
+plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
+text(predicted(1,1), predicted(1,2), predicted(1,3),"FPZ");
+xlabel('x');
+ylabel('y');
+zlabel('z');
 
-end
+return;
+
+figure;
+hold on;
+predicted_With_displacement = predicted + dis_matrix_nziz(1,:);
+plot3(predicted_no_specs(:,1), predicted_no_specs(:,2), predicted_no_specs(:,3), 'd');
+plot3(predicted_With_displacement(:,1), predicted_With_displacement(:,2), predicted_With_displacement(:,3), 'o');
+plot3(predicted(:,1), predicted(:,2), predicted(:,3), '*');
+
+% for i = 1:1:length(predicted)
+%     text(predicted(i,1), predicted(i,2), predicted(i,3),string(i));
+% end
+
+end 
 

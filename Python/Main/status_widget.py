@@ -23,18 +23,21 @@ class StatusWidget(QWidget):
         self.optitrack_label = "Optitrack: "
         self.wand_label = "Stylus: "
         self.specs_label = "Specs: "
+        self.app_mode_label = "Mode : "
 
         # Create placeholder labels
         self.matlab_qlabel = QLabel(self.matlab_label)
         self.optitrack_qlabel = QLabel(self.optitrack_label)
         self.wand_qlabel = QLabel(self.wand_label)
         self.specs_qlabel = QLabel(self.specs_label)
+        self.app_mode_qlabel = QLabel(self.app_mode_label)
 
         self._layout.addWidget(self.matlab_qlabel)
         self._layout.addWidget(self.optitrack_qlabel)
         self._layout.addWidget(self.wand_qlabel)
         self._layout.addWidget(self.specs_qlabel)
-        self._layout.addStretch()   
+        self._layout.addWidget(self.app_mode_qlabel)
+        self._layout.addStretch()  
 
     @Slot(list)
     def change_label(self,message):
@@ -49,3 +52,5 @@ class StatusWidget(QWidget):
             self.wand_qlabel.setText(self.wand_label + self.status) 
         elif self.label == "Specs" :
             self.specs_qlabel.setText(self.specs_label + self.status) 
+        elif self.label == "Mode" :
+            self.app_mode_qlabel.setText(self.app_mode_label + self.status) 

@@ -132,10 +132,10 @@ class OptitrackMainThread(QThread):
                     self.stylus_previous_position = position 
                     self.signals_to_status.signal_list.emit(["Stylus","Detected"])
                     self.stylus_lose_track_counter = 0
-                    print(self.stylus_data)
+                    trace_opitrack_status_bodies("Showing stylus:\n {}".format(self.stylus_previous_position))
                 else:  # if the new position is the same as the old one, there is a big chance that it has lost detection.
                     self.stylus_lose_track_counter += 1
-                    trace_opitrack_status("Optitrack: Stylus is not detected!")
+                    trace_opitrack_status("Stylus is not detected!")
                     if (self.stylus_lose_track_counter > 100):
                         self.signals_to_status.signal_list.emit(["Stylus","Lost detection"])
         elif (id == 1005): # specs data
@@ -160,8 +160,8 @@ class OptitrackMainThread(QThread):
             
     @Slot()
     def spawn_thread(self, message):
-        trace_opitrack_status("Optitrack: Spawn matlab thread called!!!")
-        trace_opitrack_status(message)
+
+        trace_opitrack_status("Optitrack: Spawn matlab thread called! {}".format(message))
 
     @Slot(bool)
     def set_recording(self, message):
@@ -172,7 +172,7 @@ class OptitrackMainThread(QThread):
     @Slot(bool)
     def set_show_all_markers(self, message):
         self.show_all_markers = message
-        print("Optitrack: Showing all markers ", message)
+        trace_opitrack_status("Optitrack: Showing all markers:\n {}".format(message))
 
     def clear_data(self):
         self.index_counter = 0

@@ -1,4 +1,5 @@
 # Unused class but this is to store and manage data
+import numpy as np
 
 class DataManager():
     def __init__(self):
@@ -15,4 +16,7 @@ class DataManager():
         self.EarToEar_specs_rotate = None
         self.specs_position = None
         self.specs_rotation = None
+
+class PredictedPositions():
+    self.position= numpy.array([0,0,0])
 

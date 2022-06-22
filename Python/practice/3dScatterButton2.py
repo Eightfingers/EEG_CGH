@@ -101,15 +101,16 @@ class MainWindow(QMainWindow):
     def update_and_add_scatter(self, message):
         print("signal recieved")
 
-        self.scatter.removeSeries(self.scatter_series) # remove the old position
-        self.scatter_series = self.reset_scatter_series(QColor(0, 0, 0))
+        # self.scatter.removeSeries(self.scatter_series) # remove the old position
+        # self.scatter_series = self.reset_scatter_series(QColor(0, 0, 0))
 
         # self.scatter_series = QScatter3DSeries() # create a new series at every instance
         # self.scatter_series.setBaseColor(QColor(0, 0, 0)) # Black
         # self.scatter_series.setItemSize(0.5)
 
+        self.scatter_series.dataProxy().removeItems(0,self.scatter_series.dataProxy().itemCount())
         self.add_list_to_scatterdata(self.scatter_series, message)
-        self.scatter.addSeries(self.scatter_series)
+        
         self.scatter.show()
     
     @Slot()

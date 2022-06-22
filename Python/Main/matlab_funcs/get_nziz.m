@@ -1,31 +1,42 @@
 function final_nziz_python = get_nziz(nziz ,nziz_spec)
 
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
-addpath('GUi_wrong\');
+%%% Circumference
+addpath('helperfuncs\');
+addpath('myfuncs');
+
+step = 1; % used to take only every 2nd data
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus');
-stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
-stylus_data = rmmissing(stylus_data);
+nziz_stylus_data = readmatrix('data_NZIZstylus.csv');
+nziz_stylus_data = [nziz_stylus_data(:,1) nziz_stylus_data(:,3) nziz_stylus_data(:,2)]; 
+nziz_stylus_data = rmmissing(nziz_stylus_data);
+
+% stylus_data = stylus_data(1:step:end,:);
+
 quaternion_extracted = readmatrix('rotation_data_NZIZspecs'); % extract the rotation vector out
 quaternion_extracted = [quaternion_extracted(:,4), quaternion_extracted(:,1), quaternion_extracted(:,3), quaternion_extracted(:,2)];
+% quaternion_extracted = quaternion_extracted(1:step:end,:);
+
 dis_matrix_nziz = readmatrix('data_NZIZspecs.csv'); % extract the displacement vector out
+dis_matrix_nziz = [dis_matrix_nziz(:,1) dis_matrix_nziz(:,3) dis_matrix_nziz(:,2)]; 
 
-plot3(stylus_data(:,1), stylus_data(:,2), stylus_data(:,3), '*');
-hold on ;
+% dis_matrix_nziz = dis_matrix_nziz(1:step:end,:); 
 
-% Quaternion way
-new_markers_nziz = [];
-rotation_matrix = [];
-new_markers_nziz = transform_frame_quat(stylus_data, quaternion_extracted, dis_matrix_nziz);
-% 
-plot3(new_markers_nziz(:,1), new_markers_nziz(:,2), new_markers_nziz(:,3), 'o', 'MarkerSize',10);
-hold on;
+data_length = min([length(nziz_stylus_data), length(quaternion_extracted), length(dis_matrix_nziz)]);
+if length(nziz_stylus_data) == data_length 
+    quaternion_extracted = quaternion_extracted(1:data_length,:);
+    dis_matrix_nziz = dis_matrix_nziz(1:data_length,:);
+else
+    nziz_stylus_data = nziz_stylus_data(1:data_length,:);
+end
+
+% plot3(nziz_stylus_data(:,1), nziz_stylus_data(:,2), nziz_stylus_data(:,3), '*');
+% hold on ;
+
+new_markers_nziz = transform_to_specs_frame(nziz_stylus_data, quaternion_extracted, dis_matrix_nziz);
 
 %%% NZ-IZ
 nziz_dataset =  new_markers_nziz;
-nziz_dataset = rmmissing(new_markers_nziz);
 nziz_x = nziz_dataset(:,1);
 nziz_y = nziz_dataset(:,2);
 nziz_z = nziz_dataset(:,3);

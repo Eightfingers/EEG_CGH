@@ -5,7 +5,7 @@ function [new_markers] = transform_frame_quat(stylus_data, quaternion_extracted_
     %     disp(i);
         quat_vector = quaternion(quaternion_extracted_data(i,:));
         RPY1 = eulerd(quat_vector,'XYZ', 'frame' );
-        rot_vector = [-RPY1(1), -RPY1(2), -RPY1(3)];
+        rot_vector = [RPY1(1), RPY1(2), RPY1(3)];
         dis_vector = displacement_matrix(i,:);
         stylus_vector = [stylus_data(i,1); ... % X,Y,Z 
                   stylus_data(i,2); ...

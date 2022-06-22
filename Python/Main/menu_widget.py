@@ -39,6 +39,7 @@ class MenuWidget(QWidget):
         self.Circumbutton_text = "Start Circum"
         self.EartoEarbutton_text = "Start Ear to Ear"
         self.attach_electrodes_button_text = "Attach electrodes"
+        self.show_trace_button_text = "Show Trace"
 
         self._matlab_thread = None 
         self._optitrack_thread = None 
@@ -53,11 +54,14 @@ class MenuWidget(QWidget):
         self.signals_to_optitrack2 = AppSignals() # show reflective markers
 
         # Used to save the 3 traces data 
-        self.signals_to_main = AppSignals()
-        self.signals_to_main.signal_int.connect(parent.save_trace_data)
+        self.signals_trace_to_main = AppSignals()
+        self.signals_trace_to_main.signal_int.connect(parent.save_trace_data)
 
-        self.slider_signals_to_main = AppSignals()
-        self.slider_signals_to_main.signal_float.connect(parent.adjust_axis_min_max)
+        self.signals_to_show_trace_to_main = AppSignals()
+        self.signals_to_show_trace_to_main.signal_bool.connect(parent.show_trace_data)
+
+        self.slider_signals_trace_to_main = AppSignals()
+        self.slider_signals_trace_to_main.signal_float.connect(parent.adjust_axis_min_max)
 
         self.reflective_markers_to_main_signals = AppSignals()
         self.reflective_markers_to_main_signals.signal_bool.connect(parent.set_reflective_markers)
@@ -84,6 +88,9 @@ class MenuWidget(QWidget):
         self.predict_all_button = QPushButton("Predict 21")
         self.predict_all_button.clicked.connect(self.predict_eeg_positions) # can only start when there are 3 scatter data
 
+        self.show_trace_button = QPushButton(self.show_trace_button_text) # Clear EEG positions
+        self.show_trace_button.clicked.connect(self.show_trace) 
+
         self.clear_button = QPushButton("Clear") # Clear EEG positions
         self.clear_button.clicked.connect(parent.clear_data) 
 
@@ -101,6 +108,7 @@ class MenuWidget(QWidget):
         self.layout.addWidget(self.EartoearButton)
         self.layout.addWidget(self.predictpz_button)
         self.layout.addWidget(self.predict_all_button)
+        self.layout.addWidget(self.show_trace_button)
         self.layout.addWidget(self.attach_electrodes_button)
         self.layout.addWidget(self.clear_button)
         self.layout.addWidget(self.slider_label)
@@ -108,7 +116,7 @@ class MenuWidget(QWidget):
         self.layout.addStretch()
 
     def slider_position(self, p):
-        self.slider_signals_to_main.signal_float.emit(p)
+        self.slider_signals_trace_to_main.signal_float.emit(p)
         
     # I am not sure if this is the best way or so but
     # These functions are called from the main.py and these signals are only initialized and connected after 
@@ -137,24 +145,37 @@ class MenuWidget(QWidget):
     def do_ear_to_ear(self):
         self.change_trace_button_state(self.EartoearButton, self.EartoEarbutton_text)
 
+    @Slot()
+    def show_trace(self):
+        if(self.show_trace_button.isFlat()): # If the initial state of the button is flat and it is clicked, unflat them
+            self.signals_to_show_trace_to_main.signal_bool.emit(False)
+            self.show_trace_button.setFlat(False)
+            self.show_trace_button.setStyleSheet('QPushButton {background-color: light gray; color: black;}')
+            self.show_trace_button.setText('Show Trace')
+        else:
+            self.signals_to_show_trace_to_main.signal_bool.emit(True)
+            self.show_trace_button.setFlat(True)
+            self.show_trace_button.setStyleSheet('QPushButton {background-color: light gray; color: black; border-width: 1px; border-color: light gray;}')
+            self.show_trace_button.setText('Showing trace ...')
+
     # Shows optitrack markers as grey in colour in the graph
     @Slot()
     def electrode_placements(self):
-        if (self.parent.Predicted21_series.dataProxy().itemCount() == 0 and self.lock == False):
-            QMessageBox.warning(self, "Warning", "Complete all the 3 traces and prediction first!")
+        # if (self.parent.Predicted21_series.dataProxy().itemCount() == 0 and self.lock == False):
+        #     QMessageBox.warning(self, "Warning", "Complete all the 3 traces and prediction first!")
+        # else:
+        if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat -> it is clicked, unflat them
+            self.show_trace_button.setStyleSheet('QPushButton {background-color: light gray; color: black;')
+            self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
+            self.attach_electrodes_button.setFlat(False)
+            self.signals_to_optitrack2.signal_bool.emit(False)
+            self.reflective_markers_to_main_signals.signal_bool.emit(False)
         else:
-            if(self.attach_electrodes_button.isFlat()): # If the initial state of the button is flat -> it is clicked, unflat them
-                self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: light gray ; color: black;}')
-                self.attach_electrodes_button.setText(self.attach_electrodes_button_text)
-                self.attach_electrodes_button.setFlat(False)
-                self.signals_to_optitrack2.signal_bool.emit(False)
-                self.reflective_markers_to_main_signals.signal_bool.emit(False)
-            else:
-                self.attach_electrodes_button.setStyleSheet('QPushButton {background-color: rgb(225, 0, 0); color: black; border-style: outset; border-width: 1px; border-color: black;}')
-                self.attach_electrodes_button.setText('Stop!')
-                self.attach_electrodes_button.setFlat(True)
-                self.signals_to_optitrack2.signal_bool.emit(True)
-                self.reflective_markers_to_main_signals.signal_bool.emit(True)
+            self.show_trace_button.setStyleSheet('QPushButton {background-color: red; color: black;')
+            self.attach_electrodes_button.setText('Stop!')
+            self.attach_electrodes_button.setFlat(True)
+            self.signals_to_optitrack2.signal_bool.emit(True)
+            self.reflective_markers_to_main_signals.signal_bool.emit(True)
 
     @Slot(str) # used by the matlab thread to indicate that it has finished predicting
     def change_predict_state(self, message):
@@ -188,7 +209,7 @@ class MenuWidget(QWidget):
             self.signals_to_matlab.signal_list.emit(message)
             self.signals_to_status.signal_list.emit(["Stylus","Stopped"])
             self.predictpz_button.setStyleSheet('QPushButton {background-color: red ; color: black;}')
-            self.predictpz_button.setText("Predicting ..")
+            self.predictpz_button.setText("Predicting ..")        
 
     # Press down the button to start the trace 
     # Unflatted the button the stop the trace
@@ -200,14 +221,14 @@ class MenuWidget(QWidget):
             button.setFlat(False)
 
             # Save the data accordingly
-            if (button_label == "Start NZIZ"):
-                self.signals_to_main.signal_int.emit(self.NZIZ_BUTTON)
+            if (button_label == self.NZIZbutton_text):
+                self.signals_trace_to_main.signal_int.emit(self.NZIZ_BUTTON)
 
-            elif (button_label == "Start Circum"):
-                self.signals_to_main.signal_int.emit(self.CIRCUM_BUTTON)
+            elif (button_label == self.Circumbutton_text):
+                self.signals_trace_to_main.signal_int.emit(self.CIRCUM_BUTTON)
 
-            elif (button_label == "Start Ear to Ear"):
-                self.signals_to_main.signal_int.emit(self.EARTOEAR_BUTTON)
+            elif (button_label == self.EartoEarbutton_text):
+                self.signals_trace_to_main.signal_int.emit(self.EARTOEAR_BUTTON)
 
             self.signals_to_optitrack.signal_bool.emit(False) # Stop recording
             self.signals_to_status.signal_bool.emit(False) # change status to stop recording

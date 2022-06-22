@@ -1,9 +1,8 @@
 function [predicted] = EEGpoints_quat()
 
 %%% Circumference
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\helperfuncs\');
-addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
-addpath('GUi_wrong');
+% addpath('helperfuncs\');
+% addpath('myfuncs');
 step = 5; % used to take only every 2nd data
 
 stylus_data = readmatrix('data_CIRCUMstylus');
@@ -463,14 +462,14 @@ F3 = [F3_XZ(1) , F3_YZ(1), F3_YZ(2)];
 
 predicted = [Fpz; Fp2; F8; T4; T6; O2; Oz; O1; T5; T3; F7; Fp1; Fz; Cz; Pz; C4; C3; F4; F3; P3; P4 ];
 predicted = [predicted(:,1), predicted(:,3), predicted(:,2)];
-four_points = [F4; F3; P3; P4];
+% four_points = [F4; F3; P3; P4];
 
 % plot3(four_points(:,1), four_points(:,2), four_points(:,3), 'kd');
 % hold on;
 % plot(F3_YZ(1), F3_YZ(2), 'o');
-% figure;
-% title('Predicted Electrode Locations');
-% plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
+figure;
+title('Predicted Electrode Locations');
+plot3(predicted(:,1), predicted(:,2), predicted(:,3), 'd');
 % xlabel('x');
 % ylabel('y');
 % zlabel('z');

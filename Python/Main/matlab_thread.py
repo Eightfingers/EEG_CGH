@@ -71,18 +71,17 @@ class MatlabWorkerThread(QThread):
                 # nziz_positions = self.matlab_engine.get_nziz_30_9_2021()
                 # nziz_positions = self.matlab_engine.no_transform_get_nziz() # no spec transfofrm
                 nziz_positions = np.array(nziz_positions)
-                print("The NZIZ positions are:", nziz_positions)
+                trace_matlab("The NZIZ positions are:\n {}".format(nziz_positions))
                 
                 np.savetxt("nziz_positions.csv", nziz_positions, delimiter=',')
                 self.parent.signals_to_main2.signal_numpy.emit(nziz_positions) # Update positions in main.py
                 self.parent.signals_to_main2.signal_bool.emit(True) # Start global transformation
 
             elif self._command == "21 positions":
-                all_positions = self.matlab_engine.No_specs_EEGpoints_quat() # no spec transform at all
+                all_positions = self.matlab_engine.EEGpoints_quat() # no spec transform at all
                 # all_positions = self.matlab_engine.no_transform_EEGpoints_quat() # no spec transform at all
                 all_positions = np.array(all_positions)
-                trace_matlab(all_positions)
-                print("The All positions are:", all_positions)
+                trace_matlab("The 21 positions are:\n {}".format(all_positions))
                 self.parent.signals_to_main.signal_numpy.emit(all_positions) 
                 self.parent.signals_to_main.signal_bool.emit(True) # After finish predicting, make it live 
             self.parent.signals_to_menu.signal_str.emit(self._command) # indicate it has finished predicting

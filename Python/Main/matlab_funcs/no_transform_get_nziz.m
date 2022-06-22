@@ -4,7 +4,7 @@ addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_func
 addpath('C:\Users\65914\Documents\GitHub\EEG_CGH\EEG_CGH\Python\Main\matlab_funcs\myfuncs');
 
 %%% NZIZ
-stylus_data = readmatrix('data_NZIZstylus_specs_frame')
+stylus_data = readmatrix('data_NZIZstylus')
 step = 5; % used to take only every 2nd data
 stylus_data = stylus_data(1:step:end,:); 
 stylus_data = [stylus_data(:,1) stylus_data(:,3) stylus_data(:,2)]; 
