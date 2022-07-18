@@ -1,4 +1,6 @@
 
 Python/Main/__pycache__/menu_widget.cpython-37.pyc
+Python/Main/__pycache__/*.pyc
 *.pyc
 *.asv
+*.pyc
